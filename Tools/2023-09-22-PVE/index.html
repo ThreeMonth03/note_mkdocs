@@ -12,20 +12,18 @@
         <meta name="author" content="Three Month">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/Coding%20Exercise/2023-07-30-nowcoder/">
+        <link rel="canonical" href="https://note.threemonth03.com/Tools/2023-09-22-PVE/">
       
       
-        <link rel="prev" href="../2023-06-15-HDLBits/">
+        <link rel="prev" href="../../Coding%20Exercise/2023-07-30-nowcoder/">
       
-      
-        <link rel="next" href="../../Tools/2023-09-22-PVE/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>NowCoder tutorial - ThreeMonth's Note</title>
+        <title>Proxmox VE Tutorial - ThreeMonth's Note</title>
       
     
     
@@ -118,7 +116,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#verilog" class="md-skip">
+        <a href="#preparation" class="md-skip">
           跳轉到
         </a>
       
@@ -153,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              NowCoder tutorial
+              Proxmox VE Tutorial
             
           </span>
         </div>
@@ -386,16 +384,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
         
@@ -410,7 +406,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Coding Exercise
@@ -423,7 +419,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../2023-06-15-HDLBits/" class="md-nav__link">
+      <a href="../../Coding%20Exercise/2023-06-15-HDLBits/" class="md-nav__link">
         HDLBits tutorial
       </a>
     </li>
@@ -435,75 +431,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          NowCoder tutorial
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../Coding%20Exercise/2023-07-30-nowcoder/" class="md-nav__link">
         NowCoder tutorial
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#verilog" class="md-nav__link">
-    Verilog
-  </a>
-  
-    <nav class="md-nav" aria-label="Verilog">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#vl1" class="md-nav__link">
-    VL1 四选一多路器
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vl2-t" class="md-nav__link">
-    VL2 异步复位的串联T触发器
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vl3" class="md-nav__link">
-    VL3 奇偶校验
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -521,14 +453,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
       
       
         
@@ -541,7 +475,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Useful Tools
@@ -552,11 +486,191 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../Tools/2023-09-22-PVE/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Proxmox VE Tutorial
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Proxmox VE Tutorial
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#preparation" class="md-nav__link">
+    Preparation
+  </a>
+  
+    <nav class="md-nav" aria-label="Preparation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-proxmox-ve-gui-interface" class="md-nav__link">
+    Install Proxmox VE GUI interface
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-to-open-pve-gui-interface-in-lan" class="md-nav__link">
+    How to open PVE GUI interface in LAN
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-disk-into-pve" class="md-nav__link">
+    Add disk into PVE
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-osservice-in-vm" class="md-nav__link">
+    Install os/service in VM
+  </a>
+  
+    <nav class="md-nav" aria-label="Install os/service in VM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ubuntu" class="md-nav__link">
+    Ubuntu
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    Windows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dockerportainer" class="md-nav__link">
+    Docker/Portainer
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passthrough" class="md-nav__link">
+    Passthrough
+  </a>
+  
+    <nav class="md-nav" aria-label="Passthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-the-onboard-sound" class="md-nav__link">
+    Passthrough the onboard sound
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-the-xbox-one-controller" class="md-nav__link">
+    Passthrough the Xbox one controller
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-vck190jtaguart" class="md-nav__link">
+    Passthrough VCK190(JTAG/UART)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    Network
+  </a>
+  
+    <nav class="md-nav" aria-label="Network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#introduction-to-network-speed" class="md-nav__link">
+    Introduction to network speed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#introduction-to-router" class="md-nav__link">
+    Introduction to router
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-network-system" class="md-nav__link">
+    Configure Network System
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-access-by-openvpn" class="md-nav__link">
+    Remote access by OpenVPN
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-desktop" class="md-nav__link">
+    Remote desktop
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -593,30 +707,146 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#verilog" class="md-nav__link">
-    Verilog
+  <a href="#preparation" class="md-nav__link">
+    Preparation
   </a>
   
-    <nav class="md-nav" aria-label="Verilog">
+    <nav class="md-nav" aria-label="Preparation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#vl1" class="md-nav__link">
-    VL1 四选一多路器
+  <a href="#install-proxmox-ve-gui-interface" class="md-nav__link">
+    Install Proxmox VE GUI interface
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#vl2-t" class="md-nav__link">
-    VL2 异步复位的串联T触发器
+  <a href="#how-to-open-pve-gui-interface-in-lan" class="md-nav__link">
+    How to open PVE GUI interface in LAN
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#vl3" class="md-nav__link">
-    VL3 奇偶校验
+  <a href="#add-disk-into-pve" class="md-nav__link">
+    Add disk into PVE
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-osservice-in-vm" class="md-nav__link">
+    Install os/service in VM
+  </a>
+  
+    <nav class="md-nav" aria-label="Install os/service in VM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ubuntu" class="md-nav__link">
+    Ubuntu
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#windows" class="md-nav__link">
+    Windows
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dockerportainer" class="md-nav__link">
+    Docker/Portainer
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passthrough" class="md-nav__link">
+    Passthrough
+  </a>
+  
+    <nav class="md-nav" aria-label="Passthrough">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-the-onboard-sound" class="md-nav__link">
+    Passthrough the onboard sound
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-the-xbox-one-controller" class="md-nav__link">
+    Passthrough the Xbox one controller
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-vck190jtaguart" class="md-nav__link">
+    Passthrough VCK190(JTAG/UART)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network" class="md-nav__link">
+    Network
+  </a>
+  
+    <nav class="md-nav" aria-label="Network">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#introduction-to-network-speed" class="md-nav__link">
+    Introduction to network speed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#introduction-to-router" class="md-nav__link">
+    Introduction to router
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-network-system" class="md-nav__link">
+    Configure Network System
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-access-by-openvpn" class="md-nav__link">
+    Remote access by OpenVPN
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remote-desktop" class="md-nav__link">
+    Remote desktop
   </a>
   
 </li>
@@ -647,68 +877,124 @@
   
 
 
-  <h1>NowCoder tutorial</h1>
+  <h1>Proxmox VE Tutorial</h1>
 
-<h2 id="verilog">Verilog</h2>
-<h3 id="vl1">VL1 四选一多路器</h3>
-<p>Website: <a href="https://www.nowcoder.com/practice/cba4617e1ef64e9ea52cbb400a0725a3?tpId=301&tqId=5000604&ru=/exam/oj&qru=/ta/verilog-start/question-ranking&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301" target="_blank">https://www.nowcoder.com/practice/cba4617e1ef64e9ea52cbb400a0725a3?tpId=301&amp;tqId=5000604&amp;ru=/exam/oj&amp;qru=/ta/verilog-start/question-ranking&amp;sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301</a></p>
-<p>三元運算子就是二選一多工器，透過3個三元運算子，就能實作出一個四選一多工器。
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="no">`timescale</span><span class="w"> </span><span class="mh">1</span><span class="n">ns</span><span class="o">/</span><span class="mh">1</span><span class="n">ns</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">mux4_1</span><span class="p">(</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="n">d1</span><span class="p">,</span><span class="n">d2</span><span class="p">,</span><span class="n">d3</span><span class="p">,</span><span class="n">d0</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="n">sel</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">output</span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="n">mux_out</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">);</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="kt">wire</span><span class="w"> </span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="n">sel1</span><span class="p">,</span><span class="w"> </span><span class="n">sel2</span><span class="p">;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">assign</span><span class="w"> </span><span class="n">mux_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel</span><span class="p">[</span><span class="mh">1</span><span class="p">]</span><span class="o">?</span><span class="w"> </span><span class="nl">sel2:</span><span class="w"> </span><span class="n">sel1</span><span class="p">;</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">assign</span><span class="w"> </span><span class="n">sel2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel</span><span class="p">[</span><span class="mh">0</span><span class="p">]</span><span class="o">?</span><span class="w"> </span><span class="nl">d0:</span><span class="w"> </span><span class="n">d1</span><span class="p">;</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">assign</span><span class="w"> </span><span class="n">sel1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel</span><span class="p">[</span><span class="mh">0</span><span class="p">]</span><span class="o">?</span><span class="w"> </span><span class="nl">d2:</span><span class="w"> </span><span class="n">d3</span><span class="p">;</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div></p>
-<hr />
-<h3 id="vl2-t">VL2 异步复位的串联T触发器</h3>
-<p>Website: <a href="https://www.nowcoder.com/practice/9c8cb743919d405b9dac28eadecddfb5?tpId=301&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301" target="_blank">https://www.nowcoder.com/practice/9c8cb743919d405b9dac28eadecddfb5?tpId=301&amp;tags=&amp;title=&amp;difficulty=0&amp;judgeStatus=0&amp;rp=0&amp;sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301</a></p>
-<p>這題練習將TFF接成pipeline的樣子，用always block就能寫出sequential logic。
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="no">`timescale</span><span class="w"> </span><span class="mh">1</span><span class="n">ns</span><span class="o">/</span><span class="mh">1</span><span class="n">ns</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">Tff_2</span><span class="w"> </span><span class="p">(</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">input</span><span class="w"> </span><span class="kt">wire</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">clk</span><span class="p">,</span><span class="w"> </span><span class="n">rst</span><span class="p">,</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">output</span><span class="w"> </span><span class="kt">reg</span><span class="w"> </span><span class="n">q</span><span class="w">  </span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">);</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="kt">reg</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">always</span><span class="p">@(</span><span class="k">posedge</span><span class="w"> </span><span class="n">clk</span><span class="p">,</span><span class="w"> </span><span class="k">negedge</span><span class="w"> </span><span class="n">rst</span><span class="p">)</span><span class="w"> </span><span class="k">begin</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">rst</span><span class="p">)</span><span class="k">begin</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">            </span><span class="n">temp</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">;</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="n">q</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">;</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="k">end</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="k">begin</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">            </span><span class="n">temp</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">            </span><span class="n">q</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">temp</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">q</span><span class="p">;</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="k">end</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="k">end</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div></p>
-<hr />
-<h3 id="vl3">VL3 奇偶校验</h3>
-<p>Website: <a href="https://www.nowcoder.com/practice/67d4dd382bb44c559a1d0a023857a7a6?tpId=301&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301" target="_blank">https://www.nowcoder.com/practice/67d4dd382bb44c559a1d0a023857a7a6?tpId=301&amp;tags=&amp;title=&amp;difficulty=0&amp;judgeStatus=0&amp;rp=0&amp;sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DVerilog%25E7%25AF%2587%26topicId%3D301</a></p>
-<p>這題練習怎麼一次xor一串array。
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="no">`timescale</span><span class="w"> </span><span class="mh">1</span><span class="n">ns</span><span class="o">/</span><span class="mh">1</span><span class="n">ns</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">odd_sel</span><span class="p">(</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">31</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">bus</span><span class="p">,</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">input</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">output</span><span class="w"> </span><span class="n">check</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">);</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">assign</span><span class="w"> </span><span class="n">check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="p">((</span><span class="o">^</span><span class="n">bus</span><span class="p">)</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">sel</span><span class="p">);</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a><span class="c1">//*************code***********//</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div></p>
+<h2 id="preparation">Preparation</h2>
+<h3 id="install-proxmox-ve-gui-interface">Install Proxmox VE GUI interface</h3>
+<ol>
+<li>https://youtu.be/_sfddZHhOj4?si=KD_1tgDCVTP41ZYQ</li>
+<li>https://ithelp.ithome.com.tw/m/articles/10265378</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>如果是家用網路，在灌PVE時，強烈建議要接在router後，一切設定在內網內，不然遠端連線配置會有不少問題。然後可以先用其他電腦查看router的default gateway和dns，並照著填，可以省去很多麻煩。另外可以參考下列Introduction to router和Configure Network System章節，對router有進一步認識。</p>
+</div>
+<h3 id="how-to-open-pve-gui-interface-in-lan">How to open PVE GUI interface in LAN</h3>
+<ol>
+<li>Use another computer to connect to the same wan_ip (use same router/same switch).</li>
+<li>Open the browser and https:// lan_ip_what_you_set :8006/</li>
+<li>type username and password</li>
+<li>user: root</li>
+<li>password: The password what you set when installing PVE</li>
+</ol>
+<h3 id="add-disk-into-pve">Add disk into PVE</h3>
+<p>https://ithelp.ithome.com.tw/m/articles/10267724</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>一開始分配disk時，可以盡量就分配一步到位。因為後續補disk要動的地方不少，如果disk不相鄰也不能合併。</p>
+</div>
+<h2 id="install-osservice-in-vm">Install os/service in VM</h2>
+<h3 id="ubuntu">Ubuntu</h3>
+<p>https://ithelp.ithome.com.tw/articles/10268866?sc=iThelpR</p>
+<h3 id="windows">Windows</h3>
+<p>Reference 1(recommendation):
+https://www.youtube.com/watch?v=BoMlfk397h0&amp;list=PLXJCC3PRO2aCDQStpAYt9_SzHnVAmhq3_&amp;index=1&amp;ab_channel=HardwareHaven
+* Including:
+1. Network: Virtio (paravirtualized)
+2. Passthrough: GPU
+3. Low-latency Remote Connectivity Software: Parsec</p>
+<p>Reference 2:
+1. Install: https://ithelp.ithome.com.tw/articles/10268516<br />
+Maybe you need to refer this tutorial to resolve the dirve problem: https://blog.sakamoto.cat/zai-proxmox-ve-zhong-an-zhuang-windows10-yu-xiang-guan-qu-dong/</p>
+<ol>
+<li>Improve the performance: https://ithelp.ithome.com.tw/articles/10269679</li>
+</ol>
+<h3 id="dockerportainer">Docker/Portainer</h3>
+<p>https://honeststore.com.tw/install-oracle-linux-and-docker-on-proxmoxs-vm/</p>
+<h2 id="passthrough">Passthrough</h2>
+<h3 id="passthrough-the-onboard-sound">Passthrough the onboard sound</h3>
+<ol>
+<li><code>lspci -v</code> in the shell and see the device id of sound card.
+<img alt="" src="https://i.imgur.com/wfCEkoW.png" /></li>
+<li>Insert the earphone, and add the corresponding PCI Device in the VM hardware.
+<img alt="" src="https://i.imgur.com/vU9ORPf.png" /></li>
+</ol>
+<h3 id="passthrough-the-xbox-one-controller">Passthrough the Xbox one controller</h3>
+<p>https://www.reddit.com/r/Proxmox/comments/esghjp/cant_get_xbox_one_controller_to_passthrough/</p>
+<h3 id="passthrough-vck190jtaguart">Passthrough VCK190(JTAG/UART)</h3>
+<ol>
+<li>Add USB device of VCK190 in Ubuntu18.04.5，版本這麼神奇是因為配官方教材中的驅動程式，或許有興趣可以試看看22.04不裝uart驅動能不能動。</li>
+<li>開啟VM Ubuntu，照著這兩篇下指令，要安裝<a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads">UART驅動</a>和<a href="https://blog.csdn.net/hb_wxz/article/details/107320862">jtag驅動</a></li>
+<li>在VM Ubuntu的terminal<code>sudo adduser [username] dialout</code>來得到port和板子存取的權限，千萬不要只<code>sudo chmod 777 /dev/ttyUSB*</code>，會只得到port的權限，但讀不到板子。 </li>
+<li>在VM Ubuntu中用putty或<a href="https://xilinx.github.io/Embedded-Design-Tutorials/docs/2022.1/build/html/docs/Introduction/Versal-EDT/docs/2-cips-noc-ip-config.html">vitis內建的terminal</a>連接serial port，我的作法是將所有對應的ttyUSB全加一遍。</li>
+</ol>
+<h2 id="network">Network</h2>
+<h3 id="introduction-to-network-speed">Introduction to network speed</h3>
+<p>我不是網路專家，不過根據家用網路經驗，還是可以給些網速的建議。
+1. 電信業：這是最直接的原因，申辦的方案會影響網速的上限。
+2. 網路線：如果是1GB的網路，Cat.5e以上的網路線就夠應付了，理論上網路線不貴。
+3. 網卡/網路晶片：接收速度有差。
+4. Router：Router裡的cpu也會影響網速。
+5. 虛擬機網路設定：如果網路使用半虛擬化(Virtio)，會比全虛擬化(intel e1000)快不少，至於快多少，可以參考<a href="https://www.twblogs.net/a/5e680116bd9eee211685cc9b">這篇</a>，所以網路能半虛擬化就半虛擬化。</p>
+<h3 id="introduction-to-router">Introduction to router</h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>有關router設定，若是實驗室使用，請找網管，我不是網管，不熟悉實驗室的router配置。這段以外行人家用或是宿舍用的角度說明。</p>
+</div>
+<p>Router是專門用來分配ip和管理Wan(Wide Area Network)和Lan(Local Area Network)的機器。也就是說，如果要從外網連回內網，就要有台router。</p>
+<p>Router又能分成硬體路由和軟路由(軟體路由)，各有優缺點:
+1. 硬體路由：可以想成一台小電腦專門處理ip分配。
+* 優點：方便，現成，外面賣的router還能快速架設vpn，還會送ddns來處理dhcp之類的浮動ip。
+* 缺點：國內硬體路由器價格盤，要挑規格。
+* 結論：若以省時為考量而買的話，可以從規格和Router管理介面下手，這也是我目前選擇購買硬體路由的原因。我個人買了AC86u，雖然無線網路規格過時，但對於有限網路，至少還是能有gigabytes的網速。
+2. 軟體路由：前面提到路由器就像一台小電腦，所以其實只要有閒置的舊電腦，就能用軟體模擬路由器。常見的軟體有pfsense，RouterOS。
+* 優點：可以用幾千元的設備兜出上萬元或十萬元的頂級硬體路由器。
+* 缺點：比較麻煩，時間和薪水比的話划不來。而且網速沒跟上的話，路由器再頂也是浪費。舉個例子，1GB的網速，如果不考量wifi，一台3000元的硬體路由(AC86u)就能解決。
+* 結論：時間多的話推薦學，是酷酷的黑科技。想學怎麼在Proxmox中開pfsense VM來當router，可以參考<a href="https://www.youtube.com/watch?v=cAkRpc6UNc4&amp;ab_channel=Shimpa%27sNetworks">這篇</a>。</p>
+<p>題外話，如果是家用網路，像是中華電信，都會附一台數據機，數據機中也有router，所以家用網路會有Lan。</p>
+<blockquote>
+<p>:warning: <strong>Warning:</strong> 但我不推薦直接使用數據機中的router，一來數據機硬體不佳，不適合處理router的事情，二來如果搞到網路出問題，就要找電信業的工程師重新設定一遍。比較好的做法是直接在數據機後接router。</p>
+</blockquote>
+<h3 id="configure-network-system">Configure Network System</h3>
+<p>https://www.youtube.com/watch?v=lq0o1LdwQKg&amp;ab_channel=Sauber-LabUK</p>
+<h3 id="remote-access-by-openvpn">Remote access by OpenVPN</h3>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>前面的操作，我們都只對內網進行操作，所以如果要遠端遙控，就是vpn回內網，至於如何vpn回內網，可以看下列兩個方案。</p>
+</div>
+<ol>
+<li>Router: 這是我採取的方案，我是買華碩AC86u，在AC86u的管理介面中，就有快速創建OpenVPN的介面，照著操作，VPN能連上後，就能連接內網了。</li>
+<li><a href="https://www.asus.com/hk/support/FAQ/1008713/">如何設定華碩無線路由器做VPN伺服器</a></li>
+<li><a href="https://www.asus.com/tw/support/FAQ/1004469">如何將您的設備連接到OpenVPN伺服器?(Windows系統)</a></li>
+<li><a href="https://www.asus.com/tw/support/FAQ/1004472">如何將您的設備連接到OpenVPN伺服器? (For Mac)</a></li>
+<li>OpenVPN in Proxmox: 雖然我不太會port forwarding，照這個reference沒成功，不過這篇教學還是有參考價值，適合熱愛infra的學生。
+https://www.youtube.com/watch?v=m4i_kkx50lw&amp;t=807s&amp;ab_channel=HomelabTim</li>
+</ol>
+<h3 id="remote-desktop">Remote desktop</h3>
+<ol>
+<li>Windows/MacOS: Parsec</li>
+<li><a href="https://www.youtube.com/watch?v=BoMlfk397h0&amp;list=PLXJCC3PRO2aCDQStpAYt9_SzHnVAmhq3_&amp;index=1&amp;ab_channel=HardwareHaven">The installation and configuration of Parsec</a></li>
+<li>Ubuntu(linux system): XRDP</li>
+<li><a href="http://c-nergy.be/blog/?p=18918">Install XRDP on ubuntu</a>: 推薦用腳本的原因在於直接安裝XRDP會讓桌面排版看起來不太一樣，操作起來不方便。
+使用腳本時，除了<code>chmod +x  ~/Downloads/xrdp-installer-1.4.7.sh</code>，接著就是<code>./xrdp-installer-1.4.7.sh -c -l -s</code>，之後重開機重新連線就正常了。</li>
+<li>Connect to ubuntu by RDP:
+<a href="https://iqmore.tw/windows-10-remote-desktop-protocol-rdp">Windows</a>
+MacOS: Download Microsoft Remote Desktop in Apple store.</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>在用RDP連線前，記得去PVE的控制介面將ubuntu VM的display設定成none，才能正常顯示畫面。</p>
+</div>
 
 
 
