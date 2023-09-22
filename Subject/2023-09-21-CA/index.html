@@ -414,8 +414,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-6-cost" class="md-nav__link">
-    (§1-6 Cost)
+  <a href="#q1-1-6-cost" class="md-nav__link">
+    Q1: (§1-6 Cost)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-1-5-power-and-energy" class="md-nav__link">
+    Q2: (§1-5 Power and Energy)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-1-7-dependability" class="md-nav__link">
+    Q3: (§1-7 Dependability)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-1-9-processor-performance-amdahls-law" class="md-nav__link">
+    Q4: (§1-9 Processor Performance &amp; Amdahl’s Law)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-a-7-instruction-encoding" class="md-nav__link">
+    Q5: (§A-7 Instruction Encoding)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-a-2-isa-classes" class="md-nav__link">
+    Q6: (§A-2 ISA classes)
   </a>
   
 </li>
@@ -608,8 +643,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-6-cost" class="md-nav__link">
-    (§1-6 Cost)
+  <a href="#q1-1-6-cost" class="md-nav__link">
+    Q1: (§1-6 Cost)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q2-1-5-power-and-energy" class="md-nav__link">
+    Q2: (§1-5 Power and Energy)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q3-1-7-dependability" class="md-nav__link">
+    Q3: (§1-7 Dependability)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q4-1-9-processor-performance-amdahls-law" class="md-nav__link">
+    Q4: (§1-9 Processor Performance &amp; Amdahl’s Law)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q5-a-7-instruction-encoding" class="md-nav__link">
+    Q5: (§A-7 Instruction Encoding)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#q6-a-2-isa-classes" class="md-nav__link">
+    Q6: (§A-2 ISA classes)
   </a>
   
 </li>
@@ -649,20 +719,18 @@
 
 <h2 id="practice">Practice</h2>
 <h3 id="ch1appa">Ch1&amp;AppA</h3>
-<h4 id="1-6-cost">(§1-6 Cost)</h4>
-<p>Many factors are involved in the price of a computer chip. Intel is spending $7 billion to
-complete its Fab 42 fabrication facility for 7 nm technology. In this case study, we explore
-a hypothetical company in the same situation and how different design decisions involving
-fabrication technology, area, and redundancy affect the cost of chips.<br />
-The company will sell a range of chips from that factory, and it needs to decide how much
-capacity to dedicate to each chip. Imagine that it will sell two chips. Phoenix is a
-completely new architecture designed with 7 nm technology in mind, whereas RedDragon
-is the same architecture as their 10 nm BlueDragon. Imagine that RedDragon will make a
-profit of $15 per defect-free chip. Phoenix will make a profit of $30 per defect-free chip.
-Each wafer has a 450 mm diameter. Assume that the wafer yield is 0.9 and refer to Figure
-1.26 for more detailed information. 
-<img alt="Alt text" src="../image.png" />
-- How much profit do you make on each wafer of Phoenix chips?  </p>
+<h4 id="q1-1-6-cost">Q1: (§1-6 Cost)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Many factors are involved in the price of a computer chip. Intel is spending $7 billion to complete its Fab 42 fabrication facility for 7 nm technology. In this case study, we explore a hypothetical company in the same situation and how different design decisions involving fabrication technology, area, and redundancy affect the cost of chips. The company will sell a range of chips from that factory, and it needs to decide how much capacity to dedicate to each chip. Imagine that it will sell two chips. Phoenix is a completely new architecture designed with 7 nm technology in mind, whereas RedDragon is the same architecture as their 10 nm BlueDragon. Imagine that RedDragon will make a profit of $15 per defect-free chip. Phoenix will make a profit of $30 per defect-free chip. Each wafer has a 450 mm diameter. Assume that the wafer yield is 0.9 and refer to Figure 1.26 for more detailed information. 
+<img alt="Alt text" src="../image.png" /></p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>How much profit do you make on each wafer of Phoenix chips?  </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
 <div class="arithmatex">\[\begin{aligned}
 DieYeild = \frac{0.9}{(1+0.04 \times 2)^{14}} = 0.306
 \end{aligned}
@@ -672,24 +740,300 @@ DiesPerWafer = \frac{\pi \times 225^{2}}{200} - \frac{\pi \times 450}{\sqrt[2]{2
 \end{aligned}
 \]</div>
 <div class="arithmatex">\[\begin{aligned}
-Profit = 30 \times 724 \times 0.306 = 6646.32(\$)
+GoodDiesPerWafer = 724 \times 0.306 = 221.544 \approx 221
 \end{aligned}
 \]</div>
-<ul>
-<li>How much profit do you make on each wafer of RedDragon chips? </li>
-</ul>
+<div class="arithmatex">\[\begin{aligned}
+Profit = 30 \times 221 = 6630(\$)
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>How much profit do you make on each wafer of RedDragon chips? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
 <div class="arithmatex">\[\begin{aligned}
 DieYeild = \frac{0.9}{(1+0.04 \times 1.2)^{14}} = 0.467
 \end{aligned}
 \]</div>
 <div class="arithmatex">\[\begin{aligned}
-DiesPerWafer = \frac{\pi \times 225^{2}}{200} - \frac{\pi \times 450}{\sqrt[2]{2 \times200}} =724.53  \approx 724
+DiesPerWafer = \frac{\pi \times 225^{2}}{120} - \frac{\pi \times 450}{\sqrt[2]{2 \times 120}} = 1234.1  \approx 1234
 \end{aligned}
 \]</div>
 <div class="arithmatex">\[\begin{aligned}
-Profit = 30 \times 724 \times 0.306 = 6646.32
+GoodDiesPerWafer = 1234 \times 0.467 = 576.278 \approx 576
 \end{aligned}
 \]</div>
+<div class="arithmatex">\[\begin{aligned}
+Profit = 15 \times 576 = 8640(\$)
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>If your demand is 50,000 RedDragon chips per month and 25,000 Phoenix chips per month, and your facility can fabricate 100 wafers a month, how many wafers should you make of each chip? Why? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<div class="arithmatex">\[\begin{aligned}
+RedDragonChips = \frac{50000}{221} = 226.244 \approx 227
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+PhoenixChips = \frac{25000}{724} = 43.402 \approx 44
+\end{aligned}
+\]</div>
+<p>因為RedDragonChips產值比較高，所以先製造RedDragonChips，而RedDragonChips需要227片wafer，所以即使我們每個月能生產100片wafer給RedDragonChips，仍然無法滿足兩種chips的所有需求。</p>
+</div>
+<h4 id="q2-1-5-power-and-energy">Q2: (§1-5 Power and Energy)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>A cell phone performs very different tasks, including streaming music, streaming video,and reading email. These tasks perform very different computing tasks. Battery life and overheating are two common problems for cell phones, so reducing power and energy consumption are critical. In this problem, we consider what to do when the user is not using the phone to its full computing capacity. For these problems, we will evaluate an unrealistic scenario in which the cell phone has no specialized processing units. Instead, it has aquad-core, general-purpose processing unit. </p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>How much dynamic energy and power are required compared to running at full power? First, suppose that the quad-core operates for 1/8 of the time and is idle for the rest of the time. That is, the clock is disabled for 7/8 of the time, with no leakage occurring during that time. Compare total dynamic energy as well as dynamic power while the core is running. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
+<p>Since the capacitance is constant, and the operating voltage remains unaffected, the power of thesystem is still the same. However, the clock is only run for an eighth of the time, leading to an eighth ofthe energy consumption. </p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>How much dynamic energy and power are required using frequency and voltage scaling? Assume frequency and voltage are both reduced to 1/8 the entire time. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
+<div class="arithmatex">\[\begin{aligned}
+Energy_{dynamic} \propto CV^{2}
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+Power_{dynamic} \propto \frac{1}{2}CV^{2}F
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+\frac{Energy_{new}}{Energy_{old}} = \frac{1}{8^{2}} = \frac{1}{64}
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+\frac{Power_{new}}{Power_{old}} = \frac{1}{8^{3}} = \frac{1}{512}
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>Now assume the voltage may not decrease below 50% of the original voltage. This voltage is referred to as the voltage floor, and any voltage lower than that will lose the state. Therefore, while the frequency can keep decreasing, the voltage cannot. Assume that the frequency is reduced to 1/8 of the origin, what are the dynamic energy and power savings in this case? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<div class="arithmatex">\[\begin{aligned}
+Energy_{dynamic} \propto CV^{2}
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+Power_{dynamic} \propto \frac{1}{2}CV^{2}F
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+\frac{Energy_{new}}{Energy_{old}} = \frac{1}{2^{2}} = \frac{1}{4}
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+\frac{Power_{new}}{Power_{old}} = \frac{1}{2^{2} \times 8} = \frac{1}{32}
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (d)</p>
+<p>How much energy is used with a dark silicon approach? This involves creating specialized ASIC hardware for each major task and power gating those elements when not in use. Only one general-purpose core would be provided, and the rest of the chip would be filled with specialized units. For email, the one core would operate for 25% the time and be turned completely off with power gating for the other 75% of the time. During the other 75% of the time, a specialized ASIC unit that requires 20% of the energy of a core would be running. Please compare the energy requirement of this dark silicon approach against the original quad-core general-purpose processor. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (d)</p>
+<div class="arithmatex">\[\begin{aligned}
+Energy_{NewProcessor} &amp;= Energy_{NewProcessor} + Energy_{ASIC}
+\\&amp;= 0.25 \times 0.25 \times Energy_{old} + 0.75 \times 0.25 \times 0.2 \times Energy_{old}
+\\&amp;= 0.1Energy_{old}
+\end{aligned}
+\]</div>
+</div>
+<h4 id="q3-1-7-dependability">Q3: (§1-7 Dependability)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Availability is the most important consideration for designing servers, followed closely by scalability and throughput.</p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>We have a single processor with a failure in time (FIT) of 200. What is the mean time to failure (MTTF) for this system? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
+<p>Failures in time (FIT) is traditionally reported as failure per billion (<span class="arithmatex">\(1 × 10^{9}\)</span>) hours of operation.   </p>
+<div class="arithmatex">\[\begin{aligned}
+MTTF = \frac{10^{9}}{200} = 5 \times 10^{6}(hours)
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>If it takes one day to get the system running again, what is the availability of the system? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
+<div class="arithmatex">\[\begin{aligned}
+MTTR = 24(hours)
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+AvailabilityOfTheSystem = \frac{5 \times 10^{6}}{24+ 5 \times 10^{6}} = 0.999995
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>Imagine that the government, to cut costs, is going to build a supercomputer out of inexpensive computers rather than expensive, reliable computers. What is the MTTF for a system with 500 processors? Assume that if one fails, they all fail. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<div class="arithmatex">\[\begin{aligned}
+FIT_{500processors} = 500 \times 200 = 10^{5}
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+MTTF = \frac{10^{9}}{10^{5}} = 10^{4}(hours)
+\end{aligned}
+\]</div>
+</div>
+<h4 id="q4-1-9-processor-performance-amdahls-law">Q4: (§1-9 Processor Performance &amp; Amdahl’s Law)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>A 2-GHz processor was used to execute a benchmark program with the instruction mix and clock cycle counts as shown in the following table：
+<img alt="Alt text" src="../image-1.png" /></p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>Assume that the total number of instructions executed is <span class="arithmatex">\(6 \times 10^{6}\)</span>, determine the effective CPI, and execution time of this program. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
+<div class="arithmatex">\[\begin{aligned}
+EffectiveCPI = 1 \times 15\% + 17 \times 30\% + 5 \times 45\% + 3 \times 10\% = 7.8(cycle)
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+ExecutionTime_{program} &amp;= NumOfInstructions \times EffectiveCPI \times \frac{1}{Frequency}
+\\&amp;= 6 \times 10^{10} \times 7.8 \times \frac{1}{2 \times 10^{9}} = 234(s)
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>Assume that a design enhancement is to reduce the CPI of the FP operations to 5 with 20% lengthening of the clock cycle time. Determine the effective CPI of the enhancement and the speedup of the enhancement to the original design. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
+<div class="arithmatex">\[\begin{aligned}
+EffectiveCPI = 1 \times 15\% + 5 \times 30\% + 5 \times 45\% + 3 \times 10\% = 4.2(cycle)
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+ExecutionTime_{program} &amp;= NumOfInstructions \times EffectiveCPI \times \frac{1}{Frequency}
+\\&amp;= 6 \times 10^{10} \times 4.2 \times \frac{1.2}{2 \times 10^{9}} = 151.2(s)
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+SpeedUp = \frac{234}{151.2} = 1.548
+\end{aligned}
+\]</div>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>Assume that we build an optimizing compiler to discard 2/3 of the Load/Store operations from the original instruction mix. Determine the fraction of the enhancement, and calculate the speedup of the enhancement to the original design using Amdahl’s law. </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<div class="arithmatex">\[\begin{aligned}
+Fraction_{Enhancement} = 45\%
+\end{aligned}
+\]</div>
+<div class="arithmatex">\[\begin{aligned}
+SpeedUp &amp;= \frac{7.8}{1 \times 15\% + 5 \times 30\% + \frac{5 \times 45\%}{3} + 3 \times 10\%}
+\\&amp;= \frac{7.8}{6.3} = 1.238
+\end{aligned}
+\]</div>
+</div>
+<h4 id="q5-a-7-instruction-encoding">Q5: (§A-7 Instruction Encoding)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>For the following, we consider instruction encoding for instruction set architectures. </p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>Consider the case of a processor with an instruction length of 14 bits and with 64 general-purpose registers so the size of the address fields is 6 bits. Is it possible to have instruction encodings for the following?   </p>
+<ul>
+<li>3 two-address instructions  </li>
+<li>63 one-address instructions  </li>
+<li>45 zero-address instructions   </li>
+</ul>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>Assuming the same instruction length and address field sizes as above, determine if it is possible to have  </p>
+<ul>
+<li>3 two-address instructions</li>
+<li>65 one-address instructions</li>
+<li>35 zero-address instructions
+Explain your answer. </li>
+</ul>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>Assume the same instruction length and address field sizes as above. Further assume there are already 3 two-address and 24 zero-address instructions. What is the maximum number of one-address instructions that can be encoded for this processor? </p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (d)</p>
+<p>Assume the same instruction length and address field sizes as above. Further assume there are already 3 two-address and 65 zero-address instructions. What is the maximum number of one-address instructions that can be encoded for this processor? </p>
+</div>
+<h4 id="q6-a-2-isa-classes">Q6: (§A-2 ISA classes)</h4>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>Your task is to compare the memory efficiency of four different styles of instruction set architectures. The architecture styles are:  </p>
+<ul>
+<li>Accumulator—All operations occur between a single register and a memory location.  </li>
+<li>Memory-memory—All instruction addresses reference only memory locations.  </li>
+<li>Stack—All operations occur on top of the stack. Push and pop are the only instructions that access memory; all others remove their operands from the stack and replace them with the result. The implementation uses a hardwired stack for only the top two stack entries, which keeps the processor circuit very small and low in cost. Additional stack positions are kept in memory locations, and accesses to these stack positions require memory references.  </li>
+<li>Load-store—All operations occur in registers, and register-to-register instructions have three register names per instruction. <br />
+To measure memory efficiency, make the following assumptions about all four instruction sets:  </li>
+<li>All instructions are an integral number of bytes in length.  </li>
+<li>The opcode is always one byte (8 bits).  </li>
+<li>Memory accesses use direct, or absolute, addressing.  </li>
+<li>The variables A, B, C, and D are initially in memory. <br />
+<img alt="Alt text" src="../image-2.png" /></li>
+</ul>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (a)</p>
+<p>Invent your own assembly language mnemonics (Figure A.2 provides a useful sample to generalize), and for each architecture write the best equivalent assembly language code for this high-level language code sequence: 
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>A =B+C;
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>B =A+C;
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>D =A–B;
+</span></code></pre></div></p>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (b)</p>
+<p>In your assembly codes for part (a), point out the following information.  </p>
+<ol>
+<li>Where a value is loaded from memory after having been loaded once?   </li>
+<li>Where the result of one instruction is passed to another instruction as an operand?   </li>
+<li>Are the above events in 2. involving the storage within the processor or in memory?   </li>
+</ol>
+</div>
+<div class="admonition question">
+<p class="admonition-title">Question (c)</p>
+<p>Assume that the given code sequence is from a small, embedded computer application that uses a 16-bit memory address and data operands. If a load-store architecture is used, assume it has 16 general-purpose registers. For each architecture answer the following questions: How many instruction bytes are fetched? How many bytes of data are transferred from/to memory? Which architecture is most efficient as measured by total memory traffic (code+data)? </p>
+</div>
 
 
 
