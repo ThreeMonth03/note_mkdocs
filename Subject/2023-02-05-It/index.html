@@ -188,6 +188,45 @@
     
     
     
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
     
       <div class="md-header__source">
         <a href="https://github.com/ThreeMonth03/note_mkdocs" title="前往倉庫" class="md-source" data-md-component="source">
@@ -649,8 +688,8 @@
 
   <h1>Information Theory and Data Compression</h1>
 
-<h2 id="information-measurement">Information measurement</h2>
-<h3 id="the-definition-of-entropy">The definition of entropy</h3>
+<h2 id="information-measurement">Information measurement<a class="headerlink" href="#information-measurement" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="the-definition-of-entropy">The definition of entropy<a class="headerlink" href="#the-definition-of-entropy" title="Anchor link to this section for reference">⚓︎</a></h3>
 <div class="arithmatex">\[\begin{aligned}
 H(X) =  - \sum_{x \in X} p(x) \log p(x)
 \end{aligned}
@@ -659,7 +698,7 @@ H(X) =  - \sum_{x \in X} p(x) \log p(x)
 <p>舉例來說，一個投擲出去的硬幣，是正面或反面的機率為1，不是正面也不是反面的機率為0，顯然這句話是廢話。<br />
 於是我們將上述的機率分佈代入entropy，算出<span class="arithmatex">\(-( 0 \log 0+ 1 \log 1 ) = 0\)</span>，廢話的entropy還真的是0。  </p>
 <p>而透過微分找極值，顯然當二項分布<span class="arithmatex">\(p=0.5\)</span>時，entropy最大，因為這個機率分佈不會暗示說哪個事件發生的可能比較大。</p>
-<h3 id="the-derivation-of-entropy">The derivation of entropy</h3>
+<h3 id="the-derivation-of-entropy">The derivation of entropy<a class="headerlink" href="#the-derivation-of-entropy" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p>通過上述簡單的介紹entropy，接著推導entropy的公式如何求得。  </p>
 <p>假如有三個事件<span class="arithmatex">\(A_{1},A_{2},A_{3}\)</span>，其對應的機率分別為<span class="arithmatex">\(p_{1},p_{2},p_{3}\)</span>。<br />
 我們將其中兩個事件<span class="arithmatex">\(A_{2},A_{3}\)</span>組成一組，使得另外有兩個事件，<span class="arithmatex">\(B_{1} = \{ A_{1} \}\)</span> <span class="arithmatex">\(,\)</span> <span class="arithmatex">\(B_{2} = \{ A_{2} , A_{3} \}\)</span>，其對應的機率為<span class="arithmatex">\(q_{1}=p_{1},q_{2}=p_{2}+p_{3}\)</span>。</p>
@@ -712,7 +751,7 @@ H(p_{1},p_{2}...,p_{i}) &amp;= K \log (\sum_{i \in I} n_{i}) - K\sum_{i \in I} p
 \]</div>
 <p>為了方便，將<span class="arithmatex">\(K\)</span>帶入<span class="arithmatex">\(1\)</span>，最後得到entropy的式子  </p>
 <div class="arithmatex">\[\tag{1.1}H=-\sum_{i \in I}p_{i}\log p_{i}\]</div>
-<h2 id="reference">Reference</h2>
+<h2 id="reference">Reference<a class="headerlink" href="#reference" title="Anchor link to this section for reference">⚓︎</a></h2>
 <ol>
 <li>Elements of Information Theory, 2nd edition</li>
 <li>Introduction to data compression, 3rd edition</li>

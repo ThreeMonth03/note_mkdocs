@@ -186,6 +186,45 @@
     
     
     
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
     
       <div class="md-header__source">
         <a href="https://github.com/ThreeMonth03/note_mkdocs" title="前往倉庫" class="md-source" data-md-component="source">
@@ -907,15 +946,15 @@
 
   <h1>Proxmox VE Tutorial</h1>
 
-<h2 id="preface-proxmox-ve">Preface - 為什麼你需要Proxmox VE</h2>
+<h2 id="preface-proxmox-ve">Preface - 為什麼你需要Proxmox VE<a class="headerlink" href="#preface-proxmox-ve" title="Anchor link to this section for reference">⚓︎</a></h2>
 <p>Proxmox VE 是一個開源的伺服器環境，可以在其中建立虛擬機和容器，其Proxmox VE是基於Debian os，他也有GUI介面可以方便操作。<br />
 而比起在windows中使用hyper-v或vmware，使用Proxmox VE最直接的好處在於PVE是一種kvm，kvm可以很有效的將硬體資源分給虛擬機，像是可以透過通透(passthrough)來讓虛擬機獨佔GPU或是fpga版。而hyper-v光是passthrough serial port就有問題，而即使是vmware pro可以passthrough serial port，也沒辦法pass through PCIE，從這就能看出PVE的好處，尤其在做fpga版開發時。  </p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>當然Proxmox VE也有缺點，不少遊戲無法在虛擬機上遊玩，像是原神或特戰英豪。即使網路上有方法可以繞過虛擬機檢測，但這些方法不保證安全。</p>
 </div>
-<h2 id="preparation">Preparation</h2>
-<h3 id="install-proxmox-ve-gui-interface">Install Proxmox VE GUI interface</h3>
+<h2 id="preparation">Preparation<a class="headerlink" href="#preparation" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="install-proxmox-ve-gui-interface">Install Proxmox VE GUI interface<a class="headerlink" href="#install-proxmox-ve-gui-interface" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li><a href="https://youtu.be/_sfddZHhOj4?si=d2sby2GmX5ZyMT36&amp;t=424">My Proxmox Home Server Walk-Through: Part 1 (TrueNAS, Portainer, Wireguard)</a></li>
 <li><a href="https://ithelp.ithome.com.tw/m/articles/10265378">Proxmox VE 準備與安裝</a></li>
@@ -924,7 +963,7 @@
 <p class="admonition-title">Warning</p>
 <p>如果是家用網路，在灌PVE時，強烈建議要接在router後，一切設定在內網內，不然遠端連線配置會有不少問題。然後可以先用其他電腦查看router的default gateway和dns，並照著填，可以省去很多麻煩。另外可以參考下列Introduction to router和Configure Network System章節，對router有進一步認識。</p>
 </div>
-<h3 id="how-to-open-pve-gui-interface-in-lan">How to open PVE GUI interface in LAN</h3>
+<h3 id="how-to-open-pve-gui-interface-in-lan">How to open PVE GUI interface in LAN<a class="headerlink" href="#how-to-open-pve-gui-interface-in-lan" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li>Use another computer to connect to the same wan_ip (use same router/same switch).</li>
 <li>Open the browser and https:// lan_ip_what_you_set :8006/</li>
@@ -932,16 +971,16 @@
 <li>user: root</li>
 <li>password: The password what you set when installing PVE</li>
 </ol>
-<h3 id="add-disk-into-pve">Add disk into PVE</h3>
+<h3 id="add-disk-into-pve">Add disk into PVE<a class="headerlink" href="#add-disk-into-pve" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p><a href="https://ithelp.ithome.com.tw/m/articles/10267724">Proxmox VE 儲存基本配置</a></p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>一開始分配disk時，可以盡量就分配一步到位。因為後續補disk要動的地方不少，如果disk不相鄰也不能合併。</p>
 </div>
-<h2 id="install-osservice-in-vm">Install os/service in VM</h2>
-<h3 id="ubuntu">Ubuntu</h3>
+<h2 id="install-osservice-in-vm">Install os/service in VM<a class="headerlink" href="#install-osservice-in-vm" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="ubuntu">Ubuntu<a class="headerlink" href="#ubuntu" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p><a href="https://ithelp.ithome.com.tw/articles/10268866?sc=iThelpR">Proxmox VE 安裝虛擬機：Ubuntu Server 20.04</a></p>
-<h3 id="windows">Windows</h3>
+<h3 id="windows">Windows<a class="headerlink" href="#windows" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p>Reference 1(recommendation):<br />
 <a href="https://youtu.be/BoMlfk397h0?si=k6bDE4D1XsrKCQeH&amp;t=628">Remote Gaming and Streaming w/ Proxmox - Proxmox Walk-Through: Part 2</a></p>
 <ul>
@@ -962,32 +1001,32 @@ Maybe you need to refer this tutorial to resolve the <a href="https://blog.sakam
 </a></p>
 </li>
 </ol>
-<h3 id="dockerportainer">Docker/Portainer</h3>
+<h3 id="dockerportainer">Docker/Portainer<a class="headerlink" href="#dockerportainer" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p><a href="https://honeststore.com.tw/install-oracle-linux-and-docker-on-proxmoxs-vm/">在Proxmox的VM上安裝Oracle Linux及Docker</a></p>
-<h2 id="passthrough">Passthrough</h2>
-<h3 id="passthrough-gpu">Passthrough GPU</h3>
+<h2 id="passthrough">Passthrough<a class="headerlink" href="#passthrough" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="passthrough-gpu">Passthrough GPU<a class="headerlink" href="#passthrough-gpu" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li><a href="https://youtu.be/BoMlfk397h0?si=k6bDE4D1XsrKCQeH&amp;t=628">Remote Gaming and Streaming w/ Proxmox - Proxmox Walk-Through: Part 2</a></li>
 <li><a href="https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to_gpu_passthrough/">The Ultimate Beginner's Guide to GPU Passthrough (Proxmox, Windows 10)</a></li>
 </ol>
-<h3 id="passthrough-the-onboard-sound">Passthrough the onboard sound</h3>
+<h3 id="passthrough-the-onboard-sound">Passthrough the onboard sound<a class="headerlink" href="#passthrough-the-onboard-sound" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li><code>lspci -v</code> in the shell and see the device id of sound card.
 <img alt="" src="https://i.imgur.com/wfCEkoW.png" /></li>
 <li>Insert the earphone, and add the corresponding PCI Device in the VM hardware.
 <img alt="" src="https://i.imgur.com/vU9ORPf.png" /></li>
 </ol>
-<h3 id="passthrough-the-xbox-one-controller">Passthrough the Xbox one controller</h3>
+<h3 id="passthrough-the-xbox-one-controller">Passthrough the Xbox one controller<a class="headerlink" href="#passthrough-the-xbox-one-controller" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p><a href="https://www.reddit.com/r/Proxmox/comments/esghjp/cant_get_xbox_one_controller_to_passthrough/">Can't get Xbox one controller to passthrough?</a></p>
-<h3 id="passthrough-vck190jtaguart">Passthrough VCK190(JTAG/UART)</h3>
+<h3 id="passthrough-vck190jtaguart">Passthrough VCK190(JTAG/UART)<a class="headerlink" href="#passthrough-vck190jtaguart" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li>Add USB device of VCK190 in Ubuntu18.04.5，版本這麼神奇是因為配官方教材中的驅動程式，或許有興趣可以試看看22.04不裝uart驅動能不能動。</li>
 <li>開啟VM Ubuntu，照著這兩篇下指令，要安裝<a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads">UART驅動</a>和<a href="https://blog.csdn.net/hb_wxz/article/details/107320862">jtag驅動</a></li>
 <li>在VM Ubuntu的terminal<code>sudo adduser [username] dialout</code>來得到port和板子存取的權限，千萬不要只<code>sudo chmod 777 /dev/ttyUSB*</code>，會只得到port的權限，但讀不到板子。 </li>
 <li>在VM Ubuntu中用putty或<a href="https://xilinx.github.io/Embedded-Design-Tutorials/docs/2022.1/build/html/docs/Introduction/Versal-EDT/docs/2-cips-noc-ip-config.html">vitis內建的terminal</a>連接serial port，我的作法是將所有對應的ttyUSB全加一遍。</li>
 </ol>
-<h2 id="network">Network</h2>
-<h3 id="introduction-to-network-speed">Introduction to network speed</h3>
+<h2 id="network">Network<a class="headerlink" href="#network" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="introduction-to-network-speed">Introduction to network speed<a class="headerlink" href="#introduction-to-network-speed" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p>我不是網路專家，不過根據家用網路經驗，還是可以給些網速的建議。 </p>
 <ol>
 <li>電信業：這是最直接的原因，申辦的方案會影響網速的上限。  </li>
@@ -996,7 +1035,7 @@ Maybe you need to refer this tutorial to resolve the <a href="https://blog.sakam
 <li>Router：Router裡的cpu也會影響網速。  </li>
 <li>虛擬機網路設定：如果網路使用半虛擬化(Virtio)，會比全虛擬化(intel e1000)快不少，至於快多少，可以參考<a href="https://www.twblogs.net/a/5e680116bd9eee211685cc9b">這篇</a>，所以網路能半虛擬化就半虛擬化。  </li>
 </ol>
-<h3 id="introduction-to-router">Introduction to router</h3>
+<h3 id="introduction-to-router">Introduction to router<a class="headerlink" href="#introduction-to-router" title="Anchor link to this section for reference">⚓︎</a></h3>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>有關router設定，若是實驗室使用，請找網管，我不是網管，不熟悉實驗室的router配置。這段以外行人家用或是宿舍用的角度說明。</p>
@@ -1022,9 +1061,9 @@ Maybe you need to refer this tutorial to resolve the <a href="https://blog.sakam
 <p class="admonition-title">Info</p>
 <p>題外話，家用中華電信預設是浮動ip，為了讓pve可以順利從Wan連回Lan，可以去申請固定ip，或是現有的router可能也有DDNS可以處理浮動ip問題。</p>
 </div>
-<h3 id="configure-network-system">Configure Network System</h3>
+<h3 id="configure-network-system">Configure Network System<a class="headerlink" href="#configure-network-system" title="Anchor link to this section for reference">⚓︎</a></h3>
 <p><a href="https://www.youtube.com/watch?v=lq0o1LdwQKg&amp;ab_channel=Sauber-LabUK">Proxmox Part 10: Let's configure our network system to create different connections</a></p>
-<h3 id="remote-access-by-openvpn">Remote access by OpenVPN</h3>
+<h3 id="remote-access-by-openvpn">Remote access by OpenVPN<a class="headerlink" href="#remote-access-by-openvpn" title="Anchor link to this section for reference">⚓︎</a></h3>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>前面的操作，我們都只對內網進行操作，所以如果要遠端遙控，就是vpn回內網，至於如何vpn回內網，可以看下列兩個方案。</p>
@@ -1037,7 +1076,7 @@ Maybe you need to refer this tutorial to resolve the <a href="https://blog.sakam
 <li>OpenVPN in Proxmox: 雖然我不太會port forwarding，照這個reference沒成功，不過這篇教學還是有參考價值，適合熱愛infra的學生。<br />
 Reference: <a href="https://www.youtube.com/watch?v=m4i_kkx50lw&amp;t=807s&amp;ab_channel=HomelabTim">Creating a VPN with Proxmox</a></li>
 </ol>
-<h3 id="remote-desktop">Remote desktop</h3>
+<h3 id="remote-desktop">Remote desktop<a class="headerlink" href="#remote-desktop" title="Anchor link to this section for reference">⚓︎</a></h3>
 <ol>
 <li>Windows/MacOS: Parsec</li>
 <li><a href="https://www.youtube.com/watch?v=BoMlfk397h0&amp;list=PLXJCC3PRO2aCDQStpAYt9_SzHnVAmhq3_&amp;index=1&amp;ab_channel=HardwareHaven">The installation and configuration of Parsec</a></li>

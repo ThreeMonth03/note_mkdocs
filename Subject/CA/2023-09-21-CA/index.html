@@ -188,6 +188,45 @@
     
     
     
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜尋" placeholder="搜尋" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="搜尋">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清除" aria-label="清除" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜尋引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
     
       <div class="md-header__source">
         <a href="https://github.com/ThreeMonth03/note_mkdocs" title="前往倉庫" class="md-source" data-md-component="source">
@@ -717,9 +756,9 @@
 
   <h1>Computer Architecture</h1>
 
-<h2 id="practice">Practice</h2>
-<h3 id="ch1appa">Ch1&amp;AppA</h3>
-<h4 id="q1-1-6-cost">Q1: (§1-6 Cost)</h4>
+<h2 id="practice">Practice<a class="headerlink" href="#practice" title="Anchor link to this section for reference">⚓︎</a></h2>
+<h3 id="ch1appa">Ch1&amp;AppA<a class="headerlink" href="#ch1appa" title="Anchor link to this section for reference">⚓︎</a></h3>
+<h4 id="q1-1-6-cost">Q1: (§1-6 Cost)<a class="headerlink" href="#q1-1-6-cost" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>Many factors are involved in the price of a computer chip. Intel is spending $7 billion to complete its Fab 42 fabrication facility for 7 nm technology. In this case study, we explore a hypothetical company in the same situation and how different design decisions involving fabrication technology, area, and redundancy affect the cost of chips. The company will sell a range of chips from that factory, and it needs to decide how much capacity to dedicate to each chip. Imagine that it will sell two chips. Phoenix is a completely new architecture designed with 7 nm technology in mind, whereas RedDragon is the same architecture as their 10 nm BlueDragon. Imagine that RedDragon will make a profit of $15 per defect-free chip. Phoenix will make a profit of $30 per defect-free chip. Each wafer has a 450 mm diameter. Assume that the wafer yield is 0.9 and refer to Figure 1.26 for more detailed information. 
@@ -787,7 +826,7 @@ PhoenixChips = \frac{25000}{724} = 43.402 \approx 44
 \]</div>
 <p>因為RedDragonChips產值比較高，所以先製造RedDragonChips，而RedDragonChips需要227片wafer，所以即使我們每個月能生產100片wafer給RedDragonChips，仍然無法滿足兩種chips的所有需求。</p>
 </div>
-<h4 id="q2-1-5-power-and-energy">Q2: (§1-5 Power and Energy)</h4>
+<h4 id="q2-1-5-power-and-energy">Q2: (§1-5 Power and Energy)<a class="headerlink" href="#q2-1-5-power-and-energy" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>A cell phone performs very different tasks, including streaming music, streaming video,and reading email. These tasks perform very different computing tasks. Battery life and overheating are two common problems for cell phones, so reducing power and energy consumption are critical. In this problem, we consider what to do when the user is not using the phone to its full computing capacity. For these problems, we will evaluate an unrealistic scenario in which the cell phone has no specialized processing units. Instead, it has aquad-core, general-purpose processing unit. </p>
@@ -859,7 +898,7 @@ Energy_{NewProcessor} &amp;= Energy_{NewProcessor} + Energy_{ASIC}
 \end{aligned}
 \]</div>
 </div>
-<h4 id="q3-1-7-dependability">Q3: (§1-7 Dependability)</h4>
+<h4 id="q3-1-7-dependability">Q3: (§1-7 Dependability)<a class="headerlink" href="#q3-1-7-dependability" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>Availability is the most important consideration for designing servers, followed closely by scalability and throughput.</p>
@@ -906,7 +945,7 @@ MTTF = \frac{10^{9}}{10^{5}} = 10^{4}(hours)
 \end{aligned}
 \]</div>
 </div>
-<h4 id="q4-1-9-processor-performance-amdahls-law">Q4: (§1-9 Processor Performance &amp; Amdahl’s Law)</h4>
+<h4 id="q4-1-9-processor-performance-amdahls-law">Q4: (§1-9 Processor Performance &amp; Amdahl’s Law)<a class="headerlink" href="#q4-1-9-processor-performance-amdahls-law" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>A 2-GHz processor was used to execute a benchmark program with the instruction mix and clock cycle counts as shown in the following table：
@@ -964,7 +1003,7 @@ SpeedUp &amp;= \frac{1}{(1 - 0.288) + \frac{0.288}{3}}
 \end{aligned}
 \]</div>
 </div>
-<h4 id="q5-a-7-instruction-encoding">Q5: (§A-7 Instruction Encoding)</h4>
+<h4 id="q5-a-7-instruction-encoding">Q5: (§A-7 Instruction Encoding)<a class="headerlink" href="#q5-a-7-instruction-encoding" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>For the following, we consider instruction encoding for instruction set architectures. </p>
@@ -996,7 +1035,7 @@ SpeedUp &amp;= \frac{1}{(1 - 0.288) + \frac{0.288}{3}}
 <p class="admonition-title">Question (d)</p>
 <p>Assume the same instruction length and address field sizes as above. Further assume there are already 3 two-address and 65 zero-address instructions. What is the maximum number of one-address instructions that can be encoded for this processor? </p>
 </div>
-<h4 id="q6-a-2-isa-classes">Q6: (§A-2 ISA classes)</h4>
+<h4 id="q6-a-2-isa-classes">Q6: (§A-2 ISA classes)<a class="headerlink" href="#q6-a-2-isa-classes" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
 <p>Your task is to compare the memory efficiency of four different styles of instruction set architectures. The architecture styles are:  </p>
