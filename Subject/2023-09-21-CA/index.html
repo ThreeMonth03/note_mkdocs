@@ -816,15 +816,16 @@ Profit = 15 \times 576 = 8640(\$)
 </div>
 <div class="admonition answer">
 <p class="admonition-title">Answer (c)</p>
+<p>從answer(a)(b)得知RedDragoen wafer每片利潤8640元，比起Phoenix wafer每片利潤6630元高，所以優先做RedDragon chip。</p>
 <div class="arithmatex">\[\begin{aligned}
-RedDragonChips = \frac{50000}{221} = 226.244 \approx 227
+RedDragonChips = \frac{50000}{576} = 86.8 \approx 87
 \end{aligned}
 \]</div>
 <div class="arithmatex">\[\begin{aligned}
-PhoenixChips = \frac{25000}{724} = 43.402 \approx 44
+PhoenixChips = 100 - 87 = 13
 \end{aligned}
 \]</div>
-<p>因為RedDragonChips產值比較高，所以先製造RedDragonChips，而RedDragonChips需要227片wafer，所以即使我們每個月能生產100片wafer給RedDragonChips，仍然無法滿足兩種chips的所有需求。</p>
+<p>從上述得知，用來製作RedDragon chips的wafer共87片，而用來製作Phoenix chips的wafer共13片。</p>
 </div>
 <h4 id="q2-1-5-power-and-energy">Q2: (§1-5 Power and Energy)<a class="headerlink" href="#q2-1-5-power-and-energy" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
@@ -1017,6 +1018,17 @@ SpeedUp &amp;= \frac{1}{(1 - 0.288) + \frac{0.288}{3}}
 <li>45 zero-address instructions   </li>
 </ul>
 </div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
+<p>題目說明了每個address都要用6 bits編碼。    </p>
+<div class="arithmatex">\[\begin{aligned}
+3TwoAddressInstructions &amp;= \lceil log_23 \rceil + 6 \times 2(Instructions) = 14(bits)
+\\ 63OneAddressInstructions &amp;= \lceil log_23 \rceil + \lceil log_263 \rceil + 6 \times 1(Instructions) = 14(bits)
+\\ 45ZeroAddressInstructions &amp;= \lceil log_23 \rceil + \lceil log_263 \rceil +\lceil log_245 \rceil + 6 \times 0(Instructions) = 14(bits)
+\end{aligned}
+\]</div>
+<p>從上述運算可以看出，這三個的最短編碼都不超過14bits，所以這的編碼是可以實現的。</p>
+</div>
 <div class="admonition question">
 <p class="admonition-title">Question (b)</p>
 <p>Assuming the same instruction length and address field sizes as above, determine if it is possible to have  </p>
@@ -1027,13 +1039,39 @@ SpeedUp &amp;= \frac{1}{(1 - 0.288) + \frac{0.288}{3}}
 </ul>
 <p>Explain your answer. </p>
 </div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
+<p>題目說明了每個address都要用6 bits編碼。    </p>
+<div class="arithmatex">\[\begin{aligned}
+3TwoAddressInstructions &amp;= \lceil log_23 \rceil + 6 \times 2(Instructions) = 14(bits)
+\\ 63OneAddressInstructions &amp;= \lceil log_23 \rceil + \lceil log_265 \rceil + 6 \times 1(Instructions) = 15(bits)
+\end{aligned}
+\]</div>
+<p>從上述運算可以看出會超過14bits，所以這個的編碼是不可以實現的。</p>
+</div>
 <div class="admonition question">
 <p class="admonition-title">Question (c)</p>
 <p>Assume the same instruction length and address field sizes as above. Further assume there are already 3 two-address and 24 zero-address instructions. What is the maximum number of one-address instructions that can be encoded for this processor? </p>
 </div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<div class="arithmatex">\[\begin{aligned}
+min(14 - 2 - 5 , 6) &amp;= 6  
+\\ 2^{6} - 1 &amp;= 63(instructions)
+\end{aligned}
+\]</div>
+</div>
 <div class="admonition question">
 <p class="admonition-title">Question (d)</p>
 <p>Assume the same instruction length and address field sizes as above. Further assume there are already 3 two-address and 65 zero-address instructions. What is the maximum number of one-address instructions that can be encoded for this processor? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (d)</p>
+<div class="arithmatex">\[\begin{aligned}
+\lceil log_265 \rceil - 6 &amp;= 1  
+\\ 2^6 - 2^1 &amp;= 62(Instructions)
+\end{aligned}
+\]</div>
 </div>
 <h4 id="q6-a-2-isa-classes">Q6: (§A-2 ISA classes)<a class="headerlink" href="#q6-a-2-isa-classes" title="Anchor link to this section for reference">⚓︎</a></h4>
 <div class="admonition info">
@@ -1060,6 +1098,13 @@ To measure memory efficiency, make the following assumptions about all four inst
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>D =A–B;
 </span></code></pre></div></p>
 </div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (a)</p>
+<p><img alt="Image" src="https://i.imgur.com/QzA1sPG.png" /> <br />
+<img alt="Image" src="https://i.imgur.com/d8Ier52.png" /> <br />
+<img alt="Image" src="https://i.imgur.com/Eth6NcU.png" /> <br />
+<img alt="Image" src="https://i.imgur.com/KeLAocy.png" />   </p>
+</div>
 <div class="admonition question">
 <p class="admonition-title">Question (b)</p>
 <p>In your assembly codes for part (a), point out the following information.  </p>
@@ -1069,9 +1114,38 @@ To measure memory efficiency, make the following assumptions about all four inst
 <li>Are the above events in 2. involving the storage within the processor or in memory?   </li>
 </ol>
 </div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (b)</p>
+<ol>
+<li>
+<p>Accumulator: register
+   Stack: stack
+   Memory-memory: 不會load
+   Register-register: register</p>
+</li>
+<li>
+<p>Accumulator: memory
+   Stack: memory
+   Memory-memory: memory
+   Register-register: register</p>
+</li>
+<li>
+<p>Accumulator: 運算在stack(processor)，用memory傳值
+   Stack: 運算在stack(processor)，用memory傳值
+   Memory-memory: 都在memory
+   Register-register: 都在register</p>
+</li>
+</ol>
+</div>
 <div class="admonition question">
 <p class="admonition-title">Question (c)</p>
 <p>Assume that the given code sequence is from a small, embedded computer application that uses a 16-bit memory address and data operands. If a load-store architecture is used, assume it has 16 general-purpose registers. For each architecture answer the following questions: How many instruction bytes are fetched? How many bytes of data are transferred from/to memory? Which architecture is most efficient as measured by total memory traffic (code+data)? </p>
+</div>
+<div class="admonition answer">
+<p class="admonition-title">Answer (c)</p>
+<p><img alt="Image" src="https://i.imgur.com/0kFYCq3.png" /> <br />
+<img alt="Image" src="https://i.imgur.com/57lLyGW.png" /> <br />
+<img alt="Image" src="https://i.imgur.com/lXXL3HL.png" />   </p>
 </div>
 
 
