@@ -12,25 +12,27 @@
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/">
+        <link rel="canonical" href="https://note.threemonth03.com/hdlbits/circuits/multiplexers/">
       
       
+        <link rel="prev" href="../basic-gates/">
       
-        <link rel="next" href="hdlbits/">
       
-      <link rel="icon" href="assets/images/favicon.png">
+        <link rel="next" href="../arithmetic/">
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>君實的技術筆記</title>
+        <title>Multiplexers - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -87,7 +89,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -116,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#multiplexers" class="md-skip">
           跳轉到
         </a>
       
@@ -132,7 +134,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -151,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              首頁
+              Multiplexers
             
           </span>
         </div>
@@ -237,12 +239,10 @@
         
   
   
-    
-  
 
 
   <li class="md-tabs__item">
-    <a href="." class="md-tabs__link md-tabs__link--active">
+    <a href="../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -251,13 +251,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="hdlbits/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
         HDLBits
       </a>
     </li>
@@ -273,7 +275,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="pve/" class="md-tabs__link">
+      <a href="../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -307,7 +309,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -324,59 +326,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          首頁
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
         首頁
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    章節
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    版權聲明
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -387,14 +341,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
       
         
@@ -417,7 +373,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="hdlbits/">HDLBits</a>
+          <a href="../../">HDLBits</a>
           
             <label for="__nav_2">
               <span class="md-nav__icon md-icon"></span>
@@ -425,7 +381,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           HDLBits
@@ -440,7 +396,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -493,7 +449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verilog-language/basics/" class="md-nav__link">
+      <a href="../../verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -507,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verilog-language/vectors/" class="md-nav__link">
+      <a href="../../verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -521,7 +477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verilog-language/modules/" class="md-nav__link">
+      <a href="../../verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -535,7 +491,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verilog-language/procedures/" class="md-nav__link">
+      <a href="../../verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -549,7 +505,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verilog-language/more-features/" class="md-nav__link">
+      <a href="../../verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -568,14 +524,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" checked>
       
       
         
@@ -606,7 +564,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_2_4">
           <span class="md-nav__icon md-icon"></span>
           Circuits
@@ -619,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/basic-gates/" class="md-nav__link">
+      <a href="../basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -631,11 +589,80 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="hdlbits/circuits/multiplexers/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Multiplexers
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Multiplexers
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#2-to-1-multiplexer" class="md-nav__link">
+    2-to-1 multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-to-1-bus-multiplexer" class="md-nav__link">
+    2-to-1 bus multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-to-1-multiplexer" class="md-nav__link">
+    9-to-1 multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#256-to-1-multiplexer" class="md-nav__link">
+    256-to-1 multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#256-to-1-4-bit-multiplexer" class="md-nav__link">
+    256-to-1 4-bit multiplexer
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -647,7 +674,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/arithmetic/" class="md-nav__link">
+      <a href="../arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -661,7 +688,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -675,7 +702,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -689,7 +716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/counters/" class="md-nav__link">
+      <a href="../counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -703,7 +730,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/shift-registers/" class="md-nav__link">
+      <a href="../shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -717,7 +744,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/more-circuits/" class="md-nav__link">
+      <a href="../more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -731,7 +758,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -745,7 +772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -799,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verification/reading-simulations/" class="md-nav__link">
+      <a href="../../verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -813,7 +840,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -834,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="hdlbits/cs450/" class="md-nav__link">
+      <a href="../../cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -874,7 +901,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="pve/">Proxmox VE</a>
+          <a href="../../../pve/">Proxmox VE</a>
           
         </div>
       
@@ -920,15 +947,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    章節
+  <a href="#2-to-1-multiplexer" class="md-nav__link">
+    2-to-1 multiplexer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    版權聲明
+  <a href="#2-to-1-bus-multiplexer" class="md-nav__link">
+    2-to-1 bus multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-to-1-multiplexer" class="md-nav__link">
+    9-to-1 multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#256-to-1-multiplexer" class="md-nav__link">
+    256-to-1 multiplexer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#256-to-1-4-bit-multiplexer" class="md-nav__link">
+    256-to-1 4-bit multiplexer
   </a>
   
 </li>
@@ -951,16 +999,79 @@
 
 
 
-<h1 id="_1">筆記說明</h1>
-<p>這裡是君實的技術筆記網站，包含基礎資工知識和工具的使用。</p>
-<h2 id="_2">章節</h2>
-<ul>
-<li><a href="hdlbits/">HDLBits Tutorial</a>：HDLBits的所有題目解答，Verilog 練習題解與語法整理。</li>
-<li><a href="pve/">Proxmox VE Tutorial</a>：Proxmox VE 安裝、虛擬機配置、硬體 passthrough、網路與遠端連線筆記。</li>
-</ul>
-<h2 id="_3">版權聲明</h2>
-<p>除頁面另有標示外，這裡的文字內容由我整理撰寫，著作權歸張君實所有。未經授權，請勿將本站內容用於商業用途；若需引用、轉載或改作，請保留原始連結與作者資訊。</p>
-<p>本站部分內容會引用外部文件、教學文章或社群討論，相關資料之著作權歸原作者或原網站所有。</p>
+<h1 id="multiplexers">Multiplexers</h1>
+<h2 id="2-to-1-multiplexer">2-to-1 multiplexer</h2>
+<blockquote>
+<p>原題：<a href="https://hdlbits.01xz.net/wiki/Mux2to1">2-to-1 multiplexer</a></p>
+</blockquote>
+<p>可以用三元運算子簡潔地寫出 multiplexer。</p>
+<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span><span class="w"> </span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel</span><span class="o">?</span><span class="w"> </span><span class="nl">b:</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">endmodule</span>
+</span></code></pre></div>
+<h2 id="2-to-1-bus-multiplexer">2-to-1 bus multiplexer</h2>
+<blockquote>
+<p>原題：<a href="https://hdlbits.01xz.net/wiki/Mux2to1v">2-to-1 bus multiplexer</a></p>
+</blockquote>
+<p>和前一題類似，可以用三元運算子簡潔地寫出 vector 的 multiplexer。</p>
+<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">99</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="p">[</span><span class="mh">99</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
+</span></code></pre></div>
+<h2 id="9-to-1-multiplexer">9-to-1 multiplexer</h2>
+<blockquote>
+<p>原題：<a href="https://hdlbits.01xz.net/wiki/Mux9to1v">9-to-1 multiplexer</a></p>
+</blockquote>
+<p>可以用<code>case</code> 來實現9-to-1 multiplexer。</p>
+<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">15</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">g</span><span class="p">,</span><span class="w"> </span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">3</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="p">[</span><span class="mh">15</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="k">always</span><span class="p">@(</span><span class="o">*</span><span class="p">)</span><span class="k">begin</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="k">case</span><span class="p">(</span><span class="n">sel</span><span class="p">)</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0000</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0001</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0010</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0011</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0100</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">e</span><span class="p">;</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0101</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f</span><span class="p">;</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><a href="#__codelineno-2-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0110</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">g</span><span class="p">;</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14"></a><a href="#__codelineno-2-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b0111</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h</span><span class="p">;</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15"></a><a href="#__codelineno-2-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">            </span><span class="mh">4</span><span class="mb">&#39;b1000</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16"></a><a href="#__codelineno-2-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">            </span><span class="k">default</span><span class="o">:</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mh">16</span><span class="p">{</span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="p">}};</span>
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17"></a><a href="#__codelineno-2-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">        </span><span class="k">endcase</span>
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18"></a><a href="#__codelineno-2-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="k">end</span>
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19"></a><a href="#__codelineno-2-19"><span class="linenos" data-linenos="19 "></span></a><span class="k">endmodule</span>
+</span></code></pre></div>
+<h2 id="256-to-1-multiplexer">256-to-1 multiplexer</h2>
+<blockquote>
+<p>原題：<a href="https://hdlbits.01xz.net/wiki/Mux256to1">256-to-1 multiplexer</a></p>
+</blockquote>
+<p>講述sel也可以放在index的位置。</p>
+<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">255</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">in</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="n">sel</span><span class="p">];</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
+</span></code></pre></div>
+<h2 id="256-to-1-4-bit-multiplexer">256-to-1 4-bit multiplexer</h2>
+<blockquote>
+<p>原題：<a href="https://hdlbits.01xz.net/wiki/Mux256to1v">256-to-1 4-bit multiplexer</a></p>
+</blockquote>
+<p>題目講說<code>assign out = in[4*sel+3 :4*sel];</code>會編不過，所以可以改寫成<code>assign out = in[4*sel +:4];</code>，從4*sel的地方往上取4位。</p>
+<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">1023</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">in</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="p">[</span><span class="mh">7</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="p">[</span><span class="mh">3</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">[</span><span class="mh">4</span><span class="o">*</span><span class="n">sel</span><span class="w"> </span><span class="o">+:</span><span class="mh">4</span><span class="p">];</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
+</span></code></pre></div>
 
 
 
@@ -1002,13 +1113,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="javascripts/mathjax.js"></script>
+          <script src="../../../javascripts/mathjax.js"></script>
         
       
         

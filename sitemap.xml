@@ -2,47 +2,112 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://note.threemonth03.com/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Coding-Exercise/2023-06-15-HDLBits/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Coding-Exercise/2023-07-30-nowcoder/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/cs450/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Subject/2023-02-05-It/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/getting-started/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Subject/2023-02-06-c%2B%2B/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/arithmetic/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Subject/2023-02-14-fl/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/basic-gates/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Subject/2023-09-18-nsd/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/building-larger-circuits/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Subject/2023-09-21-CA/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/counters/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/Tools/2023-09-22-PVE/</loc>
-         <lastmod>2023-10-22</lastmod>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/finite-state-machines/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/karnaugh-map/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/latches-and-flip-flops/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/more-circuits/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/multiplexers/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/circuits/shift-registers/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verification/reading-simulations/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verification/writing-testbenches/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verilog-language/basics/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verilog-language/modules/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verilog-language/more-features/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verilog-language/procedures/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/hdlbits/verilog-language/vectors/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/pve/</loc>
+         <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
