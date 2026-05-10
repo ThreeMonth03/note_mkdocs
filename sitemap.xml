@@ -6,7 +6,22 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://note.threemonth03.com/algorithm/number-theory/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://note.threemonth03.com/algorithm/segment-tree/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/algorithm/string-matching/</loc>
+         <lastmod>2026-05-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/algorithm/tree/</loc>
          <lastmod>2026-05-10</lastmod>
          <changefreq>daily</changefreq>
     </url>
