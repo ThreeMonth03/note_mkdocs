@@ -2,132 +2,137 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://note.threemonth03.com/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/algorithm/graph/</loc>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/algorithm/number-theory/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/algorithm/segment-tree/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/algorithm/string-matching/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/algorithm/tree/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/cs450/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/getting-started/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/arithmetic/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/basic-gates/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/building-larger-circuits/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/counters/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/finite-state-machines/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/karnaugh-map/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/latches-and-flip-flops/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/more-circuits/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/multiplexers/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/circuits/shift-registers/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verification/reading-simulations/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verification/writing-testbenches/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verilog-language/basics/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verilog-language/modules/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verilog-language/more-features/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verilog-language/procedures/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/hdlbits/verilog-language/vectors/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/pve/</loc>
-         <lastmod>2026-05-10</lastmod>
+         <lastmod>2026-05-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

@@ -25,7 +25,7 @@
     
     
       
-        <title>SegmentTree - 君實的技術筆記</title>
+        <title>Segment Tree - 君實的技術筆記</title>
       
     
     
@@ -118,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#segmenttree" class="md-skip">
+        <a href="#segment-tree" class="md-skip">
           跳轉到
         </a>
       
@@ -153,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              SegmentTree
+              Segment Tree
             
           </span>
         </div>
@@ -378,6 +378,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -408,12 +410,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          SegmentTree
+          Segment Tree
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        SegmentTree
+        Segment Tree
       </a>
       
         
@@ -605,6 +607,20 @@
     <li class="md-nav__item">
       <a href="../string-matching/" class="md-nav__link">
         String Matching
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graph/" class="md-nav__link">
+        Graph
       </a>
     </li>
   
@@ -1330,10 +1346,19 @@
 
 
 
-<h1 id="segmenttree">SegmentTree</h1>
-<p>這頁整理幾種常用的 segment tree 模板。每個段落都依照「適用情境、維護資訊、模板、參考題型」的順序整理，方便之後依題型快速套用。</p>
+<h1 id="segment-tree">Segment Tree</h1>
+<p>Segment tree 適合處理需要頻繁更新與查詢區間資訊的問題，例如區間總和、區間最大值、lazy range update，或依照節點維護的資訊往下尋找第一個符合條件的位置。</p>
+<p>時間複雜度：</p>
+<ul>
+<li>建樹：<code>O(n)</code></li>
+<li>單點更新：<code>O(log n)</code></li>
+<li>區間更新：<code>O(log n)</code></li>
+<li>區間查詢：<code>O(log n)</code></li>
+<li>Segment tree binary search：<code>O(log n)</code></li>
+</ul>
+<p>陣列實作通常配置 <code>4 * n</code> 個節點。遞迴建出的節點編號不一定會落在 <code>2 * n</code> 內，<code>4 * n</code> 是競賽中常用的保守配置，可以避免節點編號超出陣列範圍。</p>
 <h2 id="point-update-range-query">Point Update + Range Query</h2>
-<p>適用於已知初始陣列、更新只影響單一位置、查詢需要合併一段區間資訊的題型。這裡以區間總和為例，合併時直接把左右子樹相加。</p>
+<p>適用於有初始陣列、更新只影響單一位置，且查詢需要合併一段區間資訊的題型。這裡以區間總和為例，合併時直接把左右子樹相加。</p>
 <h3 id="_1">維護資訊</h3>
 <ul>
 <li><code>sum[p]</code>：節點 <code>p</code> 對應區間的總和。</li>
@@ -1450,12 +1475,12 @@
 </span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45"></a><a href="#__codelineno-1-45"><span class="linenos" data-linenos="45 "></span></a><span class="p">};</span>
 </span></code></pre></div>
 <h2 id="range-assign-range-query">Range Assign + Range Query</h2>
-<p>適用於每次把一段區間覆蓋成同一個值，並查詢區間統計資訊的題型。這裡以區間最大值為例，更新時會把整段 assign 成同一個高度。</p>
+<p>適用於更新操作會把一段區間覆蓋成同一個值，並查詢區間統計資訊的題型。這裡以區間最大值為例，更新時會把整段覆蓋成同一個高度。</p>
 <h3 id="_4">維護資訊</h3>
 <ul>
 <li><code>st[p]</code>：節點 <code>p</code> 對應區間的最大值。</li>
-<li><code>lazy</code>：記錄尚未往下推的 assign value。</li>
-<li><code>is_lazy</code>：標記該節點是否有 pending assignment，因為 assign value 可能是 <code>0</code>。</li>
+<li><code>lazy</code>：記錄尚未往下推的覆蓋值。</li>
+<li><code>is_lazy</code>：標記該節點是否有待下推更新。覆蓋值可能是 <code>0</code>，因此不能只靠 <code>lazy[p]</code> 判斷。</li>
 </ul>
 <h3 id="_5">模板</h3>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
@@ -1528,7 +1553,7 @@
 </span></code></pre></div>
 <h3 id="_6">參考題型</h3>
 <ul>
-<li><a href="https://leetcode.com/problems/falling-squares/">LeetCode - Falling Squares</a>：先做座標離散化，把每個方塊覆蓋的半開區間 <code>[l, l + size)</code> 轉成 segment tree 上的 <code>[L, R - 1]</code>。每次先查詢該區間目前最大高度，再把整段 assign 成新的高度。</li>
+<li><a href="https://leetcode.com/problems/falling-squares/">LeetCode - Falling Squares</a>：先做座標離散化，把每個方塊覆蓋的半開區間 <code>[l, l + size)</code> 轉成 segment tree 上的 <code>[L, R - 1]</code>。每次先查詢該區間目前最大高度，再把整段覆蓋成新的高度。</li>
 </ul>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">public</span><span class="o">:</span>
@@ -1568,7 +1593,7 @@
 </span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36"></a><a href="#__codelineno-3-36"><span class="linenos" data-linenos="36 "></span></a><span class="p">};</span>
 </span></code></pre></div>
 <h2 id="range-add-range-query">Range Add + Range Query</h2>
-<p>適用於每次對一段區間加上同一個值，並查詢區間統計資訊的題型。這裡同時維護區間總和 <code>sum</code> 與平方和 <code>sum2</code>，可用來計算區間內所有 pair 的乘積總和。</p>
+<p>適用於每次對一段區間加上同一個值，並查詢區間統計資訊的題型。這裡同時維護區間總和 <code>sum</code> 與平方和 <code>sum2</code>，可用來計算區間內所有兩兩乘積的總和。</p>
 <h3 id="_7">維護資訊</h3>
 <ul>
 <li><code>sum[p]</code>：節點 <code>p</code> 對應區間的總和。</li>
@@ -1580,9 +1605,9 @@
 <li><code>sum += len * v</code></li>
 <li><code>sum2 += 2 * v * sum_old + len * v^2</code></li>
 </ul>
-<p>注意 <code>sum2</code> 的更新需要用到更新前的 <code>sum</code>，所以在 <code>apply</code> 裡要先更新 <code>sum2</code>，再更新 <code>sum</code>。</p>
+<p><code>sum2</code> 的更新會用到更新前的 <code>sum</code>，因此 <code>apply</code> 裡要先更新 <code>sum2</code>，再更新 <code>sum</code>。</p>
 <h3 id="pairwise-product">查詢 pairwise product</h3>
-<p>若題目要查詢區間內所有 pair 的乘積總和：</p>
+<p>若題目要查詢區間內所有兩兩乘積的總和：</p>
 <div class="arithmatex">\[
 \sum_{l \le i &lt; j \le r} A_i A_j
 \]</div>
@@ -1605,9 +1630,9 @@
 </span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a><a href="#__codelineno-4-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ll</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">sum2</span><span class="p">,</span><span class="w"> </span><span class="n">lazy</span><span class="p">;</span>
 </span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a><a href="#__codelineno-4-12"><span class="linenos" data-linenos="12 "></span></a>
 </span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13"></a><a href="#__codelineno-4-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="n">SegmentTree</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="n">sum</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15"></a><a href="#__codelineno-4-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="n">sum2</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16"></a><a href="#__codelineno-4-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="n">lazy</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="n">sum</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15"></a><a href="#__codelineno-4-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="n">sum2</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16"></a><a href="#__codelineno-4-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="n">lazy</span><span class="p">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17"></a><a href="#__codelineno-4-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18"></a><a href="#__codelineno-4-18"><span class="linenos" data-linenos="18 "></span></a>
 </span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19"></a><a href="#__codelineno-4-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="n">ll</span><span class="w"> </span><span class="n">norm</span><span class="p">(</span><span class="n">ll</span><span class="w"> </span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1684,7 +1709,7 @@
 </span></code></pre></div>
 <h3 id="_9">參考題型</h3>
 <ul>
-<li><a href="https://atcoder.jp/contests/abc455/tasks/abc455_f">AtCoder ABC455 F - Merge Slimes 2</a>：每次對區間加值後，查詢同一段區間內所有 unordered pair 的乘積總和。核心是維護 <code>sum</code> 與 <code>sum2</code>，再用 <code>((sum^2 - sum2) / 2)</code> 得到答案。</li>
+<li><a href="https://atcoder.jp/contests/abc455/tasks/abc455_f">AtCoder ABC455 F - Merge Slimes 2</a>：每次對區間加值後，查詢同一段區間內所有無序 pair 的乘積總和。核心是維護 <code>sum</code> 與 <code>sum2</code>，再用 <code>((sum^2 - sum2) / 2)</code> 得到答案。</li>
 </ul>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">ios</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
@@ -1716,7 +1741,7 @@
 </span><span id="__span-5-28"><a id="__codelineno-5-28" name="__codelineno-5-28"></a><a href="#__codelineno-5-28"><span class="linenos" data-linenos="28 "></span></a><span class="p">}</span>
 </span></code></pre></div>
 <h2 id="segment-tree-binary-search">Segment Tree Binary Search</h2>
-<p>適用於要找「位置」而不是只查詢區間統計值的題型。做法是利用節點維護的資訊，從 root 往下走；每一層先判斷左子樹是否已經足夠決定答案，不足時再往右子樹走。</p>
+<p>適用於要找「位置」而不是只查詢區間統計值的題型。做法是利用節點維護的資訊，從根節點往下走；每一層先判斷左子樹是否已經足夠決定答案，不足時再往右子樹走。</p>
 <h3 id="first-position-with-max">First Position With Max</h3>
 <p>當每個節點維護區間最大值時，可以找出第一個 <code>arr[pos] &gt;= k</code> 的位置。呼叫 <code>firstpos</code> 前，先確認整棵樹的最大值是否足夠。</p>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;bits/stdc++.h&gt;</span>
@@ -1854,7 +1879,7 @@
 </span></code></pre></div>
 <h3 id="_10">參考題型</h3>
 <ul>
-<li><a href="https://leetcode.com/problems/fruits-into-baskets-iii/">LeetCode - Fruits Into Baskets III</a>：每個 basket 只能使用一次，segment tree 維護剩餘容量最大值。若全域最大值小於 fruit size，代表放不下；否則用 <code>firstpos</code> 找最左邊容量足夠的 basket，再把該位置更新成 <code>-1</code>。</li>
+<li><a href="https://leetcode.com/problems/fruits-into-baskets-iii/">LeetCode - Fruits Into Baskets III</a>：每個 basket 只能使用一次，segment tree 維護剩餘容量最大值。若全域最大值小於 fruit 大小，代表放不下；否則用 <code>firstpos</code> 找最左邊容量足夠的 basket，再把該位置更新成 <code>-1</code>。</li>
 <li><a href="https://leetcode.com/problems/next-greater-element-iv/">LeetCode - Next Greater Element IV</a>：離線處理 index，segment tree 維護目前已啟用的位置。查詢 <code>i</code> 右側第 2 個已啟用位置時，可用 <code>kth_inrange(i + 1, n - 1, 2)</code>。</li>
 </ul>
 
