@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="從 matmul 的成本、generic execution contract 到 BLAS dispatch 與 packing。">
+        <meta name="description" content="從 matmul 的 HPC 問題、實作樂趣到 generic contract 與 dispatch。">
       
       
         <meta name="author" content="張君實">
@@ -1179,7 +1179,7 @@
   
     <li class="md-nav__item">
       <a href="generic/roles/" class="md-nav__link">
-        Roles
+        Four roles, one kernel
       </a>
     </li>
   
@@ -1193,7 +1193,7 @@
   
     <li class="md-nav__item">
       <a href="generic/batch-mapping/" class="md-nav__link">
-        Batch
+        Broadcast by zero
       </a>
     </li>
   
@@ -1207,7 +1207,7 @@
   
     <li class="md-nav__item">
       <a href="generic/signed-strides/" class="md-nav__link">
-        Strides
+        Walk backwards
       </a>
     </li>
   
@@ -1221,7 +1221,7 @@
   
     <li class="md-nav__item">
       <a href="generic/contraction-loop/" class="md-nav__link">
-        Kernel
+        Hot loop
       </a>
     </li>
   
@@ -1289,7 +1289,7 @@
   
     <li class="md-nav__item">
       <a href="dispatch/direct-blas/" class="md-nav__link">
-        BLAS views
+        No-copy BLAS
       </a>
     </li>
   
@@ -1303,7 +1303,7 @@
   
     <li class="md-nav__item">
       <a href="dispatch/packing/" class="md-nav__link">
-        Pack once
+        When copy pays
       </a>
     </li>
   
@@ -1317,7 +1317,7 @@
   
     <li class="md-nav__item">
       <a href="dispatch/batched-vectors/" class="md-nav__link">
-        Vector reuse
+        Reuse pays
       </a>
     </li>
   
@@ -1338,7 +1338,7 @@
   
     <li class="md-nav__item">
       <a href="validation/" class="md-nav__link">
-        Validation
+        Same answer
       </a>
     </li>
   
@@ -1385,8 +1385,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#hpc" class="md-nav__link">
+    為什麼 HPC
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_1" class="md-nav__link">
-    成本
+    樂趣
   </a>
   
 </li>
@@ -1438,38 +1445,49 @@
 
 
 <h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p>大型 contiguous <code>GEMM</code> 已有 BLAS，新的 <code>matmul</code> 還能貢獻什麼？答案在
-公式周圍：execution contract 正規化 operand roles、broadcasting 與 signed
-strides；selection 再依 layout 與 reuse 固定 kernel 和 optional pack-once
-preparation。</p>
+<p>讓矩陣乘法更快，有時要先 copy；有時 copy 一個 element 都嫌多。
+差別不在公式，而在 shape、stride 與 reuse。</p>
 <p><code>A(2, 1, 3, 4) @ B(1, 5, 4, 6) → C(2, 5, 3, 6)</code></p>
 <p>這個 batched <code>GEMM</code> 會展開成十個 <code>3×4 @ 4×6</code> contractions。<code>A</code>、<code>B</code>
 沿不同 batch axes 重用；reverse 或 step-two view 又會改變 address walk。
-先 copy、直接計算，還是交給 BLAS？公式相同，execution path 卻在第一個
-multiply-add 前就已經分岔。</p>
-<h2 id="_1">成本</h2>
-<p>一個 <code>@</code> 同時支付乘加、資料移動與 planning/dispatch。shape、stride、
-batch reuse 會改變三者的比例。HPC 從找出不變工作開始：把它移出重複
-路徑，只在 reuse 足以回本時準備資料。</p>
+沿 signed strides 直接算、建立 no-copy BLAS view，還是 pack once？
+這個選擇在第一個 multiply-add 之前就已經決定。</p>
+<h2 id="hpc">為什麼 HPC</h2>
+<p>大型 contiguous <code>GEMM</code> 已有 BLAS；array library 面對的卻不只是一對乾淨
+matrix。四種 operand roles、broadcast batches、reverse views 與 empty axes
+都屬於同一個 <code>matmul</code> contract。公式只給出乘加次數，沒有回答資料該搬幾次、
+語意該解析幾次，以及 preparation 能不能由後續工作回本。</p>
+<h2 id="_1">樂趣</h2>
+<p>HPC 的樂趣，是把 array semantics 變成可以推理的 address 與 cost rules：</p>
+<ul>
+<li>broadcast axis 變成 mapped <code>stride = 0</code>，整個 tensor 不必展開；</li>
+<li>reverse view 變成 negative stride，不需要另一套乘法；</li>
+<li>eligible reused operand 先 pack 一次，讓 preparation cost 由 batch 攤提。</li>
+</ul>
+<p>每個技巧都在拿掉一種不必要的工作。寫完可以從位址、搬移量與 reuse 解釋它，
+再用 benchmark 找出真正的 crossover；硬體會直接回答推理是否成立。</p>
 <h2 id="_2">本質</h2>
-<p>rank、broadcasting 與 signed strides 先被壓成 <code>M/N/K</code>、三組 batch
-mappings 與四個 core strides。selector 固定 kernel 與 optional packing；
-若需要 packing，就 materialize 並 replan 一次，然後用同一個 selection
-走完整個 batch traversal。</p>
+<p>這個實作控制三件事：每個 output element 重複什麼、每個 contraction 搬多少
+資料，以及一次性的工作在哪一層支付。</p>
+<p>rank、broadcasting 與 signed strides 先被壓成 <code>M/N/K</code>、batch mappings
+與 core strides。selector 固定 kernel 與 optional packing；若需要 packing，
+就 materialize 並 replan 一次，然後用同一個 selection 走完整個 batch。</p>
 <p>generic K-loop 最後只剩 <code>total += lhs[lhs_offset] * rhs[rhs_offset]</code>，
 以及兩個 signed offset increments。</p>
 <h2 id="_3">貢獻</h2>
 <ul>
-<li><code>Generic</code>：<a href="generic/">Contract</a> → <a href="generic/roles/">Roles</a> →
-  <a href="generic/batch-mapping/">Batch</a> → <a href="generic/signed-strides/">Strides</a> →
-  <a href="generic/contraction-loop/">Kernel</a>。四種 roles、broadcast batch、signed views
-  與 empty dimensions 收斂成同一個 contraction。</li>
-<li><code>Dispatch</code>：<a href="dispatch/">Select once</a> →
-  <a href="dispatch/direct-blas/">BLAS views</a> / <a href="dispatch/packing/">Pack once</a> /
-  <a href="dispatch/batched-vectors/">Vector reuse</a>。eligible direct views 不複製資料；
-  eligible reused operands 才支付一次 packing cost。</li>
-<li><code>Validation</code>：<a href="validation/">NumPy differential tests</a> 跨 dtypes、roles、
-  signed layouts、broadcasting 與 empty axes 驗證 shape 和 numerical values。</li>
+<li><code>Generic</code>：<a href="generic/">The contract</a> →
+  <a href="generic/roles/">Four roles, one kernel</a> →
+  <a href="generic/batch-mapping/">Broadcast by zero</a> →
+  <a href="generic/signed-strides/">Walk backwards</a> →
+  <a href="generic/contraction-loop/">Hot loop</a>。四種 roles 與 batch/layout semantics
+  收斂成一個 signed-stride contraction。</li>
+<li><code>Dispatch</code>：<a href="dispatch/">Decide once</a> →
+  <a href="dispatch/direct-blas/">No-copy BLAS</a> / <a href="dispatch/packing/">When copy pays</a> /
+  <a href="dispatch/batched-vectors/">Reuse pays</a>。kernel 在 traversal 前固定，packing
+  只在 eligible reuse 能攤提 cost 時發生。</li>
+<li><code>Validation</code>：<a href="validation/">Same answer</a> across dtypes、roles、signed
+  layouts、broadcasting 與 empty axes。</li>
 </ul>
 <h2 id="version">Version</h2>
 <p>本文固定在 solvcon upstream <code>master</code>
