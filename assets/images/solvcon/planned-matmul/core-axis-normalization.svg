@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Four matmul roles normalized to the same M, N, K core axes</title>
+  <desc id="desc">DOT, GEVM, GEMV, and GEMM become the same matrix contraction by adding synthetic axes of length one for vector operands.</desc>
+  <style>
+    .heading { font: 600 25px Inter, "Noto Sans TC", sans-serif; fill: #172033; }
+    .column { font: 600 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; letter-spacing: .06em; }
+    .role { font: 700 18px Inter, ui-monospace, monospace; fill: #172033; }
+    .shape { font: 500 17px Inter, ui-monospace, monospace; fill: #334155; }
+    .axis-text { font: 700 17px Inter, ui-monospace, monospace; text-anchor: middle; dominant-baseline: middle; }
+    .output { font: 700 17px Inter, ui-monospace, monospace; fill: #166534; }
+    .note { font: 500 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; }
+    .rule { stroke: #dbe3ee; stroke-width: 1; }
+    .axis-m { fill: #eff6ff; stroke: #2563eb; stroke-width: 1.5; }
+    .axis-k { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.5; }
+    .axis-n { fill: #f0fdf4; stroke: #16a34a; stroke-width: 1.5; }
+    .synthetic { stroke-dasharray: 6 4; }
+  </style>
+  <rect width="1200" height="560" fill="#ffffff"/>
+
+  <text x="36" y="42" class="heading">Core-axis normalization</text>
+  <text x="36" y="70" class="note">Public shapes change by role; the executor always receives A[M,K] @ B[K,N].</text>
+
+  <text x="36" y="111" class="column">ROLE</text>
+  <text x="142" y="111" class="column">PUBLIC OPERANDS</text>
+  <text x="454" y="111" class="column">NORMALIZED CORE</text>
+  <text x="997" y="111" class="column">PUBLIC OUTPUT</text>
+  <line x1="36" y1="124" x2="1164" y2="124" class="rule"/>
+
+  <g transform="translate(0 137)">
+    <text x="36" y="34" class="role">DOT</text>
+    <text x="142" y="34" class="shape">(K,) @ (K,)</text>
+    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m synthetic"/>
+    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M=1</text>
+    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="624" y="36" class="role">@</text>
+    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n synthetic"/>
+    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="777" y="35" class="axis-text" fill="#15803d">N=1</text>
+    <text x="997" y="35" class="output">(1,)</text>
+  </g>
+  <line x1="36" y1="211" x2="1164" y2="211" class="rule"/>
+
+  <g transform="translate(0 224)">
+    <text x="36" y="34" class="role">GEVM</text>
+    <text x="142" y="34" class="shape">(K,) @ (...,K,N)</text>
+    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m synthetic"/>
+    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M=1</text>
+    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="624" y="36" class="role">@</text>
+    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n"/>
+    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="777" y="35" class="axis-text" fill="#15803d">N</text>
+    <text x="997" y="35" class="output">(...,N)</text>
+  </g>
+  <line x1="36" y1="298" x2="1164" y2="298" class="rule"/>
+
+  <g transform="translate(0 311)">
+    <text x="36" y="34" class="role">GEMV</text>
+    <text x="142" y="34" class="shape">(...,M,K) @ (K,)</text>
+    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m"/>
+    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M</text>
+    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="624" y="36" class="role">@</text>
+    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n synthetic"/>
+    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="777" y="35" class="axis-text" fill="#15803d">N=1</text>
+    <text x="997" y="35" class="output">(...,M)</text>
+  </g>
+  <line x1="36" y1="385" x2="1164" y2="385" class="rule"/>
+
+  <g transform="translate(0 398)">
+    <text x="36" y="34" class="role">GEMM</text>
+    <text x="142" y="34" class="shape">(...,M,K) @ (...,K,N)</text>
+    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m"/>
+    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M</text>
+    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="624" y="36" class="role">@</text>
+    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
+    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n"/>
+    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
+    <text x="777" y="35" class="axis-text" fill="#15803d">N</text>
+    <text x="997" y="35" class="output">(...,M,N)</text>
+  </g>
+  <line x1="36" y1="472" x2="1164" y2="472" class="rule"/>
+
+  <rect x="447" y="500" width="42" height="28" rx="4" class="axis-m synthetic"/>
+  <text x="505" y="519" class="note">dashed axis = synthetic length-one axis; omitted from the public output shape</text>
+</svg>

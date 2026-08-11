@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Addressing one generic matrix contraction</title>
+  <desc id="desc">One output cell combines a signed-stride lhs row and rhs column. Batch offsets and row or column bases are resolved before the inner K loop.</desc>
+  <style>
+    .heading { font: 600 25px Inter, "Noto Sans TC", sans-serif; fill: #172033; }
+    .sub { font: 500 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; }
+    .label { font: 700 17px Inter, ui-monospace, monospace; fill: #172033; }
+    .mono { font: 500 15px Inter, ui-monospace, monospace; fill: #334155; }
+    .operator { font: 600 28px Inter, ui-monospace, monospace; fill: #64748b; text-anchor: middle; }
+    .cell-text { font: 600 14px Inter, ui-monospace, monospace; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
+    .cell { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1; }
+    .lhs-cell { fill: #eff6ff; stroke: #2563eb; stroke-width: 1.5; }
+    .rhs-cell { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.5; }
+    .out-cell { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+    .rule { stroke: #dbe3ee; stroke-width: 1; }
+  </style>
+  <rect width="1200" height="700" fill="#ffffff"/>
+
+  <text x="36" y="42" class="heading">One output cell: a signed-stride row @ a signed-stride column</text>
+  <text x="36" y="70" class="sub">The current batch coordinate supplies lhs_base, rhs_base, and output_base before this contraction begins.</text>
+
+  <text x="52" y="118" class="label">A [M,K]</text>
+  <text x="438" y="118" class="label">B [K,N]</text>
+  <text x="815" y="118" class="label">C [M,N]</text>
+  <text x="376" y="235" class="operator">@</text>
+  <text x="725" y="235" class="operator">→</text>
+
+  <g transform="translate(52 142)">
+    <rect x="0" y="0" width="66" height="58" class="cell"/><rect x="66" y="0" width="66" height="58" class="cell"/>
+    <rect x="132" y="0" width="66" height="58" class="cell"/><rect x="198" y="0" width="66" height="58" class="cell"/>
+    <rect x="0" y="58" width="66" height="58" class="lhs-cell"/><rect x="66" y="58" width="66" height="58" class="lhs-cell"/>
+    <rect x="132" y="58" width="66" height="58" class="lhs-cell"/><rect x="198" y="58" width="66" height="58" class="lhs-cell"/>
+    <rect x="0" y="116" width="66" height="58" class="cell"/><rect x="66" y="116" width="66" height="58" class="cell"/>
+    <rect x="132" y="116" width="66" height="58" class="cell"/><rect x="198" y="116" width="66" height="58" class="cell"/>
+    <text x="33" y="29" class="cell-text">A00</text><text x="99" y="29" class="cell-text">A01</text>
+    <text x="165" y="29" class="cell-text">A02</text><text x="231" y="29" class="cell-text">A03</text>
+    <text x="33" y="87" class="cell-text">A10</text><text x="99" y="87" class="cell-text">A11</text>
+    <text x="165" y="87" class="cell-text">A12</text><text x="231" y="87" class="cell-text">A13</text>
+    <text x="33" y="145" class="cell-text">A20</text><text x="99" y="145" class="cell-text">A21</text>
+    <text x="165" y="145" class="cell-text">A22</text><text x="231" y="145" class="cell-text">A23</text>
+    <text x="-18" y="88" class="mono" text-anchor="end">i=1</text>
+    <text x="132" y="201" class="sub" text-anchor="middle">lhs_base + i × lhs_row_stride</text>
+  </g>
+
+  <g transform="translate(438 142)">
+    <rect x="0" y="0" width="66" height="58" class="cell"/><rect x="66" y="0" width="66" height="58" class="cell"/>
+    <rect x="132" y="0" width="66" height="58" class="rhs-cell"/>
+    <rect x="0" y="58" width="66" height="58" class="cell"/><rect x="66" y="58" width="66" height="58" class="cell"/>
+    <rect x="132" y="58" width="66" height="58" class="rhs-cell"/>
+    <rect x="0" y="116" width="66" height="58" class="cell"/><rect x="66" y="116" width="66" height="58" class="cell"/>
+    <rect x="132" y="116" width="66" height="58" class="rhs-cell"/>
+    <rect x="0" y="174" width="66" height="58" class="cell"/><rect x="66" y="174" width="66" height="58" class="cell"/>
+    <rect x="132" y="174" width="66" height="58" class="rhs-cell"/>
+    <text x="33" y="29" class="cell-text">B00</text><text x="99" y="29" class="cell-text">B01</text><text x="165" y="29" class="cell-text">B02</text>
+    <text x="33" y="87" class="cell-text">B10</text><text x="99" y="87" class="cell-text">B11</text><text x="165" y="87" class="cell-text">B12</text>
+    <text x="33" y="145" class="cell-text">B20</text><text x="99" y="145" class="cell-text">B21</text><text x="165" y="145" class="cell-text">B22</text>
+    <text x="33" y="203" class="cell-text">B30</text><text x="99" y="203" class="cell-text">B31</text><text x="165" y="203" class="cell-text">B32</text>
+    <text x="165" y="-12" class="mono" text-anchor="middle">j=2</text>
+    <text x="99" y="259" class="sub" text-anchor="middle">rhs_base + j × rhs_column_stride</text>
+  </g>
+
+  <g transform="translate(815 142)">
+    <rect x="0" y="0" width="66" height="58" class="cell"/><rect x="66" y="0" width="66" height="58" class="cell"/>
+    <rect x="132" y="0" width="66" height="58" class="cell"/>
+    <rect x="0" y="58" width="66" height="58" class="cell"/><rect x="66" y="58" width="66" height="58" class="cell"/>
+    <rect x="132" y="58" width="66" height="58" class="out-cell"/>
+    <rect x="0" y="116" width="66" height="58" class="cell"/><rect x="66" y="116" width="66" height="58" class="cell"/>
+    <rect x="132" y="116" width="66" height="58" class="cell"/>
+    <text x="33" y="29" class="cell-text">C00</text><text x="99" y="29" class="cell-text">C01</text><text x="165" y="29" class="cell-text">C02</text>
+    <text x="33" y="87" class="cell-text">C10</text><text x="99" y="87" class="cell-text">C11</text><text x="165" y="87" class="cell-text">C12</text>
+    <text x="33" y="145" class="cell-text">C20</text><text x="99" y="145" class="cell-text">C21</text><text x="165" y="145" class="cell-text">C22</text>
+    <text x="99" y="201" class="sub" text-anchor="middle">output_base + i × N + j</text>
+  </g>
+
+  <line x1="36" y1="442" x2="1164" y2="442" class="rule"/>
+  <text x="36" y="478" class="label">K traversal for C(1,2)</text>
+  <text x="275" y="478" class="mono">A10×B02  +  A11×B12  +  A12×B22  +  A13×B32</text>
+
+  <text x="36" y="529" class="mono">lhs offset: lhs_base + i×sA_M</text>
+  <text x="420" y="529" class="mono">each k: load lhs[offset], then offset += sA_K</text>
+  <text x="36" y="565" class="mono">rhs offset: rhs_base + j×sB_N</text>
+  <text x="420" y="565" class="mono">each k: load rhs[offset], then offset += sB_K</text>
+
+  <line x1="36" y1="596" x2="1164" y2="596" class="rule"/>
+  <text x="36" y="632" class="sub">Rank, shape, broadcasting, and layout decisions are absent from the K loop. The output is newly allocated contiguous storage.</text>
+  <text x="36" y="664" class="sub">If K=0, the value-initialized accumulator remains zero and is written to each non-empty output cell.</text>
+</svg>

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Broadcast batch coordinates mapped to output, lhs, and rhs offsets</title>
+  <desc id="desc">A two by five batch domain uses mapped strides. Zero mapped strides reuse a broadcast operand without expanding its storage.</desc>
+  <style>
+    .heading { font: 600 25px Inter, "Noto Sans TC", sans-serif; fill: #172033; }
+    .sub { font: 500 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; }
+    .mono { font: 500 16px Inter, ui-monospace, monospace; fill: #334155; }
+    .strong { font-weight: 700; fill: #172033; }
+    .small { font: 500 13px Inter, ui-monospace, monospace; }
+    .grid-label { font: 700 14px Inter, ui-monospace, monospace; fill: #475569; text-anchor: middle; }
+    .coord { font: 700 14px Inter, ui-monospace, monospace; fill: #172033; text-anchor: middle; }
+    .cell-text { font: 600 13px Inter, ui-monospace, monospace; text-anchor: middle; }
+    .line { stroke: #cbd5e1; stroke-width: 1; }
+    .cell { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1; }
+    .lhs { fill: #1d4ed8; }
+    .rhs { fill: #c2410c; }
+    .out { fill: #15803d; }
+    .zero { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.2; }
+  </style>
+  <rect width="1200" height="700" fill="#ffffff"/>
+
+  <text x="36" y="42" class="heading">Batch coordinates become three base offsets</text>
+  <text x="36" y="68" class="sub">All strides and offsets are in elements. Zero appears only in the aligned batch mapping, not in the inputs' physical strides.</text>
+
+  <text x="36" y="108" class="mono strong">lhs</text>
+  <text x="105" y="108" class="mono">shape (2,1,3,4)</text>
+  <text x="307" y="108" class="mono">physical strides (12,12,4,1)</text>
+  <text x="36" y="140" class="mono strong">rhs</text>
+  <text x="105" y="140" class="mono">shape (1,5,4,6)</text>
+  <text x="307" y="140" class="mono">physical strides (120,24,6,1)</text>
+  <text x="700" y="108" class="mono strong">output</text>
+  <text x="790" y="108" class="mono">shape (2,5,3,6)</text>
+  <text x="790" y="140" class="mono">batch domain (2,5)</text>
+
+  <line x1="36" y1="166" x2="1164" y2="166" class="line"/>
+  <text x="36" y="198" class="sub">ALIGNED BATCH MAPPINGS</text>
+  <text x="250" y="198" class="mono strong">axis sizes</text>
+  <text x="378" y="198" class="mono">(2, 5)</text>
+  <text x="518" y="198" class="mono strong out">output</text>
+  <text x="606" y="198" class="mono">(90, 18)</text>
+  <text x="754" y="198" class="mono strong lhs">lhs</text>
+  <text x="812" y="198" class="mono">(12,</text>
+  <rect x="851" y="176" width="25" height="30" rx="4" class="zero"/>
+  <text x="863.5" y="197" class="mono" text-anchor="middle">0</text>
+  <text x="879" y="198" class="mono">)</text>
+  <text x="934" y="198" class="mono strong rhs">rhs</text>
+  <text x="992" y="198" class="mono">(</text>
+  <rect x="1008" y="176" width="25" height="30" rx="4" class="zero"/>
+  <text x="1020.5" y="197" class="mono" text-anchor="middle">0</text>
+  <text x="1036" y="198" class="mono">, 24)</text>
+
+  <text x="36" y="260" class="sub">CURSOR OUTPUT FOR EACH BATCH COORDINATE</text>
+  <text x="153" y="297" class="grid-label">b1=0</text>
+  <text x="363" y="297" class="grid-label">b1=1</text>
+  <text x="573" y="297" class="grid-label">b1=2</text>
+  <text x="783" y="297" class="grid-label">b1=3</text>
+  <text x="993" y="297" class="grid-label">b1=4</text>
+  <text x="48" y="354" class="grid-label">b0=0</text>
+  <text x="48" y="456" class="grid-label">b0=1</text>
+
+  <g transform="translate(78 312)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(0,0)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=0</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=0</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=0</tspan></text>
+  </g>
+  <g transform="translate(288 312)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(0,1)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=18</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=0</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=24</tspan></text>
+  </g>
+  <g transform="translate(498 312)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(0,2)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=36</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=0</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=48</tspan></text>
+  </g>
+  <g transform="translate(708 312)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(0,3)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=54</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=0</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=72</tspan></text>
+  </g>
+  <g transform="translate(918 312)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(0,4)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=72</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=0</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=96</tspan></text>
+  </g>
+
+  <g transform="translate(78 414)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(1,0)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=90</tspan><tspan fill="#64748b">  ←  </tspan><tspan class="lhs">L=12</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=0</tspan></text>
+  </g>
+  <g transform="translate(288 414)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(1,1)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=108</tspan><tspan fill="#64748b"> ← </tspan><tspan class="lhs">L=12</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=24</tspan></text>
+  </g>
+  <g transform="translate(498 414)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(1,2)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=126</tspan><tspan fill="#64748b"> ← </tspan><tspan class="lhs">L=12</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=48</tspan></text>
+  </g>
+  <g transform="translate(708 414)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(1,3)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=144</tspan><tspan fill="#64748b"> ← </tspan><tspan class="lhs">L=12</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=72</tspan></text>
+  </g>
+  <g transform="translate(918 414)">
+    <rect width="210" height="84" class="cell"/>
+    <text x="105" y="25" class="coord">(1,4)</text>
+    <text x="105" y="53" class="cell-text"><tspan class="out">O=162</tspan><tspan fill="#64748b"> ← </tspan><tspan class="lhs">L=12</tspan><tspan fill="#64748b"> @ </tspan><tspan class="rhs">R=96</tspan></text>
+  </g>
+
+  <line x1="36" y1="532" x2="1164" y2="532" class="line"/>
+  <text x="36" y="572" class="mono">offset(b0,b1) = b0 × mapped_stride[0] + b1 × mapped_stride[1]</text>
+  <text x="36" y="606" class="sub">The plan stores one mapping per operand. The cursor computes these offsets while traversing the batch domain.</text>
+  <text x="36" y="638" class="sub">A mapped stride of zero keeps the same operand base, so broadcasting reuses storage without materializing an expanded tensor.</text>
+</svg>
