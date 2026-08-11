@@ -1,44 +1,36 @@
-.md-typeset .planned-matmul-lede {
-    max-width: 44rem;
-    margin: 0 0 2.2rem;
-    padding-left: 1rem;
-    border-left: 0.2rem solid var(--md-accent-fg-color);
-    color: var(--md-default-fg-color--light);
-    font-size: 1.08rem;
-    line-height: 1.75;
-}
-
 .md-typeset .matmul-figure {
-    margin: 2.2rem 0 2.4rem;
+    margin: 1.6rem 0 1.8rem;
 }
 
-.md-typeset .matmul-figure__viewport {
-    overflow-x: auto;
-    border: 0.05rem solid var(--md-default-fg-color--lightest);
-    border-radius: 0.35rem;
-    background: #fff;
-    box-shadow: 0 0.15rem 0.45rem rgb(0 0 0 / 7%);
-    overscroll-behavior-inline: contain;
-}
-
-.md-typeset .matmul-figure__viewport a {
+.md-typeset .matmul-figure > a {
     display: block;
 }
 
-.md-typeset .matmul-figure__viewport img {
+.md-typeset pre.matmul-data {
+    padding: 0.8rem 1rem;
+    border-left: 0.15rem solid var(--md-accent-fg-color);
+    background: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
+    font-size: 0.76rem;
+    line-height: 1.55;
+}
+
+.md-typeset pre.matmul-data code {
+    padding: 0;
+    background: transparent;
+    color: inherit;
+}
+
+.md-typeset .matmul-figure img {
     display: block;
     width: 100%;
-    min-width: 46rem;
+    max-width: 38rem;
     height: auto;
-    margin: 0;
+    margin: 0 auto;
+    background: #fff;
 }
 
-.md-typeset .matmul-figure--dense img {
-    min-width: 52rem;
-}
-
-.md-typeset .matmul-figure figcaption,
-.md-typeset .matmul-caption {
+.md-typeset .matmul-figure figcaption {
     margin: 0.65rem auto 0;
     color: var(--md-default-fg-color--light);
     font-size: 0.76rem;
@@ -46,45 +38,18 @@
     text-align: center;
 }
 
-.md-typeset .matmul-figure-note {
-    margin-top: 2rem;
-    color: var(--md-default-fg-color--light);
-    font-size: 0.72rem;
-}
-
 @media screen and (max-width: 44.984375em) {
-    .md-typeset .planned-matmul-lede {
-        padding-left: 0.75rem;
-        font-size: 0.95rem;
-    }
-
     .md-typeset .matmul-figure {
-        margin: 1.8rem 0 2rem;
+        margin: 1.3rem 0 1.5rem;
     }
 
-    .md-typeset .matmul-figure__viewport img {
-        min-width: 28rem;
-    }
-
-    .md-typeset .matmul-figure--dense img {
-        min-width: 34rem;
-    }
-
-    .md-typeset .matmul-figure figcaption,
-    .md-typeset .matmul-caption {
+    .md-typeset .matmul-figure figcaption {
         text-align: left;
     }
 }
 
 @media print {
-    .md-typeset .matmul-figure__viewport {
-        overflow: visible;
-        border: 0;
-        box-shadow: none;
-    }
-
-    .md-typeset .matmul-figure__viewport img,
-    .md-typeset .matmul-figure--dense img {
-        min-width: 0;
+    .md-typeset .matmul-figure img {
+        max-width: 100%;
     }
 }

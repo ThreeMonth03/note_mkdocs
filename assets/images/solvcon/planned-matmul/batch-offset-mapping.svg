@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720" role="img" aria-labelledby="title desc">
-  <title id="title">Broadcast repeats base offsets without copying matrices</title>
-  <desc id="desc">A two-by-one lhs batch and a one-by-five rhs batch map to a two-by-five output batch. Lhs bases repeat across columns and rhs bases repeat across rows. A selected coordinate demonstrates the three mapped offsets.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" role="img" aria-labelledby="title desc">
+  <title id="title">Batch coordinates mapped to reused operand bases</title>
+  <desc id="desc">A two-by-one lhs batch and one-by-five rhs batch map to a two-by-five output batch. Lhs bases repeat across columns and rhs bases repeat across rows.</desc>
   <defs>
     <marker id="arrow-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
       <path d="M0,0 L9,4.5 L0,9 Z" fill="#2563eb"/>
@@ -8,126 +8,69 @@
     <marker id="arrow-orange" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
       <path d="M0,0 L9,4.5 L0,9 Z" fill="#ea580c"/>
     </marker>
-    <marker id="arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <path d="M0,0 L9,4.5 L0,9 Z" fill="#16a34a"/>
-    </marker>
   </defs>
   <style>
-    .title { font: 700 30px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .body { font: 500 20px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #475569; }
-    .label { font: 700 22px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .mono { font: 600 20px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .cell-text { font: 700 18px Consolas, "Noto Sans Mono", monospace; text-anchor: middle; }
-    .axis { font: 600 18px Consolas, "Noto Sans Mono", monospace; fill: #475569; text-anchor: middle; }
-    .lhs-text { fill: #2563eb; }
-    .rhs-text { fill: #ea580c; }
-    .out-text { fill: #16a34a; }
-    .lhs-fill { fill: #eff6ff; }
-    .rhs-fill { fill: #fff7ed; }
-    .cell { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; }
+    .heading { font: 700 28px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
+    .label { font: 700 23px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
+    .mono { font: 600 22px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
+    .cell { font: 700 21px Consolas, "Noto Sans Mono", monospace; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font: 600 20px Consolas, "Noto Sans Mono", monospace; fill: #475569; text-anchor: middle; }
+    .a { fill: #2563eb; }
+    .b { fill: #ea580c; }
+    .c { fill: #16a34a; }
+    .a-fill { fill: #eff6ff; }
+    .b-fill { fill: #fff7ed; }
+    .grid { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
     .selected { fill: none; stroke: #16a34a; stroke-width: 4; }
-    .rule { stroke: #dbe3ee; stroke-width: 2; }
   </style>
 
-  <rect width="960" height="720" fill="#ffffff"/>
-  <text x="32" y="42" class="title">broadcast 只重複 base offset，不複製矩陣</text>
-  <text x="32" y="74" class="body">兩個 input batch 仍保留原本的 storage；plan 只改變 batch coordinate 到 base 的映射。</text>
+  <rect width="720" height="420" fill="#ffffff"/>
+  <text x="20" y="34" class="heading">batch coordinate → base offsets</text>
 
-  <text x="32" y="118" class="label lhs-text">lhs batch (2,1)</text>
-  <text x="32" y="144" class="body">core (3,4)</text>
-  <rect x="188" y="96" width="112" height="48" rx="6" class="lhs-fill" stroke="#2563eb" stroke-width="2"/>
-  <rect x="188" y="148" width="112" height="48" rx="6" class="lhs-fill" stroke="#2563eb" stroke-width="2"/>
-  <text x="244" y="121" class="cell-text lhs-text">L0</text>
-  <text x="244" y="173" class="cell-text lhs-text">L12</text>
-  <text x="317" y="126" class="axis" text-anchor="start">b0=0</text>
-  <text x="317" y="178" class="axis" text-anchor="start">b0=1</text>
+  <text x="20" y="72" class="label a">lhs (2,1)</text>
+  <rect x="132" y="48" width="76" height="38" rx="5" class="a-fill" stroke="#2563eb" stroke-width="2"/>
+  <rect x="132" y="90" width="76" height="38" rx="5" class="a-fill" stroke="#2563eb" stroke-width="2"/>
+  <text x="170" y="68" class="cell a">L0</text>
+  <text x="170" y="110" class="cell a">L12</text>
+  <text x="230" y="69" class="axis">b0=0</text>
+  <text x="230" y="111" class="axis">b0=1</text>
 
-  <text x="438" y="118" class="label rhs-text">rhs batch (1,5)</text>
-  <text x="438" y="144" class="body">core (4,6)</text>
-  <g transform="translate(438 158)">
-    <rect x="0" y="0" width="94" height="48" rx="6" class="rhs-fill" stroke="#ea580c" stroke-width="2"/>
-    <rect x="98" y="0" width="94" height="48" rx="6" class="rhs-fill" stroke="#ea580c" stroke-width="2"/>
-    <rect x="196" y="0" width="94" height="48" rx="6" class="rhs-fill" stroke="#ea580c" stroke-width="2"/>
-    <rect x="294" y="0" width="94" height="48" rx="6" class="rhs-fill" stroke="#ea580c" stroke-width="2"/>
-    <rect x="392" y="0" width="94" height="48" rx="6" class="rhs-fill" stroke="#ea580c" stroke-width="2"/>
-    <text x="47" y="25" class="cell-text rhs-text">R0</text>
-    <text x="145" y="25" class="cell-text rhs-text">R24</text>
-    <text x="243" y="25" class="cell-text rhs-text">R48</text>
-    <text x="341" y="25" class="cell-text rhs-text">R72</text>
-    <text x="439" y="25" class="cell-text rhs-text">R96</text>
+  <text x="292" y="72" class="label b">rhs (1,5)</text>
+  <g transform="translate(292 88)">
+    <rect x="0" y="0" width="78" height="40" rx="5" class="b-fill" stroke="#ea580c" stroke-width="2"/>
+    <rect x="82" y="0" width="78" height="40" rx="5" class="b-fill" stroke="#ea580c" stroke-width="2"/>
+    <rect x="164" y="0" width="78" height="40" rx="5" class="b-fill" stroke="#ea580c" stroke-width="2"/>
+    <rect x="246" y="0" width="78" height="40" rx="5" class="b-fill" stroke="#ea580c" stroke-width="2"/>
+    <rect x="328" y="0" width="78" height="40" rx="5" class="b-fill" stroke="#ea580c" stroke-width="2"/>
+    <text x="39" y="21" class="cell b">R0</text><text x="121" y="21" class="cell b">R24</text>
+    <text x="203" y="21" class="cell b">R48</text><text x="285" y="21" class="cell b">R72</text>
+    <text x="367" y="21" class="cell b">R96</text>
   </g>
 
-  <text x="480" y="242" class="label" text-anchor="middle">broadcast 成 output batch (2,5)</text>
-  <path d="M480 252 V270" fill="none" stroke="#16a34a" stroke-width="3" marker-end="url(#arrow-green)"/>
+  <text x="20" y="174" class="label c">output batch (2,5)</text>
+  <text x="124" y="202" class="axis">b1=0</text><text x="236" y="202" class="axis">b1=1</text>
+  <text x="348" y="202" class="axis">b1=2</text><text x="460" y="202" class="axis">b1=3</text>
+  <text x="572" y="202" class="axis">b1=4</text>
+  <text x="32" y="245" class="axis">b0=0</text><text x="32" y="297" class="axis">b0=1</text>
 
-  <text x="236" y="292" class="axis">b1=0</text>
-  <text x="376" y="292" class="axis">b1=1</text>
-  <text x="516" y="292" class="axis">b1=2</text>
-  <text x="656" y="292" class="axis">b1=3</text>
-  <text x="796" y="292" class="axis">b1=4</text>
-  <text x="142" y="343" class="axis">b0=0</text>
-  <text x="142" y="415" class="axis">b0=1</text>
-
-  <g transform="translate(166 306)">
-    <g transform="translate(0 0)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L0</text><text x="70" y="57" class="cell-text rhs-text">R0</text>
-    </g>
-    <g transform="translate(140 0)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L0</text><text x="70" y="57" class="cell-text rhs-text">R24</text>
-    </g>
-    <g transform="translate(280 0)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L0</text><text x="70" y="57" class="cell-text rhs-text">R48</text>
-    </g>
-    <g transform="translate(420 0)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L0</text><text x="70" y="57" class="cell-text rhs-text">R72</text>
-    </g>
-    <g transform="translate(560 0)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L0</text><text x="70" y="57" class="cell-text rhs-text">R96</text>
-    </g>
-
-    <g transform="translate(0 68)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L12</text><text x="70" y="57" class="cell-text rhs-text">R0</text>
-    </g>
-    <g transform="translate(140 68)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L12</text><text x="70" y="57" class="cell-text rhs-text">R24</text>
-    </g>
-    <g transform="translate(280 68)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L12</text><text x="70" y="57" class="cell-text rhs-text">R48</text>
-    </g>
-    <g transform="translate(420 68)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L12</text><text x="70" y="57" class="cell-text rhs-text">R72</text><rect x="2" y="2" width="136" height="64" rx="3" class="selected"/>
-    </g>
-    <g transform="translate(560 68)">
-      <rect width="140" height="68" class="cell"/><rect x="2" y="2" width="136" height="31" class="lhs-fill"/><rect x="2" y="35" width="136" height="31" class="rhs-fill"/>
-      <text x="70" y="24" class="cell-text lhs-text">L12</text><text x="70" y="57" class="cell-text rhs-text">R96</text>
-    </g>
+  <g transform="translate(68 212)">
+    <g transform="translate(0 0)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L0</text><text x="56" y="39" class="cell b">R0</text></g>
+    <g transform="translate(112 0)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L0</text><text x="56" y="39" class="cell b">R24</text></g>
+    <g transform="translate(224 0)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L0</text><text x="56" y="39" class="cell b">R48</text></g>
+    <g transform="translate(336 0)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L0</text><text x="56" y="39" class="cell b">R72</text></g>
+    <g transform="translate(448 0)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L0</text><text x="56" y="39" class="cell b">R96</text></g>
+    <g transform="translate(0 52)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L12</text><text x="56" y="39" class="cell b">R0</text></g>
+    <g transform="translate(112 52)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L12</text><text x="56" y="39" class="cell b">R24</text></g>
+    <g transform="translate(224 52)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L12</text><text x="56" y="39" class="cell b">R48</text></g>
+    <g transform="translate(336 52)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L12</text><text x="56" y="39" class="cell b">R72</text><rect x="2" y="2" width="108" height="48" rx="3" class="selected"/></g>
+    <g transform="translate(448 52)"><rect width="112" height="52" class="grid"/><rect x="2" y="2" width="108" height="23" class="a-fill"/><rect x="2" y="27" width="108" height="23" class="b-fill"/><text x="56" y="14" class="cell a">L12</text><text x="56" y="39" class="cell b">R96</text></g>
   </g>
 
-  <path d="M182 318 H854" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow-blue)"/>
-  <text x="32" y="478" class="body lhs-text">沿 b1：lhs base 在整列重用</text>
-  <path d="M884 318 V430" fill="none" stroke="#ea580c" stroke-width="3" marker-end="url(#arrow-orange)"/>
-  <text x="520" y="478" class="body rhs-text">沿 b0：rhs base 在同欄重用</text>
+  <path d="M82 210 H616" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow-blue)"/>
+  <text x="92" y="344" class="mono a">Δb1: lhs +0</text>
+  <path d="M648 220 V306" fill="none" stroke="#ea580c" stroke-width="3" marker-end="url(#arrow-orange)"/>
+  <text x="438" y="344" class="mono b">Δb0: rhs +0</text>
 
-  <rect x="32" y="500" width="896" height="92" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
-  <text x="50" y="530" class="label out-text">選中 (b0,b1)=(1,3)</text>
-  <text x="50" y="568" class="mono out-text">out: 1×90 + 3×18 = 144</text>
-  <text x="365" y="568" class="mono lhs-text">lhs: 1×12 + 3×0 = 12</text>
-  <text x="650" y="568" class="mono rhs-text">rhs: 1×0 + 3×24 = 72</text>
-  <line x1="32" y1="618" x2="928" y2="618" class="rule"/>
-  <text x="32" y="650" class="label">plan 中的 aligned batch mappings</text>
-  <rect x="32" y="665" width="270" height="42" rx="7" fill="#f0fdf4" stroke="#16a34a" stroke-width="2"/>
-  <rect x="345" y="665" width="270" height="42" rx="7" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <rect x="658" y="665" width="270" height="42" rx="7" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
-  <text x="167" y="692" class="mono out-text" text-anchor="middle">output (90,18)</text>
-  <text x="480" y="692" class="mono lhs-text" text-anchor="middle">lhs (12,0)</text>
-  <text x="793" y="692" class="mono rhs-text" text-anchor="middle">rhs (0,24)</text>
+  <line x1="20" y1="365" x2="700" y2="365" stroke="#dbe3ee" stroke-width="1.5"/>
+  <text x="20" y="400" class="mono"><tspan class="c">(1,3)</tspan><tspan> → </tspan><tspan class="c">out 144</tspan><tspan> · </tspan><tspan class="a">lhs 12</tspan><tspan> · </tspan><tspan class="b">rhs 72</tspan></text>
 </svg>

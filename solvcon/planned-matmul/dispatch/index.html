@@ -6,26 +6,26 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="我整理的演算法、硬體描述語言練習與系統建置筆記。">
+        <meta name="description" content="planned matmul 如何在 batch traversal 前固定 kernel 與 packing。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/hdlbits/verilog-language/basics/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/dispatch/">
       
       
-        <link rel="prev" href="../../getting-started/">
+        <link rel="prev" href="../generic/contraction-loop/">
       
       
-        <link rel="next" href="../vectors/">
+        <link rel="next" href="../validation/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Basics - 君實的技術筆記</title>
+        <title>Dispatch - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#basics" class="md-skip">
+        <a href="#batch-traversal-dispatch-route" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Basics
+              Dispatch
             
           </span>
         </div>
@@ -269,15 +269,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../../" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -303,6 +301,8 @@
         
   
   
+    
+  
 
 
   
@@ -314,7 +314,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../solvcon/planned-matmul/" class="md-tabs__link">
+      <a href="../" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -531,16 +531,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
         
@@ -563,7 +561,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">HDLBits</a>
+          <a href="../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -571,7 +569,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           HDLBits
@@ -586,7 +584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/" class="md-nav__link">
+      <a href="../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -598,16 +596,14 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" >
       
       
         
@@ -628,7 +624,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3_3">
           <span class="md-nav__icon md-icon"></span>
           Verilog Language
@@ -639,101 +635,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Basics
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#simple-wire" class="md-nav__link">
-    Simple wire
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#four-wires" class="md-nav__link">
-    Four wires
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inverter" class="md-nav__link">
-    Inverter
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#and-gate" class="md-nav__link">
-    AND gate
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#nor-gate" class="md-nav__link">
-    NOR gate
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#xnor-gate" class="md-nav__link">
-    XNOR gate
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#declaring-wires" class="md-nav__link">
-    Declaring wires
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7458-chip" class="md-nav__link">
-    7458 chip
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -745,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vectors/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -759,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../modules/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -773,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../procedures/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -787,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../more-features/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -857,7 +763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -871,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -885,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -899,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -913,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -927,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/counters/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -941,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -955,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -969,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -983,7 +889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -1037,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -1051,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -1072,7 +978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../cs450/" class="md-nav__link">
+      <a href="../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -1137,14 +1043,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
       
       
         
@@ -1157,7 +1065,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           solvcon
@@ -1168,14 +1076,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
       
       
         
@@ -1196,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../solvcon/planned-matmul/">Planned matmul</a>
+          <a href="../">Planned matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1204,7 +1114,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
           Planned matmul
@@ -1245,7 +1155,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../solvcon/planned-matmul/generic/">Generic implementation</a>
+          <a href="../generic/">Generic implementation</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1268,7 +1178,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../solvcon/planned-matmul/generic/roles/" class="md-nav__link">
+      <a href="../generic/roles/" class="md-nav__link">
         Operand roles
       </a>
     </li>
@@ -1282,7 +1192,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../solvcon/planned-matmul/generic/batch-mapping/" class="md-nav__link">
+      <a href="../generic/batch-mapping/" class="md-nav__link">
         Batch mapping
       </a>
     </li>
@@ -1296,7 +1206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../solvcon/planned-matmul/generic/signed-strides/" class="md-nav__link">
+      <a href="../generic/signed-strides/" class="md-nav__link">
         Signed strides
       </a>
     </li>
@@ -1310,7 +1220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../solvcon/planned-matmul/generic/contraction-loop/" class="md-nav__link">
+      <a href="../generic/contraction-loop/" class="md-nav__link">
         Contraction loop
       </a>
     </li>
@@ -1329,14 +1239,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" checked>
       
       
         
@@ -1348,12 +1260,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../solvcon/planned-matmul/dispatch/">Dispatch</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Dispatch</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_3">
           <span class="md-nav__icon md-icon"></span>
           Dispatch
@@ -1375,7 +1287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../solvcon/planned-matmul/validation/" class="md-nav__link">
+      <a href="../validation/" class="md-nav__link">
         Validation
       </a>
     </li>
@@ -1423,57 +1335,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#simple-wire" class="md-nav__link">
-    Simple wire
+  <a href="#selection" class="md-nav__link">
+    Selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#four-wires" class="md-nav__link">
-    Four wires
+  <a href="#direct-blas" class="md-nav__link">
+    Direct BLAS
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#inverter" class="md-nav__link">
-    Inverter
+  <a href="#pack-once" class="md-nav__link">
+    Pack once
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#and-gate" class="md-nav__link">
-    AND gate
+  <a href="#batched-vectors" class="md-nav__link">
+    Batched vectors
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#nor-gate" class="md-nav__link">
-    NOR gate
+  <a href="#boundary" class="md-nav__link">
+    Boundary
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#xnor-gate" class="md-nav__link">
-    XNOR gate
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#declaring-wires" class="md-nav__link">
-    Declaring wires
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#7458-chip" class="md-nav__link">
-    7458 chip
+  <a href="#source" class="md-nav__link">
+    Source
   </a>
   
 </li>
@@ -1496,111 +1394,122 @@
 
 
 
-<h1 id="basics">Basics</h1>
-<h2 id="simple-wire">Simple wire</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Wire">Simple wire</a></p>
-</blockquote>
-<p>只需要把 <code>out</code> 和 <code>in</code> 連接起來。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span><span class="k">input</span><span class="w"> </span><span class="n">in</span><span class="p">,</span><span class="w"> </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">endmodule</span>
+<h1 id="batch-traversal-dispatch-route">在 batch traversal 前固定 dispatch route</h1>
+<p>完整 generic semantics 建立後，dispatch 才需要回答兩個問題：使用哪個
+kernel，以及是否值得先準備 operand。這兩個決定都在 batch traversal
+之前完成。</p>
+<h2 id="selection">Selection</h2>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">MatmulSelection</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">selection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">select_execution</span><span class="p">();</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">pack</span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">kernel</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">Generic</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">Generic</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">BlasDot</span><span class="p">:</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">BlasDot</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="c1">// BlasGevm, BlasGemv, BlasGemm follow the same pattern.</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<h2 id="four-wires">Four wires</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Wire4">Four wires</a></p>
-</blockquote>
-<p>依照圖示接線：<code>w</code> 接 <code>a</code>，<code>x</code>、<code>y</code> 接 <code>b</code>，<code>z</code> 接 <code>c</code>。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">w</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">w</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos="8 "></span></a><span class="k">endmodule</span>
+<p><code>execute_contractions&lt;Kernel&gt;()</code> 的 template argument 已固定。cursor 每前進
+一個 batch coordinate，只傳三個 base offsets，不會重新跑 decision tree。</p>
+<h2 id="direct-blas">Direct BLAS</h2>
+<p>BLAS 是 dispatch 的一組 routes，不是 dispatch 本身。current selector 會看：</p>
+<ul>
+<li>role 與 value type；</li>
+<li><code>M</code>、<code>N</code>、<code>K</code> 和 batch size；</li>
+<li>vector strides；</li>
+<li>matrix view 能否表示成 row-major 或 transposed-compatible row-major BLAS view。</li>
+</ul>
+<p>最後一項只有兩個 exact predicates：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">column_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">columns</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">row_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">None</span><span class="p">};</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">column_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">column_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">Transpose</span><span class="p">};</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
 </span></code></pre></div>
-<h2 id="inverter">Inverter</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Notgate">Inverter</a></p>
-</blockquote>
-<p>需要實作 NOT gate。 
-值得注意的是，Verilog 的運算子可以分成 bitwise operator 和 logical operator，bitwise operator 會對 input 的每個 bit 分別運算，所以輸出的 bit 數會和 input 相同。而 logical operator 只做邏輯判斷，最後只會輸出 1 bit。 
-因此 bitwise NOT 的符號是 <code>~</code>，logical NOT 的符號是 <code>!</code>。雖然本題的 input 只有 1 bit，結果不會受影響，但這個差異值得先記起來。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span><span class="k">input</span><span class="w"> </span><span class="n">in</span><span class="p">,</span><span class="w"> </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">~</span><span class="n">in</span><span class="p">;</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">endmodule</span>
+<p>目前 direct routes 包含 <code>BlasDot</code>、<code>BlasGevm</code>、<code>BlasGemv</code>、<code>BlasGemm</code>。
+小型或 skinny problems 不會直接進 BLAS。matrix view 無法直接描述時，
+若符合下一節的 pack-once policy，仍可 preparation 後進 BLAS；其餘留在
+generic。</p>
+<h2 id="pack-once">Pack once</h2>
+<p>對 BLAS-incompatible core layout，matrix packing 只考慮 shape-broadcast 且
+沒有 explicit zero batch stride 的 reused operand：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
 </span></code></pre></div>
-<h2 id="and-gate">AND gate</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Andgate">AND gate</a></p>
-</blockquote>
-<p>需要實作 AND gate，和前一題類似，要注意 bitwise AND 的符號是 <code>&amp;</code>，logical AND 的符號是 <code>&amp;&amp;</code>。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
+<p>這類 operand 在 traversal 前轉成 row-major 一次，後續 batches 共用 packed
+storage。不相容的 equal-batch matrix 與 explicit-zero-stride batch view
+留在 generic；若 core layout 本來相容，它們仍可直接進 BLAS。</p>
+<p>packing 完成後，executor 對新的 storage 重建 operation description；這是
+batch traversal 前唯一一次 replan：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><a href="#__codelineno-3-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13"></a><a href="#__codelineno-3-13"><span class="linenos" data-linenos="13 "></span></a><span class="n">m_lhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a><a href="#__codelineno-3-14"><span class="linenos" data-linenos="14 "></span></a><span class="n">m_rhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
 </span></code></pre></div>
-<h2 id="nor-gate">NOR gate</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Norgate">NOR gate</a></p>
-</blockquote>
-<p>需要實作 NOR gate，和前一題類似，要注意 bitwise OR 的符號是 <code>|</code>，logical OR 的符號是 <code>||</code>。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">~</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
+<h2 id="batched-vectors">Batched vectors</h2>
+<p>相容 matrix view 只是 batched <code>GEVM</code> / <code>GEMV</code> 使用 BLAS 的必要條件。
+direct route 還要求 positive vector stride，且 matrix elements 達到
+<code>TUNING.batched_vector.direct_min_matrix_elements</code>。vector stride 不相容時，
+只有 reused vector 且 copy 成本能由 matrix size、batch size、total output
+work 攤平，才選 pack-once；其餘使用 generic。</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">always_pack_min_matrix_elements</span><span class="p">)</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">pack_min_matrix_elements</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">m_plan</span><span class="p">.</span><span class="n">batch_size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">pack_min_batch_size</span><span class="p">)</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><a href="#__codelineno-4-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><a href="#__codelineno-4-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10"></a><a href="#__codelineno-4-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">reuse_min_matrix_elements</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a><a href="#__codelineno-4-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">output_size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a><a href="#__codelineno-4-12"><span class="linenos" data-linenos="12 "></span></a><span class="p">{</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13"></a><a href="#__codelineno-4-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="p">}</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15"></a><a href="#__codelineno-4-15"><span class="linenos" data-linenos="15 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">minimum_batch_size</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16"></a><a href="#__codelineno-4-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">reuse_min_total_output_elements</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">output_size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">/</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17"></a><a href="#__codelineno-4-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="n">output_size</span><span class="p">;</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18"></a><a href="#__codelineno-4-18"><span class="linenos" data-linenos="18 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">batch_size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">minimum_batch_size</span><span class="p">;</span>
 </span></code></pre></div>
-<h2 id="xnor-gate">XNOR gate</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Xnorgate">XNOR gate</a></p>
-</blockquote>
-<p>需要實作 XNOR gate，和前一題類似，要注意 bitwise XOR 的符號是 <code>^</code>，Verilog 沒有 logical XOR 運算子。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">~</span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div>
-<h2 id="declaring-wires">Declaring wires</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Wire_decl">Declaring wires</a></p>
-</blockquote>
-<p>引入 <code>wire</code> 的概念。當線路較複雜時，可以用 <code>wire</code> 建立中間節點，讓程式更容易閱讀。補充說明，<code>input</code> 和 <code>output</code> 本身就是 <code>wire</code>。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="no">`default_nettype</span><span class="w"> </span><span class="n">none</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">a</span><span class="p">,</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">b</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">c</span><span class="p">,</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">d</span><span class="p">,</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out</span><span class="p">,</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">out_n</span><span class="w">   </span><span class="p">);</span><span class="w"> </span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="kt">wire</span><span class="w"> </span><span class="n">a_and_b</span><span class="p">,</span><span class="w"> </span><span class="n">c_and_d</span><span class="p">;</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">a_and_b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><a href="#__codelineno-6-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">c_and_d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">d</span><span class="p">;</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12"></a><a href="#__codelineno-6-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a_and_b</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">c_and_d</span><span class="p">;</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13"></a><a href="#__codelineno-6-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">out_n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">~</span><span class="n">out</span><span class="p">;</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14"></a><a href="#__codelineno-6-14"><span class="linenos" data-linenos="14 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div>
-<h2 id="7458-chip">7458 chip</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/7458">7458 chip</a></p>
-</blockquote>
-<p>和前一題類似，只是線路稍微複雜，可以直接寫出邏輯式，也可以使用 <code>wire</code> 提升可讀性。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="w"> </span><span class="p">(</span><span class="w"> </span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">p1a</span><span class="p">,</span><span class="w"> </span><span class="n">p1b</span><span class="p">,</span><span class="w"> </span><span class="n">p1c</span><span class="p">,</span><span class="w"> </span><span class="n">p1d</span><span class="p">,</span><span class="w"> </span><span class="n">p1e</span><span class="p">,</span><span class="w"> </span><span class="n">p1f</span><span class="p">,</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">p1y</span><span class="p">,</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a><a href="#__codelineno-7-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">input</span><span class="w"> </span><span class="n">p2a</span><span class="p">,</span><span class="w"> </span><span class="n">p2b</span><span class="p">,</span><span class="w"> </span><span class="n">p2c</span><span class="p">,</span><span class="w"> </span><span class="n">p2d</span><span class="p">,</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a><a href="#__codelineno-7-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">p2y</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a><a href="#__codelineno-7-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">p1y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">p1a</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p1b</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p1c</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">p1d</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p1e</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p1f</span><span class="p">);</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a><a href="#__codelineno-7-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">p2y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">p2a</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p2b</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">p2c</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">p2d</span><span class="p">);</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a><a href="#__codelineno-7-8"><span class="linenos" data-linenos="8 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div>
+<p>thresholds 集中在一份 compile-time <code>MatmulTuning</code> table，套用到所有支援的
+BLAS backend 與 value type。這不是 runtime 或 per-device autotuning。</p>
+<h2 id="boundary">Boundary</h2>
+<p>目前 planned dispatch 的 kernel enum 只有 generic 與四個 BLAS roles。
+Strassen engine 已獨立 merged，但尚未成為 planned-matmul route。benchmark
+與 crossover 分析仍在收尾。</p>
+<h2 id="source">Source</h2>
+<ul>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L594-L755"><code>execute()</code> and route selection</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L758-L885"><code>pack()</code> and fixed-kernel traversal</a></li>
+</ul>
 
 
 

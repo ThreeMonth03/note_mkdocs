@@ -1,114 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 700" role="img" aria-labelledby="title desc">
-  <title id="title">C[1,2] 沿 A 的 i=1 橫列與 B 的 j=2 直欄乘加</title>
-  <desc id="desc">Generic contraction 沿 signed lhs inner stride 走過 A row，沿 signed rhs inner stride 走過 B column，將相同 k 的四對元素乘加成 C[1,2]。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="title desc">
+  <title id="title">One output cell formed from one lhs row and one rhs column</title>
+  <desc id="desc">The highlighted row of A and column of B traverse the shared K axis with signed inner strides to produce C i j.</desc>
   <defs>
-    <marker id="stride-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+    <marker id="arrow-k" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#7c3aed"/>
     </marker>
   </defs>
   <style>
-    .title { font: 700 30px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #0f172a; }
-    .subtitle { font: 500 20px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #475569; }
-    .matrix-label { font: 700 23px Inter, ui-monospace, monospace; }
-    .operator { font: 700 34px Inter, ui-monospace, monospace; fill: #64748b; text-anchor: middle; }
-    .cell-text { font: 600 18px Inter, ui-monospace, monospace; text-anchor: middle; dominant-baseline: middle; }
-    .body { font: 600 20px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #334155; }
-    .stride { font: 700 20px Inter, ui-monospace, monospace; fill: #7c3aed; }
-    .pair { font: 700 20px Inter, ui-monospace, monospace; text-anchor: middle; }
-    .formula { font: 700 29px Inter, ui-monospace, monospace; text-anchor: middle; }
-    .lhs { fill: #2563eb; }
-    .rhs { fill: #ea580c; }
-    .out { fill: #16a34a; }
-    .shared { fill: #7c3aed; }
-    .cell-a { fill: #f8fafc; stroke: #93c5fd; stroke-width: 1.4; }
-    .cell-b { fill: #f8fafc; stroke: #fdba74; stroke-width: 1.4; }
-    .cell-c { fill: #f8fafc; stroke: #86efac; stroke-width: 1.4; }
-    .pick-a { fill: #dbeafe; stroke: #2563eb; stroke-width: 2.4; }
-    .pick-b { fill: #ffedd5; stroke: #ea580c; stroke-width: 2.4; }
-    .pick-c { fill: #dcfce7; stroke: #16a34a; stroke-width: 2.8; }
-    .stride-line { fill: none; stroke: #7c3aed; stroke-width: 3; marker-end: url(#stride-arrow); }
-    .pair-card { fill: #faf5ff; stroke: #d8b4fe; stroke-width: 1.5; }
-    .result-card { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
-    .rule { stroke: #e2e8f0; stroke-width: 1.5; }
+    .heading { font: 700 28px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
+    .matrix-label { font: 700 24px Consolas, "Noto Sans Mono", monospace; }
+    .cell { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
+    .cell-a { fill: #eff6ff; stroke: #2563eb; stroke-width: 2.5; }
+    .cell-b { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
+    .cell-c { fill: #f0fdf4; stroke: #16a34a; stroke-width: 3; }
+    .cell-text { font: 600 19px Consolas, "Noto Sans Mono", monospace; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font: 700 20px Consolas, "Noto Sans Mono", monospace; fill: #7c3aed; text-anchor: middle; }
+    .mono { font: 600 22px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
+    .formula { font: 700 27px Consolas, "Noto Sans Mono", monospace; fill: #334155; text-anchor: middle; }
+    .a { fill: #2563eb; }
+    .b { fill: #ea580c; }
+    .c { fill: #16a34a; }
+    .k { fill: #7c3aed; }
+    .k-path { fill: none; stroke: #7c3aed; stroke-width: 3; }
   </style>
-  <rect width="960" height="700" fill="#ffffff"/>
 
-  <text x="36" y="48" class="title">C[1,2]：沿 A 的 i=1 橫列與 B 的 j=2 直欄乘加</text>
-  <text x="36" y="82" class="subtitle">相同的 k 成對乘加；兩個 offset 只依各自的 signed inner stride 推進。</text>
+  <rect width="720" height="440" fill="#ffffff"/>
+  <text x="20" y="34" class="heading">row i × column j → C[i,j]</text>
 
-  <text x="36" y="126" class="matrix-label lhs">A [M,K]</text>
-  <text x="390" y="126" class="matrix-label rhs">B [K,N]</text>
-  <text x="720" y="126" class="matrix-label out">C [M,N]</text>
-  <text x="350" y="244" class="operator">@</text>
-  <text x="655" y="244" class="operator">→</text>
+  <text x="28" y="72" class="matrix-label a">A [M,K]</text>
+  <text x="334" y="76" class="matrix-label b">B [K,N]</text>
+  <text x="616" y="113" class="matrix-label c">C[i,j]</text>
 
-  <g transform="translate(36 146)">
-    <rect x="0" y="0" width="68" height="52" class="cell-a"/><rect x="68" y="0" width="68" height="52" class="cell-a"/>
-    <rect x="136" y="0" width="68" height="52" class="cell-a"/><rect x="204" y="0" width="68" height="52" class="cell-a"/>
-    <rect x="0" y="52" width="68" height="52" class="pick-a"/><rect x="68" y="52" width="68" height="52" class="pick-a"/>
-    <rect x="136" y="52" width="68" height="52" class="pick-a"/><rect x="204" y="52" width="68" height="52" class="pick-a"/>
-    <rect x="0" y="104" width="68" height="52" class="cell-a"/><rect x="68" y="104" width="68" height="52" class="cell-a"/>
-    <rect x="136" y="104" width="68" height="52" class="cell-a"/><rect x="204" y="104" width="68" height="52" class="cell-a"/>
-    <text x="34" y="26" class="cell-text lhs">A[0,0]</text><text x="102" y="26" class="cell-text lhs">A[0,1]</text>
-    <text x="170" y="26" class="cell-text lhs">A[0,2]</text><text x="238" y="26" class="cell-text lhs">A[0,3]</text>
-    <text x="34" y="78" class="cell-text lhs">A[1,0]</text><text x="102" y="78" class="cell-text lhs">A[1,1]</text>
-    <text x="170" y="78" class="cell-text lhs">A[1,2]</text><text x="238" y="78" class="cell-text lhs">A[1,3]</text>
-    <text x="34" y="130" class="cell-text lhs">A[2,0]</text><text x="102" y="130" class="cell-text lhs">A[2,1]</text>
-    <text x="170" y="130" class="cell-text lhs">A[2,2]</text><text x="238" y="130" class="cell-text lhs">A[2,3]</text>
-    <path d="M18 97 L254 97" class="stride-line"/>
+  <text x="57.5" y="91" class="axis">0</text><text x="112.5" y="91" class="axis">1</text>
+  <text x="167.5" y="91" class="axis">2</text><text x="222.5" y="91" class="axis">3</text>
+  <g transform="translate(30 98)">
+    <rect x="0" y="0" width="55" height="46" class="cell"/><rect x="55" y="0" width="55" height="46" class="cell"/><rect x="110" y="0" width="55" height="46" class="cell"/><rect x="165" y="0" width="55" height="46" class="cell"/>
+    <rect x="0" y="46" width="55" height="46" class="cell-a"/><rect x="55" y="46" width="55" height="46" class="cell-a"/><rect x="110" y="46" width="55" height="46" class="cell-a"/><rect x="165" y="46" width="55" height="46" class="cell-a"/>
+    <rect x="0" y="92" width="55" height="46" class="cell"/><rect x="55" y="92" width="55" height="46" class="cell"/><rect x="110" y="92" width="55" height="46" class="cell"/><rect x="165" y="92" width="55" height="46" class="cell"/>
+    <text x="27.5" y="23" class="cell-text">a00</text><text x="82.5" y="23" class="cell-text">a01</text><text x="137.5" y="23" class="cell-text">a02</text><text x="192.5" y="23" class="cell-text">a03</text>
+    <text x="27.5" y="69" class="cell-text a">a10</text><text x="82.5" y="69" class="cell-text a">a11</text><text x="137.5" y="69" class="cell-text a">a12</text><text x="192.5" y="69" class="cell-text a">a13</text>
+    <text x="27.5" y="115" class="cell-text">a20</text><text x="82.5" y="115" class="cell-text">a21</text><text x="137.5" y="115" class="cell-text">a22</text><text x="192.5" y="115" class="cell-text">a23</text>
   </g>
-  <text x="172" y="329" class="stride" text-anchor="middle">k++ : offset += sA_K</text>
+  <text x="14" y="173" class="axis a">i</text>
 
-  <g transform="translate(390 146)">
-    <rect x="0" y="0" width="68" height="52" class="cell-b"/><rect x="68" y="0" width="68" height="52" class="cell-b"/><rect x="136" y="0" width="68" height="52" class="pick-b"/>
-    <rect x="0" y="52" width="68" height="52" class="cell-b"/><rect x="68" y="52" width="68" height="52" class="cell-b"/><rect x="136" y="52" width="68" height="52" class="pick-b"/>
-    <rect x="0" y="104" width="68" height="52" class="cell-b"/><rect x="68" y="104" width="68" height="52" class="cell-b"/><rect x="136" y="104" width="68" height="52" class="pick-b"/>
-    <rect x="0" y="156" width="68" height="52" class="cell-b"/><rect x="68" y="156" width="68" height="52" class="cell-b"/><rect x="136" y="156" width="68" height="52" class="pick-b"/>
-    <text x="34" y="26" class="cell-text rhs">B[0,0]</text><text x="102" y="26" class="cell-text rhs">B[0,1]</text><text x="170" y="26" class="cell-text rhs">B[0,2]</text>
-    <text x="34" y="78" class="cell-text rhs">B[1,0]</text><text x="102" y="78" class="cell-text rhs">B[1,1]</text><text x="170" y="78" class="cell-text rhs">B[1,2]</text>
-    <text x="34" y="130" class="cell-text rhs">B[2,0]</text><text x="102" y="130" class="cell-text rhs">B[2,1]</text><text x="170" y="130" class="cell-text rhs">B[2,2]</text>
-    <text x="34" y="182" class="cell-text rhs">B[3,0]</text><text x="102" y="182" class="cell-text rhs">B[3,1]</text><text x="170" y="182" class="cell-text rhs">B[3,2]</text>
-    <path d="M194 14 L194 194" class="stride-line"/>
+  <text x="319" y="115" class="axis">0</text><text x="319" y="161" class="axis">1</text>
+  <text x="319" y="207" class="axis">2</text><text x="319" y="253" class="axis">3</text>
+  <g transform="translate(334 86)">
+    <rect x="0" y="0" width="55" height="46" class="cell"/><rect x="55" y="0" width="55" height="46" class="cell"/><rect x="110" y="0" width="55" height="46" class="cell-b"/>
+    <rect x="0" y="46" width="55" height="46" class="cell"/><rect x="55" y="46" width="55" height="46" class="cell"/><rect x="110" y="46" width="55" height="46" class="cell-b"/>
+    <rect x="0" y="92" width="55" height="46" class="cell"/><rect x="55" y="92" width="55" height="46" class="cell"/><rect x="110" y="92" width="55" height="46" class="cell-b"/>
+    <rect x="0" y="138" width="55" height="46" class="cell"/><rect x="55" y="138" width="55" height="46" class="cell"/><rect x="110" y="138" width="55" height="46" class="cell-b"/>
+    <text x="27.5" y="23" class="cell-text">b00</text><text x="82.5" y="23" class="cell-text">b01</text><text x="137.5" y="23" class="cell-text b">b02</text>
+    <text x="27.5" y="69" class="cell-text">b10</text><text x="82.5" y="69" class="cell-text">b11</text><text x="137.5" y="69" class="cell-text b">b12</text>
+    <text x="27.5" y="115" class="cell-text">b20</text><text x="82.5" y="115" class="cell-text">b21</text><text x="137.5" y="115" class="cell-text b">b22</text>
+    <text x="27.5" y="161" class="cell-text">b30</text><text x="82.5" y="161" class="cell-text">b31</text><text x="137.5" y="161" class="cell-text b">b32</text>
   </g>
-  <text x="615" y="250" class="stride" text-anchor="middle" transform="rotate(90 615 250)">k++ : offset += sB_K</text>
+  <text x="471.5" y="77" class="axis b">j</text>
 
-  <g transform="translate(720 146)">
-    <rect x="0" y="0" width="68" height="52" class="cell-c"/><rect x="68" y="0" width="68" height="52" class="cell-c"/><rect x="136" y="0" width="68" height="52" class="cell-c"/>
-    <rect x="0" y="52" width="68" height="52" class="cell-c"/><rect x="68" y="52" width="68" height="52" class="cell-c"/><rect x="136" y="52" width="68" height="52" class="pick-c"/>
-    <rect x="0" y="104" width="68" height="52" class="cell-c"/><rect x="68" y="104" width="68" height="52" class="cell-c"/><rect x="136" y="104" width="68" height="52" class="cell-c"/>
-    <text x="34" y="26" class="cell-text out">C[0,0]</text><text x="102" y="26" class="cell-text out">C[0,1]</text><text x="170" y="26" class="cell-text out">C[0,2]</text>
-    <text x="34" y="78" class="cell-text out">C[1,0]</text><text x="102" y="78" class="cell-text out">C[1,1]</text><text x="170" y="78" class="cell-text out">C[1,2]</text>
-    <text x="34" y="130" class="cell-text out">C[2,0]</text><text x="102" y="130" class="cell-text out">C[2,1]</text><text x="170" y="130" class="cell-text out">C[2,2]</text>
-  </g>
-  <text x="822" y="329" class="body out" text-anchor="middle">目標 output cell</text>
+  <text x="286" y="176" class="matrix-label" text-anchor="middle">@</text>
+  <text x="557" y="176" class="matrix-label" text-anchor="middle">→</text>
+  <rect x="616" y="142" width="72" height="58" rx="5" class="cell-c"/>
+  <text x="652" y="171" class="cell-text c">c12</text>
 
-  <line x1="36" y1="390" x2="924" y2="390" class="rule"/>
-  <text x="36" y="426" class="body">沿 shared K axis 配對</text>
+  <path d="M50 254 H232" class="k-path" marker-end="url(#arrow-k)"/>
+  <text x="30" y="286" class="mono"><tspan class="a">lhs offset</tspan><tspan> += </tspan><tspan class="k">sA_K</tspan></text>
+  <path d="M519 106 V264" class="k-path" marker-end="url(#arrow-k)"/>
+  <text x="334" y="298" class="mono"><tspan class="b">rhs offset</tspan><tspan> += </tspan><tspan class="k">sB_K</tspan></text>
 
-  <g transform="translate(36 446)">
-    <rect width="216" height="92" rx="11" class="pair-card"/>
-    <text x="108" y="28" class="pair shared">k=0</text>
-    <text x="108" y="66" class="pair"><tspan class="lhs">A[1,0]</tspan><tspan fill="#64748b"> × </tspan><tspan class="rhs">B[0,2]</tspan></text>
-  </g>
-  <g transform="translate(260 446)">
-    <rect width="216" height="92" rx="11" class="pair-card"/>
-    <text x="108" y="28" class="pair shared">k=1</text>
-    <text x="108" y="66" class="pair"><tspan class="lhs">A[1,1]</tspan><tspan fill="#64748b"> × </tspan><tspan class="rhs">B[1,2]</tspan></text>
-  </g>
-  <g transform="translate(484 446)">
-    <rect width="216" height="92" rx="11" class="pair-card"/>
-    <text x="108" y="28" class="pair shared">k=2</text>
-    <text x="108" y="66" class="pair"><tspan class="lhs">A[1,2]</tspan><tspan fill="#64748b"> × </tspan><tspan class="rhs">B[2,2]</tspan></text>
-  </g>
-  <g transform="translate(708 446)">
-    <rect width="216" height="92" rx="11" class="pair-card"/>
-    <text x="108" y="28" class="pair shared">k=3</text>
-    <text x="108" y="66" class="pair"><tspan class="lhs">A[1,3]</tspan><tspan fill="#64748b"> × </tspan><tspan class="rhs">B[3,2]</tspan></text>
-  </g>
-
-  <rect x="96" y="572" width="768" height="88" rx="14" class="result-card"/>
-  <text x="480" y="626" class="formula">
-    <tspan class="out">C[1,2]</tspan><tspan fill="#64748b"> = Σ</tspan><tspan class="shared">ₖ</tspan>
-    <tspan class="lhs"> A[1,k]</tspan><tspan fill="#64748b"> × </tspan><tspan class="rhs">B[k,2]</tspan>
-  </text>
+  <line x1="20" y1="320" x2="700" y2="320" stroke="#dbe3ee" stroke-width="1.5"/>
+  <text x="360" y="357" class="mono k" text-anchor="middle">k = 0 … K−1</text>
+  <text x="360" y="403" class="formula"><tspan class="c">C[i,j]</tspan><tspan> = Σ</tspan><tspan class="k">ₖ</tspan><tspan> </tspan><tspan class="a">A[i,k]</tspan><tspan> </tspan><tspan class="b">B[k,j]</tspan></text>
 </svg>

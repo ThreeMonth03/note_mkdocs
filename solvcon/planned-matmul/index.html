@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="從完整的 generic contraction 出發，逐步建立 planned matmul 與可演進的 dispatch。">
+        <meta name="description" content="planned matmul 的 generic implementation、memory layout 與 dispatch。">
       
       
         <meta name="author" content="張君實">
@@ -17,6 +17,8 @@
       
         <link rel="prev" href="../../pve/">
       
+      
+        <link rel="next" href="generic/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
@@ -306,11 +308,18 @@
   
   
   
+    
+
+  
+  
+  
     <li class="md-tabs__item">
       <a href="./" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
+  
+
   
 
       
@@ -331,9 +340,7 @@
           
             
               
-                
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" hidden>
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -1072,125 +1079,222 @@
     
   
   
-    <li class="md-nav__item md-nav__item--active">
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
       
       
         
+          
+            
+          
+        
+          
+        
+          
+        
+          
+            
+          
+        
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          在 solvcon 開發比 NumPy 更快的矩陣乘法
+        
+        
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Planned matmul</a>
+          
+            <label for="__nav_5_1">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
+          Planned matmul
         </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        在 solvcon 開發比 NumPy 更快的矩陣乘法
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+            
+              
   
   
   
     
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+    <li class="md-nav__item md-nav__item--nested">
       
-        <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    先描述運算，再開始執行
-  </a>
-  
-</li>
       
-        <li class="md-nav__item">
-  <a href="#public-roles-core-contraction" class="md-nav__link">
-    四種 public roles，只有一個 core contraction
-  </a>
-  
-</li>
       
-        <li class="md-nav__item">
-  <a href="#batch" class="md-nav__link">
-    把 batch 看成座標空間
-  </a>
-  
-</li>
       
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    Layout 不是格式標籤，而是位址規則
-  </a>
-  
-</li>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
       
-        <li class="md-nav__item">
-  <a href="#hot-loop" class="md-nav__link">
-    讓 hot loop 只剩乘加
-  </a>
-  
-</li>
       
-        <li class="md-nav__item">
-  <a href="#generic-dispatch" class="md-nav__link">
-    完整 generic 之後，才加入 dispatch
-  </a>
-  
-    <nav class="md-nav" aria-label="完整 generic 之後，才加入 dispatch">
-      <ul class="md-nav__list">
         
-          <li class="md-nav__item">
-  <a href="#route" class="md-nav__link">
-    Route 只選一次
-  </a>
-  
-</li>
+          
+            
+          
         
-          <li class="md-nav__item">
-  <a href="#blas-route-dispatch" class="md-nav__link">
-    BLAS 是一種 route，不是 dispatch 本身
-  </a>
-  
-</li>
+          
         
-          <li class="md-nav__item">
-  <a href="#copy" class="md-nav__link">
-    Copy 是否值得，要看能重用幾次
-  </a>
-  
-</li>
+          
         
-      </ul>
-    </nav>
-  
-</li>
+          
+        
+          
+        
       
-        <li class="md-nav__item">
-  <a href="#kernel" class="md-nav__link">
-    測試守住的是語意，不是某個 kernel
-  </a>
-  
-</li>
       
-        <li class="md-nav__item">
-  <a href="#to-be-continued" class="md-nav__link">
-    To be continued
-  </a>
-  
-</li>
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="generic/">Generic implementation</a>
+          
+            <label for="__nav_5_1_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
       
-    </ul>
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          Generic implementation
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+            
+              
   
-</nav>
+  
+  
+    <li class="md-nav__item">
+      <a href="generic/roles/" class="md-nav__link">
+        Operand roles
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="generic/batch-mapping/" class="md-nav__link">
+        Batch mapping
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="generic/signed-strides/" class="md-nav__link">
+        Signed strides
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="generic/contraction-loop/" class="md-nav__link">
+        Contraction loop
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
       
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="dispatch/">Dispatch</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          Dispatch
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="validation/" class="md-nav__link">
+        Validation
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -1209,8 +1313,6 @@
               </div>
             
             
-              
-                
               
               <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
@@ -1231,77 +1333,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    先描述運算，再開始執行
+  <a href="#scope" class="md-nav__link">
+    Scope
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#public-roles-core-contraction" class="md-nav__link">
-    四種 public roles，只有一個 core contraction
+  <a href="#chapters" class="md-nav__link">
+    Chapters
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#batch" class="md-nav__link">
-    把 batch 看成座標空間
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    Layout 不是格式標籤，而是位址規則
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hot-loop" class="md-nav__link">
-    讓 hot loop 只剩乘加
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#generic-dispatch" class="md-nav__link">
-    完整 generic 之後，才加入 dispatch
-  </a>
-  
-    <nav class="md-nav" aria-label="完整 generic 之後，才加入 dispatch">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#route" class="md-nav__link">
-    Route 只選一次
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#blas-route-dispatch" class="md-nav__link">
-    BLAS 是一種 route，不是 dispatch 本身
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#copy" class="md-nav__link">
-    Copy 是否值得，要看能重用幾次
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kernel" class="md-nav__link">
-    測試守住的是語意，不是某個 kernel
+  <a href="#snapshot" class="md-nav__link">
+    Snapshot
   </a>
   
 </li>
@@ -1327,320 +1374,49 @@
                 
                   
   
-  
-
 
 
 
 
 <h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p class="planned-matmul-lede">
-一個三層迴圈只能算矩陣。要實作完整的 <code>matmul</code>，還必須同時理解
-vector roles、batch broadcasting 與任意 memory layout。
-<code>matmul_planned()</code> 的第一個效能決定不是更換 kernel，而是先讓這些
-語意離開 hot loop。
-</p>
-
-<p>矩陣乘法的公式很短，但真正放進 array library 後，輸入不一定是兩個連續的
-二維矩陣。lhs 或 rhs 可能是 vector，前面可能帶著不同 rank 的 batch axes，
-資料也可能來自 transpose、slice 或 reverse view。這些情況共用同一個
-<code>matmul</code> 名字，位址走法卻完全不同。</p>
-<p>我在 solvcon 的 <code>SimpleArray</code> 中開發 <code>matmul_planned()</code>，就是想把這些
-差異收進同一條路徑。它需要完整支援 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code>、
-right-aligned batch broadcasting，以及正、負與非單位 stride；同時又不能
-讓每次 multiply-add 都重新判斷 rank、shape 和 layout。</p>
-<p>這條新路徑目前仍是 opt-in API。Python 的 <code>@</code> 與既有 <code>matmul()</code> 還走
-原本的 implementation，讓 planned matmul 可以在不改變既有行為的情況下
-逐步長完整。本文只討論 <code>matmul_planned()</code>。</p>
-<h2 id="_1">先描述運算，再開始執行</h2>
-<p>最早的 prototype 刻意只處理 rank-2 matrix-matrix。功能雖然窄，卻先建立了
-之後最重要的責任分界：planning 解讀 operands、驗證 contraction dimension、
-推導 output shape 與 strides；execution 只消費這份已經驗證的描述。</p>
-<p>入口因此可以維持一個很單純的順序：先得到固定的運算描述，再依描述配置
-output，最後才執行 contraction。</p>
-<pre class="mermaid"><code>flowchart TD
-    I["lhs + rhs"] --&gt; P["正規化 matmul 語意&lt;br/&gt;得到固定的運算描述"]
-    P --&gt; O["依 output shape 配置結果陣列"]
-    O --&gt; E["依描述執行 contraction"]</code></pre>
-<p class="matmul-caption">
-圖 1. Planning 把 shape 與 layout 轉成固定的運算描述，execution 不必重新解讀
-public API 的語意。
-</p>
-
-<p>現在的實作使用 <code>MatmulPlan</code> 與 <code>MatmulExecutor</code> 完成這個分工，但 class
-名稱不是設計的重點。真正需要保留的是資料流：先得到一份完整、可驗證的
-operation description，再把它交給執行階段。之後增加 kernel 時，新的 route
-不需要各自重寫 broadcasting 或 output-shape 規則。</p>
-<p>rank-2 prototype 證明了這個分層可行，接下來的問題便很清楚：vector roles
-如何進入同一個 core contraction，batch 又該如何走訪。</p>
-<h2 id="public-roles-core-contraction">四種 public roles，只有一個 core contraction</h2>
-<p>矩陣乘法最後都能寫成：</p>
-<div class="arithmatex">\[
-C_{ij} = \sum_{k=0}^{K-1} A_{ik}B_{kj}
-\]</div>
-<p>四種 public roles 的差別，不在乘加本身，而在 <code>M</code> 或 <code>N</code> 是否原本就
-存在。當 lhs 是 rank-1 vector 時，planning 加入 synthetic <code>M=1</code>；當 rhs
-是 vector 時，則加入 synthetic <code>N=1</code>。</p>
-<table>
-<thead>
-<tr>
-<th>運算</th>
-<th>public operands</th>
-<th>normalized core</th>
-<th>public output</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>DOT</code></td>
-<td><code>(K,) @ (K,)</code></td>
-<td><code>1×K @ K×1</code></td>
-<td><code>(1,)</code></td>
-</tr>
-<tr>
-<td><code>GEVM</code></td>
-<td><code>(K,) @ (...,K,N)</code></td>
-<td><code>1×K @ K×N</code></td>
-<td><code>(...,N)</code></td>
-</tr>
-<tr>
-<td><code>GEMV</code></td>
-<td><code>(...,M,K) @ (K,)</code></td>
-<td><code>M×K @ K×1</code></td>
-<td><code>(...,M)</code></td>
-</tr>
-<tr>
-<td><code>GEMM</code></td>
-<td><code>(...,M,K) @ (...,K,N)</code></td>
-<td><code>M×K @ K×N</code></td>
-<td><code>(...,M,N)</code></td>
-</tr>
-</tbody>
-</table>
-<figure class="matmul-figure">
-  <div class="matmul-figure__viewport">
-    <a href="/assets/images/solvcon/planned-matmul/core-axis-normalization.svg">
-      <img src="/assets/images/solvcon/planned-matmul/core-axis-normalization.svg"
-           alt="DOT、GEVM、GEMV 與 GEMM 正規化成相同的 M、N、K core axes"
-           loading="lazy">
-    </a>
-  </div>
-  <figcaption>
-    圖 2. Synthetic axis 只存在於 normalized core，不會出現在 public output。
-  </figcaption>
-</figure>
-
-<p>執行結束後，vector-matrix 省略 synthetic <code>M</code>，matrix-vector 省略
-synthetic <code>N</code>。vector-vector 沿用 <code>SimpleArray</code> 原本的 convention，
-回傳 shape 為 <code>(1,)</code> 的一元素陣列，而不是 NumPy scalar。</p>
-<p>這個 normalization 讓 generic executor 不需要四份 contraction kernel。
-不論 public input 是哪一種 role，進入核心迴圈時都只剩下同一組
-<code>M</code>、<code>N</code>、<code>K</code>。</p>
-<h2 id="batch">把 batch 看成座標空間</h2>
-<p>加入 equal-shape batch 時，我沒有替每個 batch rank 寫一層巢狀迴圈，而是把
-leading axes 表示成一個 coordinate domain。走訪某個 batch coordinate 時，
-只要同時計算 output、lhs 與 rhs 的三個 base offsets，後面的 core
-contraction 就可以完全重用。</p>
-<p>Broadcasting 只是這個 mapping 的延伸。考慮：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>lhs:    (2, 1, 3, 4)
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>rhs:    (1, 5, 4, 6)
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>batch:  (2, 1) × (1, 5) → (2, 5)
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>core:       (3, 4) × (4, 6) → (3, 6)
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>output:                       (2, 5, 3, 6)
-</span></code></pre></div>
-<p>兩邊的 leading axes 從右側對齊後，batch domain 是 <code>(2,5)</code>。以
-C-contiguous inputs 計算，三組 batch mappings 是：</p>
-<div class="arithmatex">\[
-\begin{aligned}
-\operatorname{output}(b_0,b_1) &amp;= 90b_0 + 18b_1, \\
-\operatorname{lhs}(b_0,b_1) &amp;= 12b_0, \\
-\operatorname{rhs}(b_0,b_1) &amp;= 24b_1.
-\end{aligned}
-\]</div>
-<figure class="matmul-figure matmul-figure--dense">
-  <div class="matmul-figure__viewport">
-    <a href="/assets/images/solvcon/planned-matmul/batch-offset-mapping.svg">
-      <img src="/assets/images/solvcon/planned-matmul/batch-offset-mapping.svg"
-           alt="二乘五 batch domain 如何重用 lhs rows 與 rhs columns"
-           loading="lazy">
-    </a>
-  </div>
-  <figcaption>
-    圖 3. Broadcast axis 的 mapped stride 是 0，所以 lhs 沿著欄重用，rhs
-    沿著列重用；輸入本身沒有被展開或複製。
-  </figcaption>
-</figure>
-
-<p>這裡的 zero 是 aligned batch mapping，不是 input view 的 physical stride。
-當 cursor 改變 <code>b1</code> 時，lhs base 因為 mapped stride 為 0 而保持不變；
-改變 <code>b0</code> 時，rhs 也以同樣方式重用。plan 只保存 domain 與三組 strides，
-並沒有替十個 coordinates 各存一份資料結構。</p>
-<p>因此 broadcasting 不需要 materialize <code>(2,5,...)</code> 的 expanded inputs，
-也不需要在每個 element 上詢問「這個 axis 是否 broadcast」。它在 batch
-traversal 層就已經變成普通的 offset arithmetic。</p>
-<h2 id="layout">Layout 不是格式標籤，而是位址規則</h2>
-<p><code>SimpleArray</code> view 可以是 contiguous、transpose、step-two slice 或
-reverse。這些名稱對 generic kernel 並不重要；真正決定下一個 element
-在哪裡的是 logical origin 與 signed strides。</p>
-<figure class="matmul-figure">
-  <div class="matmul-figure__viewport">
-    <a href="/assets/images/solvcon/planned-matmul/layout-strides.svg">
-      <img src="/assets/images/solvcon/planned-matmul/layout-strides.svg"
-           alt="同一個 buffer 如何以正 stride、非單位 stride 與負 stride 形成不同 view"
-           loading="lazy">
-    </a>
-  </div>
-  <figcaption>
-    圖 4. View 是 logical index 到 buffer address 的規則；slice 與 reverse
-    不需要先複製成 contiguous storage。
-  </figcaption>
-</figure>
-
-<p>對 core contraction 而言，A 的 row axis 與 K axis 各需要一個 stride，
-B 的 K axis 與 column axis 也各需要一個 stride。planning 把它們整理成
-<code>lhs_row_stride</code>、<code>lhs_inner_stride</code>、<code>rhs_inner_stride</code> 與
-<code>rhs_column_stride</code>。這四個值可以是正數、負數或非單位間隔。</p>
-<p>generic implementation 因此不需要辨認「這是一個 transpose」或「這是一個
-reverse view」。它只遵守 address rule。layout 差異最後都變成 offset
-應該增加多少。</p>
-<h2 id="hot-loop">讓 hot loop 只剩乘加</h2>
-<p>開始一個 core contraction 前，batch cursor 已經給出 lhs、rhs 與 output
-的 base offsets。row loop 把 lhs row base 外提，column loop 決定 rhs
-column base；進入 K loop 後，只剩兩次 load、一次 multiply-add，以及兩個
-signed offset increments：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">inner_size</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">inner</span><span class="p">)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="p">{</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lhs_data</span><span class="p">[</span><span class="n">lhs_offset</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">rhs_data</span><span class="p">[</span><span class="n">rhs_offset</span><span class="p">];</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lhs_inner_stride</span><span class="p">;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">rhs_inner_stride</span><span class="p">;</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-<figure class="matmul-figure">
-  <div class="matmul-figure__viewport">
-    <a href="/assets/images/solvcon/planned-matmul/generic-contraction-addressing.svg">
-      <img src="/assets/images/solvcon/planned-matmul/generic-contraction-addressing.svg"
-           alt="lhs 的一列與 rhs 的一欄如何沿 K 軸產生一個 output cell"
-           loading="lazy">
-    </a>
-  </div>
-  <figcaption>
-    圖 5. 一個 output cell 只需要沿著 lhs row 與 rhs column 前進；rank、
-    broadcasting 與 layout 判斷都不在 K loop 裡。
-  </figcaption>
-</figure>
-
-<p>當 <code>K=0</code> 時，K loop 不執行，value-initialized accumulator 保持為 0，
-再寫入每一個非空的 output cell。empty contraction 因此不需要另外繞過
-generic semantics。</p>
-<p>這就是 generic executor 能維持低額外成本的原因。它的「通用」發生在
-planning：解析 role、推導 output shape、對齊 batch axes、建立 offset
-mappings。真正執行時只操作 raw pointers 與預先算好的整數。這裡沒有把
-generic 描述成所有尺寸下最快的 kernel；它的價值是提供一條完整、可預測，
-而且 hot loop 足夠小的基線。</p>
-<h2 id="generic-dispatch">完整 generic 之後，才加入 dispatch</h2>
-<p>如果 generic route 本身只支援部分 layout，dispatcher 就必須一邊選 kernel，
-一邊補救缺失的語意。planned matmul 採取相反順序：先讓 generic 完成所有
-roles、batch、broadcast 與 signed strides，再把 specialized route 疊在同一
-份 operation description 上。</p>
-<pre class="mermaid"><code>flowchart TD
-    F["運算事實&lt;br/&gt;role / dtype / size / layout / reuse"]
-    F --&gt; S["選擇 execution policy"]
-    S --&gt; P["必要時準備 operand"]
-    P --&gt; K["固定一條 kernel route"]
-    K --&gt; B["走訪整個 batch domain"]</code></pre>
-<p class="matmul-caption">
-圖 6. Dispatch 決定 route 與必要的 preparation，generic 或 specialized
-kernel 都消費同一份已正規化語意。
-</p>
-
-<h3 id="route">Route 只選一次</h3>
-<p>kernel 與 packing decision 在 batch traversal 之前決定。整個 batch domain
-共用同一條固定 route，不會在每個 contraction 裡重新跑一次 decision tree。
-如果沒有更合適的 specialized kernel，selection 直接回到完整的 generic
-executor，而不是落入一條功能較少的 fallback。</p>
-<h3 id="blas-route-dispatch">BLAS 是一種 route，不是 dispatch 本身</h3>
-<p>對 BLAS 支援的 value type，selection 會依 operation role、problem size 與
-layout 選擇 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code> 或 <code>GEMM</code> route。row-major 或
-transposed-compatible row-major view 可以直接交給 BLAS，不需要 copy。</p>
-<p>這不代表「有 BLAS 就使用 BLAS」。小型或 skinny problem 的 backend setup
-可能比乘加本身更貴；無法直接描述的 signed-stride layout 也可能更適合
-generic。dispatch 的工作是利用已知 facts 做選擇，而 BLAS 只是其中一個
-kernel family。</p>
-<h3 id="copy">Copy 是否值得，要看能重用幾次</h3>
-<p>若一個 incompatible matrix 因 shape broadcasting 而在許多 output
-coordinates 重複使用，execution 可以先把它 pack 成 row-major storage，
-再讓後面的 contractions 共用 packed operand。copy 只發生一次，成本由整個
-batch 攤平。</p>
-<p>對 core layout 不相容、必須 packing 的 operand，目前只處理
-shape-broadcast 且沒有 explicit zero batch stride 的情況。不相容的
-equal-batch matrix 與 explicit zero-stride batch view 保留在 signed-stride
-generic route；相容 layout 仍然可以直接進 BLAS。後續加入的 batched
-<code>GEVM</code> 與 <code>GEMV</code> 也遵守同一個原則：相容的 vector 直接進 BLAS；
-不相容但會重用的 vector，只有在 matrix size、batch size 與總 output work
-足以攤平 copy 時才 pack。</p>
-<p>這些界線集中在 execution policy，而不是散落在 contraction loop。現在使用
-的是一份 compile-time tuning table，套用到所有支援的 BLAS backend 與 value
-type；它不是 runtime 或 per-device autotuning。</p>
-<h2 id="kernel">測試守住的是語意，不是某個 kernel</h2>
-<p>每增加一條 route，最危險的不是 BLAS call 寫錯，而是新路徑只在
-C-contiguous square matrix 上正確。planned matmul 的 differential tests
-以 <code>numpy.matmul</code> 為 reference，從三個容易出錯的層次保護同一份 semantics：</p>
-<table>
-<thead>
-<tr>
-<th>容易出錯的層次</th>
-<th>測試內容</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>role 與 output shape</td>
-<td><code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code>，以及 DOT 的 <code>(1,)</code> convention</td>
-</tr>
-<tr>
-<td>address calculation</td>
-<td>C/F-contiguous、padded、negative-stride、step-two，以及 batch/core axes 同時帶 signed stride</td>
-</tr>
-<tr>
-<td>batch traversal</td>
-<td>equal batch、right-aligned cross broadcasting、empty axes、<code>K=0</code> 與 mismatch diagnostics</td>
-</tr>
-</tbody>
-</table>
-<p>同一組 cases 會套用到 <code>float32</code>、<code>float64</code>、<code>complex64</code> 與
-<code>complex128</code>。如此一來，dispatch 改變的是執行方式，而不是哪些 inputs
-才算合法。</p>
-<h2 id="to-be-continued">To be continued</h2>
-<p>走到這裡，<code>matmul_planned()</code> 已經有完整的 generic semantics，也接上
-direct BLAS、broadcast matrix pack-once，以及 batched-vector routes。
-Strassen kernel 雖然已獨立進入 repository，還沒有接到 planned matmul
-dispatch；<code>@</code> 也尚未切換到這條 opt-in 路徑。</p>
-<p>下一個問題不再是「能不能算」，而是不同 workload 的 crossover 在哪裡：
-小矩陣何時應留在 generic，大矩陣如何從 specialized route 得到優勢，
-batch reuse 又會怎麼改變 packing 的成本。完整 benchmark 還在收尾，下一篇
-會用數據回答這些問題。</p>
-<details class="note">
-<summary>Implementation trail</summary>
-<p>本文對應的實作基準是 solvcon upstream <code>master</code> commit
-<code>95a681224b95f9c5e7e2ee336b6484539bf8a91d</code>。開發順序可以從以下
-commits 閱讀：</p>
+<p><code>matmul_planned()</code> 是 solvcon 用來開發新矩陣乘法架構的 opt-in API。
+這個系列只拆 implementation；benchmark 還在收尾，數據留到下一篇。</p>
+<p>它先完成一條 signed-stride generic implementation，再在相同 semantics
+上加入 dispatch。四種 operand roles、batch broadcasting 與 layout 都在
+進入 kernel 前正規化，不由每條 route 各自解讀。</p>
+<h2 id="scope">Scope</h2>
+<p><code>operand roles + batch broadcasting + signed strides → normalized operation → fixed route</code></p>
+<p>目前 <code>matmul_planned()</code> 已支援：</p>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/commit/5dbc1fc6eccc5a6e2ab6aa6127d4a66664619a7a">Introduce planned matrix-matrix execution</a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/2e40eb8776b275dec58211829f1a2d27f8ce63ae">Traverse equal matmul batches</a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/4aa0ecb5fea85e1dd9bbf8254a7115c8ff771c87">Complete generic planned matmul roles</a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/3fcc46d1025ea9ba09fbed63e6d0ac703372fd16">Dispatch planned matmul operations through BLAS</a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/f6d18c46b3e9e075537b152c150afd884bbaef66">Pack reused matmul matrices once</a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/2bf7db34e1e65f745a8694439400d6b441c10e9f">Tune batched vector matmul routes</a></li>
+<li>完整 generic <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code></li>
+<li>signed-stride matrix、vector 與 batch views</li>
+<li>right-aligned batch broadcasting 與 empty dimensions</li>
+<li>direct BLAS routes</li>
+<li>reused broadcast matrix/vector 的 pack-once routes</li>
 </ul>
-</details>
-<p class="matmul-figure-note">
-本文圖檔皆為 self-contained SVG。可點擊圖片開啟原尺寸，再下載插入
-PowerPoint 或其他文件。
-</p>
+<p>Python <code>@</code> 與既有 <code>matmul()</code> 仍走 legacy implementation。Strassen kernel
+已經進入 repository，但尚未接到 planned-matmul dispatch。</p>
+<h2 id="chapters">Chapters</h2>
+<ol>
+<li><a href="generic/">Operation description</a>：plan 在 hot loop 前固定哪些資料。</li>
+<li><a href="generic/roles/">Operand roles</a>：如何用 synthetic axes 統一四種運算。</li>
+<li><a href="generic/batch-mapping/">Batch mapping</a>：如何用 zero stride 表示 broadcasting。</li>
+<li><a href="generic/signed-strides/">Signed strides</a>：transpose、slice、reverse 如何共用 addressing。</li>
+<li><a href="generic/contraction-loop/">Contraction loop</a>：generic hot loop 最後剩下什麼。</li>
+<li><a href="dispatch/">Dispatch</a>：selection、direct BLAS、pack once 與 batched vectors。</li>
+<li><a href="validation/">Validation</a>：跨 roles、layouts 與 routes 的 NumPy differential tests。</li>
+</ol>
+<h2 id="snapshot">Snapshot</h2>
+<p>本文固定在 solvcon upstream <code>master</code>
+<a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>。
+後續 refactor 可能改變 class 或 member 名稱；這個系列關注的是 core-axis
+normalization、batch mapping、signed addressing 與 select-once execution
+這些較穩定的 invariants。</p>
+<h2 id="to-be-continued">To be continued</h2>
+<p>Benchmark 正在收尾。下一篇只處理 generic、direct BLAS 與 packing routes
+在不同 shape、layout、batch reuse 下的 crossover。</p>
 
 
-
-  
 
 
 

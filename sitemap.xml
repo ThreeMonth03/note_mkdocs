@@ -150,4 +150,39 @@
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/dispatch/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/batch-mapping/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/contraction-loop/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/roles/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/signed-strides/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/planned-matmul/validation/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
 </urlset>

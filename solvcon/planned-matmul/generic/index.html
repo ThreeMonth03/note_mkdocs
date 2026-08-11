@@ -6,33 +6,33 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="我整理的演算法、硬體描述語言練習與系統建置筆記。">
+        <meta name="description" content="MatmulPlan 在 execution 前固定 contraction、batch mappings 與 signed strides。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/hdlbits/getting-started/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/generic/">
       
       
         <link rel="prev" href="../">
       
       
-        <link rel="next" href="../verilog-language/basics/">
+        <link rel="next" href="roles/">
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Getting Started - 君實的技術筆記</title>
+        <title>Operation description - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -89,9 +89,9 @@
       
     
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
+        <a href="#operation-description" class="md-skip">
           跳轉到
         </a>
       
@@ -136,7 +136,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Operation description
             
           </span>
         </div>
@@ -244,7 +244,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../.." class="md-tabs__link">
+    <a href="../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -259,7 +259,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../algorithm/segment-tree/" class="md-tabs__link">
+      <a href="../../../algorithm/segment-tree/" class="md-tabs__link">
         Algorithm
       </a>
     </li>
@@ -269,15 +269,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -293,7 +291,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../pve/" class="md-tabs__link">
+      <a href="../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -302,6 +300,8 @@
       
         
   
+  
+    
   
 
 
@@ -314,7 +314,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../solvcon/planned-matmul/" class="md-tabs__link">
+      <a href="../" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -350,7 +350,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -369,7 +369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         首頁
       </a>
     </li>
@@ -427,7 +427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/segment-tree/" class="md-nav__link">
+      <a href="../../../algorithm/segment-tree/" class="md-nav__link">
         Segment Tree
       </a>
     </li>
@@ -441,7 +441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/sqrt-decomposition/" class="md-nav__link">
+      <a href="../../../algorithm/sqrt-decomposition/" class="md-nav__link">
         Sqrt Decomposition
       </a>
     </li>
@@ -455,7 +455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/number-theory/" class="md-nav__link">
+      <a href="../../../algorithm/number-theory/" class="md-nav__link">
         Number Theory
       </a>
     </li>
@@ -469,7 +469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/convex-hull-trick/" class="md-nav__link">
+      <a href="../../../algorithm/convex-hull-trick/" class="md-nav__link">
         Convex Hull Trick
       </a>
     </li>
@@ -483,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/string-matching/" class="md-nav__link">
+      <a href="../../../algorithm/string-matching/" class="md-nav__link">
         String Matching
       </a>
     </li>
@@ -497,7 +497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/graph/" class="md-nav__link">
+      <a href="../../../algorithm/graph/" class="md-nav__link">
         Graph
       </a>
     </li>
@@ -511,7 +511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithm/tree/" class="md-nav__link">
+      <a href="../../../algorithm/tree/" class="md-nav__link">
         Tree
       </a>
     </li>
@@ -531,16 +531,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
       
       
         
@@ -563,7 +561,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">HDLBits</a>
+          <a href="../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -571,7 +569,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           HDLBits
@@ -584,59 +582,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Getting Started
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#getting-started_1" class="md-nav__link">
-    Getting Started
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output-zero" class="md-nav__link">
-    Output Zero
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -687,7 +637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verilog-language/basics/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -701,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verilog-language/vectors/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -715,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verilog-language/modules/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -729,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verilog-language/procedures/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -743,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verilog-language/more-features/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -813,7 +763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -827,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -841,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -855,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -869,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -883,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/counters/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -897,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -911,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -925,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -939,7 +889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -993,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -1007,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -1028,7 +978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cs450/" class="md-nav__link">
+      <a href="../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -1068,7 +1018,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../pve/">Proxmox VE</a>
+          <a href="../../../pve/">Proxmox VE</a>
           
         </div>
       
@@ -1093,14 +1043,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
       
       
         
@@ -1113,7 +1065,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           solvcon
@@ -1124,14 +1076,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
       
       
         
@@ -1152,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../solvcon/planned-matmul/">Planned matmul</a>
+          <a href="../">Planned matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1160,7 +1114,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
           Planned matmul
@@ -1173,14 +1127,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" checked>
       
       
         
@@ -1200,8 +1156,8 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../solvcon/planned-matmul/generic/">Generic implementation</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Generic implementation</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1209,7 +1165,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
           Generic implementation
@@ -1224,7 +1180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solvcon/planned-matmul/generic/roles/" class="md-nav__link">
+      <a href="roles/" class="md-nav__link">
         Operand roles
       </a>
     </li>
@@ -1238,7 +1194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solvcon/planned-matmul/generic/batch-mapping/" class="md-nav__link">
+      <a href="batch-mapping/" class="md-nav__link">
         Batch mapping
       </a>
     </li>
@@ -1252,7 +1208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solvcon/planned-matmul/generic/signed-strides/" class="md-nav__link">
+      <a href="signed-strides/" class="md-nav__link">
         Signed strides
       </a>
     </li>
@@ -1266,7 +1222,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solvcon/planned-matmul/generic/contraction-loop/" class="md-nav__link">
+      <a href="contraction-loop/" class="md-nav__link">
         Contraction loop
       </a>
     </li>
@@ -1305,7 +1261,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../solvcon/planned-matmul/dispatch/">Dispatch</a>
+          <a href="../dispatch/">Dispatch</a>
           
         </div>
       
@@ -1331,7 +1287,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../solvcon/planned-matmul/validation/" class="md-nav__link">
+      <a href="../validation/" class="md-nav__link">
         Validation
       </a>
     </li>
@@ -1379,15 +1335,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#getting-started_1" class="md-nav__link">
-    Getting Started
+  <a href="#representation" class="md-nav__link">
+    Representation
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-zero" class="md-nav__link">
-    Output Zero
+  <a href="#contract" class="md-nav__link">
+    Contract
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" class="md-nav__link">
+    Source
   </a>
   
 </li>
@@ -1410,26 +1373,57 @@
 
 
 
-<h1 id="getting-started">Getting Started</h1>
-<h2 id="getting-started_1">Getting Started</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Step_one">Getting Started</a></p>
-</blockquote>
-<p>教你怎麼操作平台的，然後要讓 <code>one</code> 輸出 1。這裡有個細節是給值時盡量寫的清楚一點，像這裡1 bit，建議寫成 <code>1'b1</code>，比寫 <code>1</code> 更清楚。</p>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span><span class="w"> </span><span class="k">output</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="p">);</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="p">;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">endmodule</span>
+<h1 id="operation-description">Operation description</h1>
+<p>最早的 planned-matmul prototype 只接受 rank-2 <code>GEMM</code>，但已經先拆開兩件事：
+planning 解讀 array semantics，execution 只消費正規化後的 operation。</p>
+<p>目前的 <code>MatmulPlan::make()</code> 仍維持這個順序：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">Contraction</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">contraction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_contraction</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">ContractionStrides</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">strides</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">make_contraction_strides</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">);</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">BatchMappings</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">make_batch_mappings</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">.</span><span class="n">m_rows</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">contraction</span><span class="p">.</span><span class="n">m_columns</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">output_shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_output_shape</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">);</span>
 </span></code></pre></div>
-<h2 id="output-zero">Output Zero</h2>
-<blockquote>
-<p>原題：<a href="https://hdlbits.01xz.net/wiki/Zero">Output Zero</a></p>
-</blockquote>
-<div class="language-verilog highlight"><span class="filename">Verilog</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">module</span><span class="w"> </span><span class="n">top_module</span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">output</span><span class="w"> </span><span class="n">zero</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">);</span><span class="c1">// Module body starts after semicolon</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">assign</span><span class="w"> </span><span class="n">zero</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">;</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">endmodule</span>
-</span></code></pre></div>
+<h2 id="representation">Representation</h2>
+<p>以兩個 C-contiguous operands 為例：</p>
+<pre class="matmul-data"><code>lhs
+  shape             (2, 1, 3, 4)
+  physical strides  (12, 12, 4, 1)
+
+rhs
+  shape             (1, 5, 4, 6)
+  physical strides  (120, 24, 6, 1)
+
+normalized operation
+  role              GEMM
+  M, N, K           3, 6, 4
+  batch shape       (2, 5)
+  output mapping    (90, 18)
+  lhs mapping       (12, 0)
+  rhs mapping       (0, 24)
+  lhs core strides  row +4, K +1
+  rhs core strides  K +6, column +1
+  output shape      (2, 5, 3, 6)</code></pre>
+
+<p>這不是 <code>MatmulPlan</code> 的 serialized class layout，而是 executor 必須取得的
+穩定資料。broadcasting 造成的 zero 只出現在 aligned batch mapping；input
+本身 size-one axis 的 physical stride 不必是 zero。</p>
+<h2 id="contract">Contract</h2>
+<p>Plan 建立後，kernel 可以假設：</p>
+<ul>
+<li>scalar 已拒絕，lhs/rhs 的 <code>K</code> 已驗證相等；</li>
+<li>public operands 已表示成 <code>M×K @ K×N</code>；</li>
+<li>batch domain 與 output/lhs/rhs mappings rank 相同；</li>
+<li>core addressing 已化成四個 signed strides；</li>
+<li>output shape 已完整決定。</li>
+</ul>
+<p>packing route 可能先 materialize 一個可重用 operand，再重建一次 plan；
+但 batch traversal 開始後，不會重新解析 shape 或 broadcasting。</p>
+<h2 id="source">Source</h2>
+<ul>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L116-L230"><code>MatmulPlan</code> contract</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L349-L362"><code>MatmulPlan::make()</code></a></li>
+</ul>
 
 
 
@@ -1471,13 +1465,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../javascripts/mathjax.js"></script>
+          <script src="../../../javascripts/mathjax.js"></script>
         
       
         
