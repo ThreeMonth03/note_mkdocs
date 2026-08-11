@@ -6,26 +6,26 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="planned matmul 的 generic M、N、K address walk。">
+        <meta name="description" content="將跨 batch 重用的 incompatible operand pack 成 row-major 一次。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/generic/contraction-loop/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/dispatch/packing/">
       
       
-        <link rel="prev" href="../signed-strides/">
+        <link rel="prev" href="../direct-blas/">
       
       
-        <link rel="next" href="../../dispatch/">
+        <link rel="next" href="../batched-vectors/">
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Contraction loop - 君實的技術筆記</title>
+        <title>Packing - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#generic-contraction-loop" class="md-skip">
+        <a href="#pack-once" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contraction loop
+              Packing
             
           </span>
         </div>
@@ -1106,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Planned matmul</a>
+          <a href="../../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1117,7 +1117,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1127,16 +1127,14 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
       
       
         
@@ -1157,7 +1155,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Generic implementation</a>
+          <a href="../../generic/">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1165,10 +1163,10 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1180,8 +1178,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../roles/" class="md-nav__link">
-        Operand roles
+      <a href="../../generic/roles/" class="md-nav__link">
+        Roles
       </a>
     </li>
   
@@ -1194,8 +1192,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../batch-mapping/" class="md-nav__link">
-        Batch mapping
+      <a href="../../generic/batch-mapping/" class="md-nav__link">
+        Batch
       </a>
     </li>
   
@@ -1208,8 +1206,92 @@
   
   
     <li class="md-nav__item">
-      <a href="../signed-strides/" class="md-nav__link">
-        Signed strides
+      <a href="../../generic/signed-strides/" class="md-nav__link">
+        Layout
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../generic/contraction-loop/" class="md-nav__link">
+        Kernel
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" checked>
+      
+      
+        
+          
+            
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          Dispatch
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../direct-blas/" class="md-nav__link">
+        Direct BLAS
       </a>
     </li>
   
@@ -1232,12 +1314,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Contraction loop
+          Packing
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Contraction loop
+        Packing
       </a>
       
         
@@ -1256,22 +1338,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#base-offsets" class="md-nav__link">
-    Base offsets
+  <a href="#eligibility" class="md-nav__link">
+    Eligibility
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#k-loop" class="md-nav__link">
-    K-loop
+  <a href="#replan" class="md-nav__link">
+    Replan
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#k-0" class="md-nav__link">
-    K = 0
+  <a href="#boundary" class="md-nav__link">
+    Boundary
   </a>
   
 </li>
@@ -1292,48 +1374,18 @@
 
             
           
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
             
               
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
-      
-      
-        
-          
-            
-          
-        
-      
-      
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../dispatch/">Dispatch</a>
-          
-        </div>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_3">
-          <span class="md-nav__icon md-icon"></span>
-          Dispatch
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
+    <li class="md-nav__item">
+      <a href="../batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1397,22 +1449,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#base-offsets" class="md-nav__link">
-    Base offsets
+  <a href="#eligibility" class="md-nav__link">
+    Eligibility
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#k-loop" class="md-nav__link">
-    K-loop
+  <a href="#replan" class="md-nav__link">
+    Replan
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#k-0" class="md-nav__link">
-    K = 0
+  <a href="#boundary" class="md-nav__link">
+    Boundary
   </a>
   
 </li>
@@ -1442,58 +1494,43 @@
 
 
 
-<h1 id="generic-contraction-loop">Generic contraction loop</h1>
-<h2 id="base-offsets">Base offsets</h2>
-<p>batch cursor 先提供 output、lhs、rhs 的三個 base offsets。row loop 再外提
-lhs row base 與 output row base；column loop 只補上 rhs column offset。</p>
-<figure class="matmul-figure">
-  <a href="/assets/images/solvcon/planned-matmul/generic-contraction-addressing.svg">
-    <img src="/assets/images/solvcon/planned-matmul/generic-contraction-addressing.svg"
-         alt="A 的一列與 B 的一欄沿 K axis 產生一個 C element"
-         loading="lazy">
-  </a>
-  <figcaption>
-    每個 <code>C[i,j]</code> 只沿 A row 與 B column 的 signed strides 前進。
-  </figcaption>
-</figure>
-
-<h2 id="k-loop">K-loop</h2>
-<p>完整 generic executor 只有固定的 row-column-inner address walk：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rows</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">lhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_row_stride</span><span class="p">();</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">output_row_base</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">output_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">column</span><span class="p">)</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">value_type</span><span class="w"> </span><span class="n">total</span><span class="p">{};</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="p">;</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="n">rhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_column_stride</span><span class="p">();</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">inner_size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">inner</span><span class="p">)</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_lhs_data</span><span class="p">[</span><span class="n">lhs_offset</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_rhs_data</span><span class="p">[</span><span class="n">rhs_offset</span><span class="p">];</span>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">            </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_inner_stride</span><span class="p">();</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">            </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_inner_stride</span><span class="p">();</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="n">m_output_data</span><span class="p">[</span><span class="n">output_row_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="p">;</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="p">}</span>
+<h1 id="pack-once">Pack once</h1>
+<h2 id="eligibility">Eligibility</h2>
+<p>對 BLAS-incompatible core layout，matrix packing 只處理 shape-broadcast 且
+沒有 explicit zero batch stride 的 reused operand：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
 </span></code></pre></div>
-<p>K-loop 裡沒有 rank、broadcast、transpose 或 route 判斷，也沒有
-multi-dimensional index multiplication。它只做兩次 load、multiply-add
-與兩個 signed increments。</p>
-<p>這條 generic route 沒有 tiling 或 packing。它的角色是用低額外成本提供
-完整 semantics；大型工作的 specialized speedup 由 dispatch 章處理。</p>
-<h2 id="k-0">K = 0</h2>
-<p><code>total{}</code> 先 value-initialize。當 <code>K=0</code>，inner loop 不執行，zero accumulator
-仍會明確寫入每個非空 output cell，符合 empty-sum semantics。</p>
+<p>copy cost 只付一次；packed storage 由後續所有 batch coordinates 共用。</p>
+<h2 id="replan">Replan</h2>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a><span class="n">m_lhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a><span class="n">m_rhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+</span></code></pre></div>
+<p>新的 row-major storage 會改變 core strides，因此 executor 在 traversal 前
+重建 operation description。route selection 與 replan 都不進入 batch loop。</p>
+<h2 id="boundary">Boundary</h2>
+<p>不相容的 equal-batch matrix 與 explicit-zero-stride batch view 不會被這條
+policy pack；它們由 signed-stride generic kernel 執行。如果 core layout
+本來 compatible，仍可直接進 BLAS。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L975-L996"><code>execute_generic()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L758-L824"><code>select_matrix_packing()</code> and <code>pack()</code></a></li>
 </ul>
 
 

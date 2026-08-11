@@ -6,33 +6,33 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="我整理的演算法、硬體描述語言練習與系統建置筆記。">
+        <meta name="description" content="matmul 的 generic M、N、K address walk。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/pve/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/generic/contraction-loop/">
       
       
-        <link rel="prev" href="../hdlbits/cs450/">
+        <link rel="prev" href="../signed-strides/">
       
       
-        <link rel="next" href="../solvcon/matmul/">
+        <link rel="next" href="../../dispatch/">
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Proxmox VE Tutorial - 君實的技術筆記</title>
+        <title>Contraction loop - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -89,9 +89,9 @@
       
     
     
-      <link rel="stylesheet" href="../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#proxmox-ve-tutorial" class="md-skip">
+        <a href="#generic-contraction-loop" class="md-skip">
           跳轉到
         </a>
       
@@ -136,7 +136,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href=".." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Proxmox VE Tutorial
+              Contraction loop
             
           </span>
         </div>
@@ -244,7 +244,7 @@
 
 
   <li class="md-tabs__item">
-    <a href=".." class="md-tabs__link">
+    <a href="../../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -259,7 +259,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../algorithm/segment-tree/" class="md-tabs__link">
+      <a href="../../../../algorithm/segment-tree/" class="md-tabs__link">
         Algorithm
       </a>
     </li>
@@ -275,7 +275,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../hdlbits/" class="md-tabs__link">
+      <a href="../../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -285,15 +285,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -303,6 +301,8 @@
         
   
   
+    
+  
 
 
   
@@ -314,7 +314,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../solvcon/matmul/" class="md-tabs__link">
+      <a href="../../" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -350,7 +350,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -369,7 +369,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../../.." class="md-nav__link">
         首頁
       </a>
     </li>
@@ -427,7 +427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/segment-tree/" class="md-nav__link">
+      <a href="../../../../algorithm/segment-tree/" class="md-nav__link">
         Segment Tree
       </a>
     </li>
@@ -441,7 +441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/sqrt-decomposition/" class="md-nav__link">
+      <a href="../../../../algorithm/sqrt-decomposition/" class="md-nav__link">
         Sqrt Decomposition
       </a>
     </li>
@@ -455,7 +455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/number-theory/" class="md-nav__link">
+      <a href="../../../../algorithm/number-theory/" class="md-nav__link">
         Number Theory
       </a>
     </li>
@@ -469,7 +469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/convex-hull-trick/" class="md-nav__link">
+      <a href="../../../../algorithm/convex-hull-trick/" class="md-nav__link">
         Convex Hull Trick
       </a>
     </li>
@@ -483,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/string-matching/" class="md-nav__link">
+      <a href="../../../../algorithm/string-matching/" class="md-nav__link">
         String Matching
       </a>
     </li>
@@ -497,7 +497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/graph/" class="md-nav__link">
+      <a href="../../../../algorithm/graph/" class="md-nav__link">
         Graph
       </a>
     </li>
@@ -511,7 +511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithm/tree/" class="md-nav__link">
+      <a href="../../../../algorithm/tree/" class="md-nav__link">
         Tree
       </a>
     </li>
@@ -561,7 +561,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../hdlbits/">HDLBits</a>
+          <a href="../../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -584,7 +584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/getting-started/" class="md-nav__link">
+      <a href="../../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -637,7 +637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verilog-language/basics/" class="md-nav__link">
+      <a href="../../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -651,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verilog-language/vectors/" class="md-nav__link">
+      <a href="../../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -665,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verilog-language/modules/" class="md-nav__link">
+      <a href="../../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -679,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verilog-language/procedures/" class="md-nav__link">
+      <a href="../../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -693,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verilog-language/more-features/" class="md-nav__link">
+      <a href="../../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -763,7 +763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -777,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -791,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -805,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -819,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -833,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/counters/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -847,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -861,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -875,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -889,7 +889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -943,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -957,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -978,12 +978,57 @@
   
   
     <li class="md-nav__item">
-      <a href="../hdlbits/cs450/" class="md-nav__link">
+      <a href="../../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
   
 
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../../../pve/">Proxmox VE</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Proxmox VE
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
             
           
         </ul>
@@ -1007,52 +1052,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
-      
-      
-        
-          
-            
-          
-        
-      
-      
-        
-        
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Proxmox VE</a>
-          
-        </div>
-      
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_4">
-          <span class="md-nav__icon md-icon"></span>
-          Proxmox VE
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
       
       
         
@@ -1065,7 +1065,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           solvcon
@@ -1076,14 +1076,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
       
       
         
@@ -1104,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../solvcon/matmul/">Matmul</a>
+          <a href="../../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1112,7 +1114,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
           Matmul
@@ -1125,14 +1127,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" checked>
       
       
         
@@ -1153,7 +1157,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../solvcon/matmul/generic/">Generic</a>
+          <a href="../">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1161,7 +1165,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
           Generic
@@ -1176,7 +1180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/generic/roles/" class="md-nav__link">
+      <a href="../roles/" class="md-nav__link">
         Roles
       </a>
     </li>
@@ -1190,7 +1194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/generic/batch-mapping/" class="md-nav__link">
+      <a href="../batch-mapping/" class="md-nav__link">
         Batch
       </a>
     </li>
@@ -1204,7 +1208,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/generic/signed-strides/" class="md-nav__link">
+      <a href="../signed-strides/" class="md-nav__link">
         Layout
       </a>
     </li>
@@ -1216,11 +1220,73 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../solvcon/matmul/generic/contraction-loop/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Kernel
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Kernel
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#base-offsets" class="md-nav__link">
+    Base offsets
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k-loop" class="md-nav__link">
+    K-loop
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#k-0" class="md-nav__link">
+    K = 0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" class="md-nav__link">
+    Source
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1263,7 +1329,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../solvcon/matmul/dispatch/">Dispatch</a>
+          <a href="../../dispatch/">Dispatch</a>
           
             <label for="__nav_5_1_3">
               <span class="md-nav__icon md-icon"></span>
@@ -1286,7 +1352,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/dispatch/direct-blas/" class="md-nav__link">
+      <a href="../../dispatch/direct-blas/" class="md-nav__link">
         Direct BLAS
       </a>
     </li>
@@ -1300,7 +1366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/dispatch/packing/" class="md-nav__link">
+      <a href="../../dispatch/packing/" class="md-nav__link">
         Packing
       </a>
     </li>
@@ -1314,7 +1380,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/dispatch/batched-vectors/" class="md-nav__link">
+      <a href="../../dispatch/batched-vectors/" class="md-nav__link">
         Batched vectors
       </a>
     </li>
@@ -1335,7 +1401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../solvcon/matmul/validation/" class="md-nav__link">
+      <a href="../../validation/" class="md-nav__link">
         Validation
       </a>
     </li>
@@ -1383,172 +1449,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    安裝與初始設定
+  <a href="#base-offsets" class="md-nav__link">
+    Base offsets
   </a>
-  
-    <nav class="md-nav" aria-label="安裝與初始設定">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#proxmox-ve" class="md-nav__link">
-    安裝 Proxmox VE
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#web" class="md-nav__link">
-    登入 Web 管理介面
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    新增磁碟
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#vm" class="md-nav__link">
-    建立 VM 與服務
+  <a href="#k-loop" class="md-nav__link">
+    K-loop
   </a>
-  
-    <nav class="md-nav" aria-label="建立 VM 與服務">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#ubuntu-vm" class="md-nav__link">
-    Ubuntu VM
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#windows-vm" class="md-nav__link">
-    Windows VM
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#docker-portainer" class="md-nav__link">
-    Docker / Portainer
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#passthrough" class="md-nav__link">
-    硬體 Passthrough
+  <a href="#k-0" class="md-nav__link">
+    K = 0
   </a>
-  
-    <nav class="md-nav" aria-label="硬體 Passthrough">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#gpu-passthrough" class="md-nav__link">
-    GPU Passthrough
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#passthrough_1" class="md-nav__link">
-    音效卡 Passthrough
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#xbox-controller-passthrough" class="md-nav__link">
-    Xbox Controller Passthrough
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#vck190-jtag-uart-passthrough" class="md-nav__link">
-    VCK190 JTAG / UART Passthrough
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    網路設定
+  <a href="#source" class="md-nav__link">
+    Source
   </a>
-  
-    <nav class="md-nav" aria-label="網路設定">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    網路速度檢查
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#router-lan" class="md-nav__link">
-    Router 與 LAN
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    網路設定參考
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    遠端連線
-  </a>
-  
-    <nav class="md-nav" aria-label="遠端連線">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#openvpn" class="md-nav__link">
-    OpenVPN
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#remote-desktop" class="md-nav__link">
-    Remote Desktop
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1570,145 +1494,59 @@
 
 
 
-<h1 id="proxmox-ve-tutorial">Proxmox VE Tutorial</h1>
-<p>Proxmox VE 是基於 Debian 的開源虛擬化平台，適合用來建立 VM、LXC container、homelab 服務，以及需要硬體 passthrough 的開發環境。</p>
-<p>相較於 Hyper-V 或 VMware Workstation，Proxmox VE 的優勢在於它以 KVM 為核心，對 PCIe、GPU、USB、序列埠等硬體 passthrough 的支援較完整。若需要在 VM 中使用 GPU、FPGA 開發板或 JTAG/UART 裝置，Proxmox VE 會比一般桌面虛擬化工具更合適。</p>
-<div class="admonition warning">
-<p class="admonition-title">注意</p>
-<p>部分遊戲或反作弊系統會偵測並阻擋虛擬機環境。即使網路上有繞過方法，也不建議把它當成穩定或安全的使用方式。</p>
-</div>
-<h2 id="_1">安裝與初始設定</h2>
-<h3 id="proxmox-ve">安裝 Proxmox VE</h3>
-<p>參考資料：</p>
-<ul>
-<li><a href="https://youtu.be/_sfddZHhOj4?si=d2sby2GmX5ZyMT36&amp;t=424">My Proxmox Home Server Walk-Through: Part 1</a></li>
-<li><a href="https://ithelp.ithome.com.tw/m/articles/10265378">Proxmox VE 準備與安裝</a></li>
-</ul>
-<div class="admonition tip">
-<p class="admonition-title">家用網路建議</p>
-<p>安裝時建議讓 Proxmox VE 主機接在 router 後方，先在 LAN 內完成設定。安裝前先查好 default gateway 與 DNS，並在安裝流程中填入正確設定，後續遠端連線會少很多問題。</p>
-</div>
-<h3 id="web">登入 Web 管理介面</h3>
-<ol>
-<li>使用同一個 LAN 內的另一台電腦。</li>
-<li>開啟瀏覽器，進入 <code>https://&lt;PVE_LAN_IP&gt;:8006/</code>。</li>
-<li>使用安裝時設定的帳號密碼登入：</li>
-<li>使用者：<code>root</code></li>
-<li>密碼：安裝 Proxmox VE 時設定的 root 密碼</li>
-</ol>
-<h3 id="_2">新增磁碟</h3>
-<p>參考：<a href="https://ithelp.ithome.com.tw/m/articles/10267724">Proxmox VE 儲存基本配置</a></p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>磁碟規劃建議一開始就盡量配置完整。後續再補磁碟時，若空間不連續或 storage type 不同，調整會比較麻煩。</p>
-</div>
-<h2 id="vm">建立 VM 與服務</h2>
-<h3 id="ubuntu-vm">Ubuntu VM</h3>
-<p>參考：<a href="https://ithelp.ithome.com.tw/articles/10268866?sc=iThelpR">Proxmox VE 安裝虛擬機：Ubuntu Server 20.04</a></p>
-<h3 id="windows-vm">Windows VM</h3>
-<p>建議先看這份 walkthrough：</p>
-<ul>
-<li><a href="https://youtu.be/BoMlfk397h0?si=k6bDE4D1XsrKCQeH&amp;t=628">Remote Gaming and Streaming w/ Proxmox - Proxmox Walk-Through: Part 2</a></li>
-</ul>
-<p>重點設定：</p>
-<ul>
-<li>網卡使用 VirtIO。</li>
-<li>若需要低延遲遠端操作，可以搭配 Parsec。</li>
-<li>若要 GPU passthrough，先確認主機板、IOMMU group、GPU 型號與驅動相容性。</li>
-</ul>
-<p>其他參考：</p>
-<ul>
-<li><a href="https://ithelp.ithome.com.tw/articles/10268516">Proxmox VE 安裝虛擬機：Windows 10（一）</a></li>
-<li><a href="https://blog.sakamoto.cat/zai-proxmox-ve-zhong-an-zhuang-windows10-yu-xiang-guan-qu-dong/">Windows 10 安裝時的磁碟驅動問題</a></li>
-<li><a href="https://ithelp.ithome.com.tw/articles/10269679">Proxmox VE 安裝虛擬機：Windows 10（二）</a></li>
-</ul>
-<h3 id="docker-portainer">Docker / Portainer</h3>
-<p>參考：<a href="https://honeststore.com.tw/install-oracle-linux-and-docker-on-proxmoxs-vm/">在 Proxmox 的 VM 上安裝 Oracle Linux 及 Docker</a></p>
-<h2 id="passthrough">硬體 Passthrough</h2>
-<h3 id="gpu-passthrough">GPU Passthrough</h3>
-<p>參考資料：</p>
-<ul>
-<li><a href="https://youtu.be/BoMlfk397h0?si=k6bDE4D1XsrKCQeH&amp;t=628">Remote Gaming and Streaming w/ Proxmox - Proxmox Walk-Through: Part 2</a></li>
-<li><a href="https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to_gpu_passthrough/">The Ultimate Beginner's Guide to GPU Passthrough</a></li>
-</ul>
-<h3 id="passthrough_1">音效卡 Passthrough</h3>
-<ol>
-<li>在 Proxmox shell 執行 <code>lspci -v</code>，確認音效裝置的 PCI device ID。</li>
-<li>在 VM 的 Hardware 頁面新增對應 PCI Device。</li>
-<li>VM 開機後確認音訊輸入/輸出裝置是否正常。</li>
-</ol>
-<h3 id="xbox-controller-passthrough">Xbox Controller Passthrough</h3>
-<p>參考：<a href="https://www.reddit.com/r/Proxmox/comments/esghjp/cant_get_xbox_one_controller_to_passthrough/">Can't get Xbox one controller to passthrough?</a></p>
-<h3 id="vck190-jtag-uart-passthrough">VCK190 JTAG / UART Passthrough</h3>
-<ol>
-<li>在 VM 設定中加入 VCK190 對應的 USB device。</li>
-<li>Ubuntu 版本建議先依官方教材環境選擇；若教材指定 18.04.5，就先用該版本降低驅動相容性問題。</li>
-<li>安裝 <a href="https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads">UART 驅動</a>與 <a href="https://blog.csdn.net/hb_wxz/article/details/107320862">JTAG 驅動</a>。</li>
-<li>在 Ubuntu VM 內加入 serial port 權限：</li>
-</ol>
-<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>sudo<span class="w"> </span>adduser<span class="w"> </span>&lt;username&gt;<span class="w"> </span>dialout
+<h1 id="generic-contraction-loop">Generic contraction loop</h1>
+<h2 id="base-offsets">Base offsets</h2>
+<p>batch cursor 先提供 output、lhs、rhs 的三個 base offsets。row loop 再外提
+lhs row base 與 output row base；column loop 只補上 rhs column offset。</p>
+<figure class="matmul-figure">
+  <a href="/assets/images/solvcon/matmul/generic/generic-contraction-addressing.svg">
+    <img src="/assets/images/solvcon/matmul/generic/generic-contraction-addressing.svg"
+         alt="A 的一列與 B 的一欄沿 K axis 產生一個 C element"
+         loading="lazy">
+  </a>
+  <figcaption>
+    每個 <code>C[i,j]</code> 只沿 A row 與 B column 的 signed strides 前進。
+  </figcaption>
+</figure>
+
+<h2 id="k-loop">K-loop</h2>
+<p>完整 generic executor 只有固定的 row-column-inner address walk：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rows</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">lhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_row_stride</span><span class="p">();</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">output_row_base</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">output_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">column</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">value_type</span><span class="w"> </span><span class="n">total</span><span class="p">{};</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="p">;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="n">rhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_column_stride</span><span class="p">();</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">inner_size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">inner</span><span class="p">)</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_lhs_data</span><span class="p">[</span><span class="n">lhs_offset</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_rhs_data</span><span class="p">[</span><span class="n">rhs_offset</span><span class="p">];</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">            </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_inner_stride</span><span class="p">();</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">            </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_inner_stride</span><span class="p">();</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="n">m_output_data</span><span class="p">[</span><span class="n">output_row_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="p">;</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>不建議只用 <code>sudo chmod 777 /dev/ttyUSB*</code> 處理權限。這通常只能暫時取得 port 存取權，未必能完整處理板子的存取問題。</p>
-</div>
-<ol>
-<li>使用 PuTTY 或 <a href="https://xilinx.github.io/Embedded-Design-Tutorials/docs/2022.1/build/html/docs/Introduction/Versal-EDT/docs/2-cips-noc-ip-config.html">Vitis 內建 terminal</a> 連接 serial port。</li>
-</ol>
-<h2 id="_3">網路設定</h2>
-<h3 id="_4">網路速度檢查</h3>
-<p>家用環境常見瓶頸：</p>
-<ol>
-<li>電信方案：決定外網速度上限。</li>
-<li>網路線：1 Gbps 網路通常使用 Cat.5e 以上即可。</li>
-<li>網卡與網路晶片：會影響 VM 或主機的實際吞吐量。</li>
-<li>Router：CPU 與 NAT 效能會影響多人連線或高流量情境。</li>
-<li>VM 網卡設定：建議使用 VirtIO，通常比 Intel E1000 這類 emulated NIC 效能更好。</li>
-</ol>
-<h3 id="router-lan">Router 與 LAN</h3>
-<p>Router 負責分配 LAN IP，並管理 WAN 與 LAN 之間的流量。若要從外網連回內網，通常需要 router、VPN、DDNS 或固定 IP 等設定配合。</p>
-<div class="admonition warning">
-<p class="admonition-title">實驗室或公司網路</p>
-<p>若在實驗室、公司或學校網路中使用，請先確認網管政策。不要自行設定 port forwarding 或架 VPN。</p>
-</div>
-<p>家用環境通常建議在電信數據機後方接一台自己的 router，再讓 Proxmox VE 主機接在 router 後方。這樣 LAN、VPN、DDNS 與防火牆規則都比較容易掌握。</p>
-<p>固定 IP 或 DDNS 可以用來解決家用浮動 IP 的問題。若 router 本身支援 DDNS，通常會比自行維護額外服務更方便。</p>
-<h3 id="_5">網路設定參考</h3>
+<p>K-loop 裡沒有 rank、broadcast、transpose 或 route 判斷，也沒有
+multi-dimensional index multiplication。它只做兩次 load、multiply-add
+與兩個 signed increments。</p>
+<p>這條 generic route 沒有 tiling 或 packing。它的角色是用低額外成本提供
+完整 semantics；大型工作的 specialized speedup 由 dispatch 章處理。</p>
+<h2 id="k-0">K = 0</h2>
+<p><code>total{}</code> 先 value-initialize。當 <code>K=0</code>，inner loop 不執行，zero accumulator
+仍會明確寫入每個非空 output cell，符合 empty-sum semantics。</p>
+<h2 id="source">Source</h2>
 <ul>
-<li><a href="https://www.youtube.com/watch?v=lq0o1LdwQKg&amp;ab_channel=Sauber-LabUK">Proxmox Part 10: Let's configure our network system to create different connections</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L975-L996"><code>execute_generic()</code></a></li>
 </ul>
-<h2 id="_6">遠端連線</h2>
-<h3 id="openvpn">OpenVPN</h3>
-<p>遠端管理 Proxmox VE 時，建議先 VPN 回 LAN，再連 Web UI 或 VM。不要直接把 Proxmox VE 管理介面暴露到公網。</p>
-<p>常見做法：</p>
-<ol>
-<li>使用 router 內建 VPN server。例如 ASUS router 可直接建立 OpenVPN server。</li>
-<li>在 Proxmox VE 或 VM 中自行架設 VPN。這種做法彈性較高，但 port forwarding 與防火牆設定也更容易出錯。</li>
-</ol>
-<p>參考資料：</p>
-<ul>
-<li><a href="https://www.asus.com/hk/support/FAQ/1008713/">如何設定華碩無線路由器做 VPN 伺服器</a></li>
-<li><a href="https://www.asus.com/tw/support/FAQ/1004469">如何將您的設備連接到 OpenVPN 伺服器？Windows</a></li>
-<li><a href="https://www.asus.com/tw/support/FAQ/1004472">如何將您的設備連接到 OpenVPN 伺服器？Mac</a></li>
-<li><a href="https://www.youtube.com/watch?v=m4i_kkx50lw&amp;t=807s&amp;ab_channel=HomelabTim">Creating a VPN with Proxmox</a></li>
-</ul>
-<h3 id="remote-desktop">Remote Desktop</h3>
-<p>Windows / macOS：</p>
-<ul>
-<li>可使用 <a href="https://www.youtube.com/watch?v=BoMlfk397h0&amp;list=PLXJCC3PRO2aCDQStpAYt9_SzHnVAmhq3_&amp;index=1&amp;ab_channel=HardwareHaven">Parsec</a> 做低延遲遠端桌面。</li>
-</ul>
-<p>Ubuntu：</p>
-<ul>
-<li>可安裝 XRDP。參考：<a href="http://c-nergy.be/blog/?p=18918">Install XRDP on Ubuntu</a></li>
-<li>若使用腳本安裝，可依文章流程執行：</li>
-</ul>
-<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>chmod<span class="w"> </span>+x<span class="w"> </span>~/Downloads/xrdp-installer-1.4.7.sh
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>./xrdp-installer-1.4.7.sh<span class="w"> </span>-c<span class="w"> </span>-l<span class="w"> </span>-s
-</span></code></pre></div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>使用 RDP 連 Ubuntu VM 前，可以在 Proxmox VE 的 VM Hardware 設定中將 display 設成 <code>none</code>，避免遠端桌面顯示異常。</p>
-</div>
 
 
 
@@ -1750,13 +1588,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../javascripts/mathjax.js"></script>
+          <script src="../../../../javascripts/mathjax.js"></script>
         
       
         

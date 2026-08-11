@@ -6,13 +6,13 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="planned matmul 的 generic implementation、memory layout 與 dispatch。">
+        <meta name="description" content="solvcon matmul 的 generic implementation、memory layout 與 dispatch。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/">
       
       
         <link rel="prev" href="../../pve/">
@@ -1106,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Planned matmul</a>
+          <a href="./">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1117,7 +1117,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1155,7 +1155,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="generic/">Generic implementation</a>
+          <a href="generic/">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1166,7 +1166,7 @@
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1179,7 +1179,7 @@
   
     <li class="md-nav__item">
       <a href="generic/roles/" class="md-nav__link">
-        Operand roles
+        Roles
       </a>
     </li>
   
@@ -1193,7 +1193,7 @@
   
     <li class="md-nav__item">
       <a href="generic/batch-mapping/" class="md-nav__link">
-        Batch mapping
+        Batch
       </a>
     </li>
   
@@ -1207,7 +1207,7 @@
   
     <li class="md-nav__item">
       <a href="generic/signed-strides/" class="md-nav__link">
-        Signed strides
+        Layout
       </a>
     </li>
   
@@ -1221,7 +1221,7 @@
   
     <li class="md-nav__item">
       <a href="generic/contraction-loop/" class="md-nav__link">
-        Contraction loop
+        Kernel
       </a>
     </li>
   
@@ -1254,12 +1254,22 @@
             
           
         
+          
+        
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
           <a href="dispatch/">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1270,6 +1280,48 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="dispatch/direct-blas/" class="md-nav__link">
+        Direct BLAS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="dispatch/packing/" class="md-nav__link">
+        Packing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="dispatch/batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1333,22 +1385,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#scope" class="md-nav__link">
-    Scope
+  <a href="#generic" class="md-nav__link">
+    Generic
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#chapters" class="md-nav__link">
-    Chapters
+  <a href="#dispatch" class="md-nav__link">
+    Dispatch
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#snapshot" class="md-nav__link">
-    Snapshot
+  <a href="#validation" class="md-nav__link">
+    Validation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    Version
   </a>
   
 </li>
@@ -1379,39 +1438,27 @@
 
 
 <h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p><code>matmul_planned()</code> 是 solvcon 用來開發新矩陣乘法架構的 opt-in API。
-這個系列只拆 implementation；benchmark 還在收尾，數據留到下一篇。</p>
-<p>它先完成一條 signed-stride generic implementation，再在相同 semantics
-上加入 dispatch。四種 operand roles、batch broadcasting 與 layout 都在
-進入 kernel 前正規化，不由每條 route 各自解讀。</p>
-<h2 id="scope">Scope</h2>
-<p><code>operand roles + batch broadcasting + signed strides → normalized operation → fixed route</code></p>
-<p>目前 <code>matmul_planned()</code> 已支援：</p>
-<ul>
-<li>完整 generic <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code></li>
-<li>signed-stride matrix、vector 與 batch views</li>
-<li>right-aligned batch broadcasting 與 empty dimensions</li>
-<li>direct BLAS routes</li>
-<li>reused broadcast matrix/vector 的 pack-once routes</li>
-</ul>
-<p>Python <code>@</code> 與既有 <code>matmul()</code> 仍走 legacy implementation。Strassen kernel
-已經進入 repository，但尚未接到 planned-matmul dispatch。</p>
-<h2 id="chapters">Chapters</h2>
-<ol>
-<li><a href="generic/">Operation description</a>：plan 在 hot loop 前固定哪些資料。</li>
-<li><a href="generic/roles/">Operand roles</a>：如何用 synthetic axes 統一四種運算。</li>
-<li><a href="generic/batch-mapping/">Batch mapping</a>：如何用 zero stride 表示 broadcasting。</li>
-<li><a href="generic/signed-strides/">Signed strides</a>：transpose、slice、reverse 如何共用 addressing。</li>
-<li><a href="generic/contraction-loop/">Contraction loop</a>：generic hot loop 最後剩下什麼。</li>
-<li><a href="dispatch/">Dispatch</a>：selection、direct BLAS、pack once 與 batched vectors。</li>
-<li><a href="validation/">Validation</a>：跨 roles、layouts 與 routes 的 NumPy differential tests。</li>
-</ol>
-<h2 id="snapshot">Snapshot</h2>
+<p><code>(2,1,3,4) @ (1,5,4,6) → (2,5,3,6)</code>。</p>
+<p>這一行包含十次 <code>3×4 @ 4×6</code> contraction。lhs 沿第二個 batch axis
+重用，rhs 沿第一個 batch axis 重用；如果 operand 再來自 reverse 或
+step-two slice，下一個 element 甚至不在相鄰位址。</p>
+<p>solvcon 的 matmul 先把這些差異壓成 <code>M/N/K</code>、三組 batch mappings 與
+四個 signed core strides。描述固定後，<code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code>
+共用同一個 generic contraction；dispatch 只決定如何執行它。</p>
+<h2 id="generic">Generic</h2>
+<p><a href="generic/">Operation</a> → <a href="generic/roles/">Roles</a> →
+<a href="generic/batch-mapping/">Batch</a> → <a href="generic/signed-strides/">Layout</a> →
+<a href="generic/contraction-loop/">Kernel</a></p>
+<h2 id="dispatch">Dispatch</h2>
+<p><a href="dispatch/">Selection</a> → <a href="dispatch/direct-blas/">Direct BLAS</a> /
+<a href="dispatch/packing/">Packing</a> / <a href="dispatch/batched-vectors/">Batched vectors</a></p>
+<h2 id="validation">Validation</h2>
+<p><a href="validation/">NumPy differential tests</a> 覆蓋 roles、signed layouts、
+broadcasting、empty axes 與 execution routes。</p>
+<h2 id="version">Version</h2>
 <p>本文固定在 solvcon upstream <code>master</code>
 <a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>。
-後續 refactor 可能改變 class 或 member 名稱；這個系列關注的是 core-axis
-normalization、batch mapping、signed addressing 與 select-once execution
-這些較穩定的 invariants。</p>
+Python entry point：<code>matmul_planned()</code>。</p>
 <h2 id="to-be-continued">To be continued</h2>
 <p>Benchmark 正在收尾。下一篇只處理 generic、direct BLAS 與 packing routes
 在不同 shape、layout、batch reuse 下的 crossover。</p>

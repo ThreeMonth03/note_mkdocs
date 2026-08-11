@@ -6,24 +6,26 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="以 NumPy differential tests 驗證 planned matmul 的 roles、layouts 與 route boundaries。">
+        <meta name="description" content="matmul 如何在 batch traversal 前固定 kernel 與 preparation。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/validation/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/dispatch/">
       
       
-        <link rel="prev" href="../dispatch/">
+        <link rel="prev" href="../generic/contraction-loop/">
       
+      
+        <link rel="next" href="direct-blas/">
       
       <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Validation - 君實的技術筆記</title>
+        <title>Selection - 君實的技術筆記</title>
       
     
     
@@ -118,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#differential-tests" class="md-skip">
+        <a href="#dispatch-selection" class="md-skip">
           跳轉到
         </a>
       
@@ -153,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Validation
+              Selection
             
           </span>
         </div>
@@ -1104,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Planned matmul</a>
+          <a href="../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1115,7 +1117,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1153,7 +1155,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../generic/">Generic implementation</a>
+          <a href="../generic/">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1164,7 +1166,7 @@
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1177,7 +1179,7 @@
   
     <li class="md-nav__item">
       <a href="../generic/roles/" class="md-nav__link">
-        Operand roles
+        Roles
       </a>
     </li>
   
@@ -1191,7 +1193,7 @@
   
     <li class="md-nav__item">
       <a href="../generic/batch-mapping/" class="md-nav__link">
-        Batch mapping
+        Batch
       </a>
     </li>
   
@@ -1205,7 +1207,7 @@
   
     <li class="md-nav__item">
       <a href="../generic/signed-strides/" class="md-nav__link">
-        Signed strides
+        Layout
       </a>
     </li>
   
@@ -1219,7 +1221,7 @@
   
     <li class="md-nav__item">
       <a href="../generic/contraction-loop/" class="md-nav__link">
-        Contraction loop
+        Kernel
       </a>
     </li>
   
@@ -1237,14 +1239,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" checked>
       
       
         
@@ -1252,16 +1256,26 @@
             
           
         
+          
+        
+          
+        
+          
+        
       
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../dispatch/">Dispatch</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_3">
           <span class="md-nav__icon md-icon"></span>
           Dispatch
@@ -1270,6 +1284,48 @@
           
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="direct-blas/" class="md-nav__link">
+        Direct BLAS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="packing/" class="md-nav__link">
+        Packing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1281,73 +1337,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Validation
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../validation/" class="md-nav__link">
         Validation
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#reference" class="md-nav__link">
-    Reference
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layout-product" class="md-nav__link">
-    Layout product
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#empty-axes" class="md-nav__link">
-    Empty axes
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
-    Source
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1393,22 +1387,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#reference" class="md-nav__link">
-    Reference
+  <a href="#selection" class="md-nav__link">
+    Selection
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#layout-product" class="md-nav__link">
-    Layout product
+  <a href="#traversal" class="md-nav__link">
+    Traversal
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#empty-axes" class="md-nav__link">
-    Empty axes
+  <a href="#routes" class="md-nav__link">
+    Routes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundary" class="md-nav__link">
+    Boundary
   </a>
   
 </li>
@@ -1438,73 +1439,46 @@
 
 
 
-<h1 id="differential-tests">Differential tests</h1>
-<p>dispatch 只能改變 execution route，不能改變合法 inputs 或 output semantics。
-planned matmul 因此以 <code>numpy.matmul</code> 當 reference，而不是替每個 kernel
-維護一套 expected values。</p>
-<h2 id="reference">Reference</h2>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">assert_matmul_planned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">expected</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="n">tol</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>        <span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos="8 "></span></a>    <span class="k">return</span> <span class="n">result</span>
+<h1 id="dispatch-selection">Dispatch selection</h1>
+<p>normalized operation 已經包含 role、dtype、<code>M/N/K</code>、layout 與 batch reuse。
+selector 讀取這些 facts，產生一個 kernel 與一個 optional packing decision：</p>
+<h2 id="selection">Selection</h2>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">MatmulSelection</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">selection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">select_execution</span><span class="p">();</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">pack</span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">kernel</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">Generic</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">Generic</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">BlasDot</span><span class="p">:</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">BlasDot</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="c1">// BlasGevm, BlasGemv, BlasGemm follow the same pattern.</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p>shape contract 與 numerical values 分開檢查。相同 test base 套用到
-<code>float32</code>、<code>float64</code>、<code>complex64</code>、<code>complex128</code>。</p>
-<h2 id="layout-product">Layout product</h2>
-<p>最容易漏掉的 case 不是單一 negative stride，而是 matrix core layout、
-batch layout 與 broadcasting 同時存在：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">)):</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a>        <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a>        <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a>    <span class="p">),)</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a>    <span class="n">rhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a>    <span class="p">),)</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a>    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_lhs</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a>            <span class="n">lhs_cases</span><span class="p">,</span> <span class="n">rhs_cases</span><span class="p">):</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a>        <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">case_lhs</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_lhs</span><span class="p">),</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_rhs</span><span class="p">),</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a>            <span class="n">expected</span><span class="p">)</span>
-</span></code></pre></div>
-<p>stride cases 包含 C/F-contiguous、padded、negative 與 step-two。小尺寸
-覆蓋 generic，較大尺寸穿過 direct 或 packed policy；兩者必須得到同一結果。</p>
-<h2 id="empty-axes">Empty axes</h2>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">for</span> <span class="n">lhs_shape</span><span class="p">,</span> <span class="n">rhs_shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="n">rhs_data</span><span class="p">))</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">lhs_data</span><span class="p">),</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">rhs_data</span><span class="p">),</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><a href="#__codelineno-2-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="n">expected</span><span class="p">)</span>
-</span></code></pre></div>
-<p><code>(3,0) @ (0,2)</code> 專門驗證 <code>K=0</code> 的 empty sum；其他 cases 分別驗證
-zero-size output core 與 empty batch domain。</p>
+<h2 id="traversal">Traversal</h2>
+<p><code>execute_contractions&lt;Kernel&gt;()</code> 的 template argument 已固定。batch cursor
+每前進一個 coordinate，只傳 output、lhs、rhs 三個 base offsets；route
+selection 不會出現在 contraction loop。</p>
+<h2 id="routes">Routes</h2>
+<ul>
+<li><a href="direct-blas/">Direct BLAS</a>：將 compatible views 直接表示成 BLAS operands。</li>
+<li><a href="packing/">Packing</a>：將 reused incompatible operands 轉成 row-major 一次。</li>
+<li><a href="batched-vectors/">Batched vectors</a>：依 reuse 與 workload 選擇 GEVM/GEMV route。</li>
+</ul>
+<h2 id="boundary">Boundary</h2>
+<p>本文 snapshot 的 kernel enum 包含 <code>Generic</code>、<code>BlasDot</code>、<code>BlasGevm</code>、
+<code>BlasGemv</code>、<code>BlasGemm</code>。Strassen engine 已獨立 merged，尚未加入這個
+selector。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L60-L141"><code>MatmulTestBase</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L378-L620">planned-matmul layout and empty-axis tests</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L594-L755"><code>execute()</code> and route selection</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L826-L885"><code>execute_contractions()</code></a></li>
 </ul>
 
 

@@ -6,26 +6,26 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="以 logical origin 與 signed core strides 存取 transpose、slice 與 reverse views。">
+        <meta name="description" content="用 synthetic M/N axes 將 DOT、GEVM、GEMV、GEMM 正規化成同一個 contraction。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/generic/signed-strides/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/generic/roles/">
       
       
-        <link rel="prev" href="../batch-mapping/">
+        <link rel="prev" href="../">
       
       
-        <link rel="next" href="../contraction-loop/">
+        <link rel="next" href="../batch-mapping/">
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Signed strides - 君實的技術筆記</title>
+        <title>Operand roles - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#signed-strides-matrix-view" class="md-skip">
+        <a href="#synthetic-axes-operand-roles" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Signed strides
+              Operand roles
             
           </span>
         </div>
@@ -1106,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Planned matmul</a>
+          <a href="../../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1117,7 +1117,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1157,7 +1157,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Generic implementation</a>
+          <a href="../">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1168,38 +1168,10 @@
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../roles/" class="md-nav__link">
-        Operand roles
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../batch-mapping/" class="md-nav__link">
-        Batch mapping
-      </a>
-    </li>
-  
-
             
           
             
@@ -1218,12 +1190,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Signed strides
+          Roles
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Signed strides
+        Roles
       </a>
       
         
@@ -1242,22 +1214,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#addressing" class="md-nav__link">
-    Addressing
+  <a href="#normalization" class="md-nav__link">
+    Normalization
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-strides" class="md-nav__link">
-    Core strides
+  <a href="#invariant" class="md-nav__link">
+    Invariant
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#logical-origin" class="md-nav__link">
-    Logical origin
+  <a href="#output-shape" class="md-nav__link">
+    Output shape
   </a>
   
 </li>
@@ -1284,8 +1256,36 @@
   
   
     <li class="md-nav__item">
+      <a href="../batch-mapping/" class="md-nav__link">
+        Batch
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../signed-strides/" class="md-nav__link">
+        Layout
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../contraction-loop/" class="md-nav__link">
-        Contraction loop
+        Kernel
       </a>
     </li>
   
@@ -1318,12 +1318,22 @@
             
           
         
+          
+        
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
           <a href="../../dispatch/">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1334,6 +1344,48 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/direct-blas/" class="md-nav__link">
+        Direct BLAS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/packing/" class="md-nav__link">
+        Packing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1397,22 +1449,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#addressing" class="md-nav__link">
-    Addressing
+  <a href="#normalization" class="md-nav__link">
+    Normalization
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#core-strides" class="md-nav__link">
-    Core strides
+  <a href="#invariant" class="md-nav__link">
+    Invariant
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#logical-origin" class="md-nav__link">
-    Logical origin
+  <a href="#output-shape" class="md-nav__link">
+    Output shape
   </a>
   
 </li>
@@ -1442,67 +1494,52 @@
 
 
 
-<h1 id="signed-strides-matrix-view">用 signed strides 表示任意 matrix view</h1>
-<h2 id="addressing">Addressing</h2>
-<p>對二維 view，logical index 到 buffer address 的規則是：</p>
-<div class="arithmatex">\[
-\operatorname{offset}(i,j)=\operatorname{origin}+i\,s_{row}+j\,s_{column}.
-\]</div>
-<p><code>origin</code> 指向 logical element <code>0</code>。stride 可以為正、負或非單位；kernel
-不需要知道 view 是由 transpose、slice 還是 reverse 產生。</p>
+<h1 id="synthetic-axes-operand-roles">用 synthetic axes 統一四種 operand roles</h1>
+<h2 id="normalization">Normalization</h2>
+<p><code>make_contraction()</code> 先由 rank 判斷 vector role，再決定 rhs 的 contraction
+axis。<code>M</code> 或 <code>N</code> 不存在時使用 <code>1</code>：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="n">rhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">rhs_vector</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="o">--</span><span class="n">rhs_inner_axis</span><span class="p">;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">inner_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs_inner_axis</span><span class="p">);</span>
+</span></code></pre></div>
 <figure class="matmul-figure">
-  <a href="/assets/images/solvcon/planned-matmul/layout-strides.svg">
-    <img src="/assets/images/solvcon/planned-matmul/layout-strides.svg"
-         alt="同一個 buffer 由不同 logical origin 與 signed stride 形成三種 traversal"
+  <a href="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg">
+    <img src="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg"
+         alt="DOT、GEVM、GEMV、GEMM 轉換成同一個 M 乘 K 與 K 乘 N contraction"
          loading="lazy">
   </a>
   <figcaption>
-    同一份 storage，不同的 logical origin 與 stride 產生不同 view。
+    Synthetic <code>1</code> 只補齊 executor 的 core axes。
   </figcaption>
 </figure>
 
-<h2 id="core-strides">Core strides</h2>
-<p>planning 只把 executor 需要的四個 core strides 取出：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">ContractionStrides</span><span class="p">{</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_lhs_row_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_stride</span><span class="p">,</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_lhs_inner_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_rhs_inner_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">rhs_inner_axis</span><span class="p">),</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_rhs_column_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_column_stride</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">};</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>stride</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>lhs_row_stride</code></td>
-<td>A 的下一列</td>
-</tr>
-<tr>
-<td><code>lhs_inner_stride</code></td>
-<td>A 沿 contraction axis 的下一個值</td>
-</tr>
-<tr>
-<td><code>rhs_inner_stride</code></td>
-<td>B 沿 contraction axis 的下一個值</td>
-</tr>
-<tr>
-<td><code>rhs_column_stride</code></td>
-<td>B 的下一欄</td>
-</tr>
-</tbody>
-</table>
-<h2 id="logical-origin">Logical origin</h2>
-<p>generic executor 從 <code>logical_data()</code> 開始，而不是從 allocation 的 physical
-起點開始。reverse view 因此可以把 logical origin 放在較高位址，再用負
-stride 往回走；hot loop 不需要特別分支。</p>
+<h2 id="invariant">Invariant</h2>
+<p>所有 roles 進入 generic executor 時都滿足：</p>
+<pre class="matmul-data"><code>lhs core     [M, K]
+rhs core     [K, N]
+output core  [M, N]</code></pre>
+
+<p>因此 multiply-add 不需要 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code> 四份實作。
+差異只留在 output shape 與 dispatch policy。</p>
+<h2 id="output-shape">Output shape</h2>
+<p>Leading batch axes 在圖中省略。public outputs 分別是
+<code>DOT → (1,)</code>、<code>GEVM → (...,N)</code>、<code>GEMV → (...,M)</code>、
+<code>GEMM → (...,M,N)</code>。Synthetic <code>M</code> 或 <code>N</code> 不會進入 output；<code>DOT</code>
+則沿用 <code>SimpleArray</code> 的 <code>(1,)</code> convention，而不是 NumPy scalar。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L409-L434"><code>make_contraction_strides()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L364-L407"><code>make_contraction()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L534-L565"><code>make_output_shape()</code></a></li>
 </ul>
 
 

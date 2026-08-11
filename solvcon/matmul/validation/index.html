@@ -6,33 +6,31 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="用 synthetic M/N axes 將 DOT、GEVM、GEMV、GEMM 正規化成同一個 contraction。">
+        <meta name="description" content="以 NumPy differential tests 驗證 matmul 的 roles、layouts 與 route boundaries。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/generic/roles/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/validation/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../dispatch/batched-vectors/">
       
       
-        <link rel="next" href="../batch-mapping/">
-      
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Operand roles - 君實的技術筆記</title>
+        <title>Validation - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -89,9 +87,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -120,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#synthetic-axes-operand-roles" class="md-skip">
+        <a href="#differential-tests" class="md-skip">
           跳轉到
         </a>
       
@@ -136,7 +134,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="../../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -155,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Operand roles
+              Validation
             
           </span>
         </div>
@@ -244,7 +242,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../../.." class="md-tabs__link">
+    <a href="../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -259,7 +257,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-tabs__link">
+      <a href="../../../algorithm/segment-tree/" class="md-tabs__link">
         Algorithm
       </a>
     </li>
@@ -275,7 +273,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../hdlbits/" class="md-tabs__link">
+      <a href="../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -291,7 +289,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../pve/" class="md-tabs__link">
+      <a href="../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -314,7 +312,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../" class="md-tabs__link md-tabs__link--active">
+      <a href="../" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -350,7 +348,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -369,7 +367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         首頁
       </a>
     </li>
@@ -427,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-nav__link">
+      <a href="../../../algorithm/segment-tree/" class="md-nav__link">
         Segment Tree
       </a>
     </li>
@@ -441,7 +439,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/sqrt-decomposition/" class="md-nav__link">
+      <a href="../../../algorithm/sqrt-decomposition/" class="md-nav__link">
         Sqrt Decomposition
       </a>
     </li>
@@ -455,7 +453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/number-theory/" class="md-nav__link">
+      <a href="../../../algorithm/number-theory/" class="md-nav__link">
         Number Theory
       </a>
     </li>
@@ -469,7 +467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/convex-hull-trick/" class="md-nav__link">
+      <a href="../../../algorithm/convex-hull-trick/" class="md-nav__link">
         Convex Hull Trick
       </a>
     </li>
@@ -483,7 +481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/string-matching/" class="md-nav__link">
+      <a href="../../../algorithm/string-matching/" class="md-nav__link">
         String Matching
       </a>
     </li>
@@ -497,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/graph/" class="md-nav__link">
+      <a href="../../../algorithm/graph/" class="md-nav__link">
         Graph
       </a>
     </li>
@@ -511,7 +509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/tree/" class="md-nav__link">
+      <a href="../../../algorithm/tree/" class="md-nav__link">
         Tree
       </a>
     </li>
@@ -561,7 +559,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../hdlbits/">HDLBits</a>
+          <a href="../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -584,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/getting-started/" class="md-nav__link">
+      <a href="../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -637,7 +635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/basics/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -651,7 +649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -665,7 +663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/modules/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -679,7 +677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -693,7 +691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -763,7 +761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -777,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -791,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -805,7 +803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -819,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -833,7 +831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/counters/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -847,7 +845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -861,7 +859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -875,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -889,7 +887,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -943,7 +941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -957,7 +955,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -978,7 +976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/cs450/" class="md-nav__link">
+      <a href="../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -1018,7 +1016,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../pve/">Proxmox VE</a>
+          <a href="../../../pve/">Proxmox VE</a>
           
         </div>
       
@@ -1106,7 +1104,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Planned matmul</a>
+          <a href="../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1117,7 +1115,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1127,16 +1125,14 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
       
       
         
@@ -1157,7 +1153,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Generic implementation</a>
+          <a href="../generic/">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1165,10 +1161,10 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1178,86 +1174,10 @@
               
   
   
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Operand roles
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Operand roles
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#normalization" class="md-nav__link">
-    Normalization
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#invariant" class="md-nav__link">
-    Invariant
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output-shape" class="md-nav__link">
-    Output shape
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
-    Source
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
   
     <li class="md-nav__item">
-      <a href="../batch-mapping/" class="md-nav__link">
-        Batch mapping
+      <a href="../generic/roles/" class="md-nav__link">
+        Roles
       </a>
     </li>
   
@@ -1270,8 +1190,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../signed-strides/" class="md-nav__link">
-        Signed strides
+      <a href="../generic/batch-mapping/" class="md-nav__link">
+        Batch
       </a>
     </li>
   
@@ -1284,8 +1204,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../contraction-loop/" class="md-nav__link">
-        Contraction loop
+      <a href="../generic/signed-strides/" class="md-nav__link">
+        Layout
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generic/contraction-loop/" class="md-nav__link">
+        Kernel
       </a>
     </li>
   
@@ -1318,12 +1252,22 @@
             
           
         
+          
+        
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../dispatch/">Dispatch</a>
+          <a href="../dispatch/">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1334,6 +1278,48 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatch/direct-blas/" class="md-nav__link">
+        Direct BLAS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatch/packing/" class="md-nav__link">
+        Packing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dispatch/batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1347,11 +1333,73 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../validation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Validation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Validation
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#reference" class="md-nav__link">
+    Reference
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layout-product" class="md-nav__link">
+    Layout product
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#empty-axes" class="md-nav__link">
+    Empty axes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" class="md-nav__link">
+    Source
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1397,22 +1445,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#normalization" class="md-nav__link">
-    Normalization
+  <a href="#reference" class="md-nav__link">
+    Reference
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#invariant" class="md-nav__link">
-    Invariant
+  <a href="#layout-product" class="md-nav__link">
+    Layout product
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-shape" class="md-nav__link">
-    Output shape
+  <a href="#empty-axes" class="md-nav__link">
+    Empty axes
   </a>
   
 </li>
@@ -1442,52 +1490,73 @@
 
 
 
-<h1 id="synthetic-axes-operand-roles">用 synthetic axes 統一四種 operand roles</h1>
-<h2 id="normalization">Normalization</h2>
-<p><code>make_contraction()</code> 先由 rank 判斷 vector role，再決定 rhs 的 contraction
-axis。<code>M</code> 或 <code>N</code> 不存在時使用 <code>1</code>：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="n">rhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">rhs_vector</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="o">--</span><span class="n">rhs_inner_axis</span><span class="p">;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">inner_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs_inner_axis</span><span class="p">);</span>
+<h1 id="differential-tests">Differential tests</h1>
+<p>dispatch 只能改變 execution route，不能改變合法 inputs 或 output semantics。
+matmul 因此以 <code>numpy.matmul</code> 當 reference，而不是替每個 kernel
+維護一套 expected values。</p>
+<h2 id="reference">Reference</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">assert_matmul_planned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">expected</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="n">tol</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>        <span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos="8 "></span></a>    <span class="k">return</span> <span class="n">result</span>
 </span></code></pre></div>
-<figure class="matmul-figure">
-  <a href="/assets/images/solvcon/planned-matmul/core-axis-normalization.svg">
-    <img src="/assets/images/solvcon/planned-matmul/core-axis-normalization.svg"
-         alt="DOT、GEVM、GEMV、GEMM 轉換成同一個 M 乘 K 與 K 乘 N contraction"
-         loading="lazy">
-  </a>
-  <figcaption>
-    Synthetic <code>1</code> 只補齊 executor 的 core axes。
-  </figcaption>
-</figure>
-
-<h2 id="invariant">Invariant</h2>
-<p>所有 roles 進入 generic executor 時都滿足：</p>
-<pre class="matmul-data"><code>lhs core     [M, K]
-rhs core     [K, N]
-output core  [M, N]</code></pre>
-
-<p>因此 multiply-add 不需要 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code> 四份實作。
-差異只留在 output shape 與 dispatch policy。</p>
-<h2 id="output-shape">Output shape</h2>
-<p>Leading batch axes 在圖中省略。public outputs 分別是
-<code>DOT → (1,)</code>、<code>GEVM → (...,N)</code>、<code>GEMV → (...,M)</code>、
-<code>GEMM → (...,M,N)</code>。Synthetic <code>M</code> 或 <code>N</code> 不會進入 output；<code>DOT</code>
-則沿用 <code>SimpleArray</code> 的 <code>(1,)</code> convention，而不是 NumPy scalar。</p>
+<p>shape contract 與 numerical values 分開檢查。相同 test base 套用到
+<code>float32</code>、<code>float64</code>、<code>complex64</code>、<code>complex128</code>。</p>
+<h2 id="layout-product">Layout product</h2>
+<p>最容易漏掉的 case 不是單一 negative stride，而是 matrix core layout、
+batch layout 與 broadcasting 同時存在：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">)):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a>        <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a>        <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a>    <span class="p">),)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a>    <span class="n">rhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a>    <span class="p">),)</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a>    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_lhs</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a>            <span class="n">lhs_cases</span><span class="p">,</span> <span class="n">rhs_cases</span><span class="p">):</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a>        <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">case_lhs</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_lhs</span><span class="p">),</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_rhs</span><span class="p">),</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a>            <span class="n">expected</span><span class="p">)</span>
+</span></code></pre></div>
+<p>stride cases 包含 C/F-contiguous、padded、negative 與 step-two。小尺寸
+覆蓋 generic，較大尺寸穿過 direct 或 packed policy；兩者必須得到同一結果。</p>
+<h2 id="empty-axes">Empty axes</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">for</span> <span class="n">lhs_shape</span><span class="p">,</span> <span class="n">rhs_shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="n">rhs_data</span><span class="p">))</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">lhs_data</span><span class="p">),</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">rhs_data</span><span class="p">),</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><a href="#__codelineno-2-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="n">expected</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>(3,0) @ (0,2)</code> 專門驗證 <code>K=0</code> 的 empty sum；其他 cases 分別驗證
+zero-size output core 與 empty batch domain。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L364-L407"><code>make_contraction()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L534-L565"><code>make_output_shape()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L60-L141"><code>MatmulTestBase</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L378-L620"><code>matmul_planned()</code> layout and empty-axis tests</a></li>
 </ul>
 
 
@@ -1530,13 +1599,13 @@ output core  [M, N]</code></pre>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../../../javascripts/mathjax.js"></script>
+          <script src="../../../javascripts/mathjax.js"></script>
         
       
         

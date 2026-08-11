@@ -146,42 +146,57 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/dispatch/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/dispatch/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/dispatch/batched-vectors/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/batch-mapping/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/dispatch/direct-blas/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/contraction-loop/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/dispatch/packing/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/roles/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/generic/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/generic/signed-strides/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/generic/batch-mapping/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://note.threemonth03.com/solvcon/planned-matmul/validation/</loc>
+         <loc>https://note.threemonth03.com/solvcon/matmul/generic/contraction-loop/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/matmul/generic/roles/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/matmul/generic/signed-strides/</loc>
+         <lastmod>2026-08-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://note.threemonth03.com/solvcon/matmul/validation/</loc>
          <lastmod>2026-08-11</lastmod>
          <changefreq>daily</changefreq>
     </url>

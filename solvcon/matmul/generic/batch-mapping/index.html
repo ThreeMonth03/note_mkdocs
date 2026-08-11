@@ -12,7 +12,7 @@
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/planned-matmul/generic/batch-mapping/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/generic/batch-mapping/">
       
       
         <link rel="prev" href="../roles/">
@@ -1106,7 +1106,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Planned matmul</a>
+          <a href="../../">Matmul</a>
           
             <label for="__nav_5_1">
               <span class="md-nav__icon md-icon"></span>
@@ -1117,7 +1117,7 @@
       <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
-          Planned matmul
+          Matmul
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1157,7 +1157,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Generic implementation</a>
+          <a href="../">Generic</a>
           
             <label for="__nav_5_1_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1168,7 +1168,7 @@
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic implementation
+          Generic
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1181,7 +1181,7 @@
   
     <li class="md-nav__item">
       <a href="../roles/" class="md-nav__link">
-        Operand roles
+        Roles
       </a>
     </li>
   
@@ -1204,12 +1204,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Batch mapping
+          Batch
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Batch mapping
+        Batch
       </a>
       
         
@@ -1271,7 +1271,7 @@
   
     <li class="md-nav__item">
       <a href="../signed-strides/" class="md-nav__link">
-        Signed strides
+        Layout
       </a>
     </li>
   
@@ -1285,7 +1285,7 @@
   
     <li class="md-nav__item">
       <a href="../contraction-loop/" class="md-nav__link">
-        Contraction loop
+        Kernel
       </a>
     </li>
   
@@ -1318,12 +1318,22 @@
             
           
         
+          
+        
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
           <a href="../../dispatch/">Dispatch</a>
+          
+            <label for="__nav_5_1_3">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1334,6 +1344,48 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/direct-blas/" class="md-nav__link">
+        Direct BLAS
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/packing/" class="md-nav__link">
+        Packing
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dispatch/batched-vectors/" class="md-nav__link">
+        Batched vectors
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1489,8 +1541,8 @@ output                        (2, 5, 3, 6)</code></pre>
 </span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="p">}</span>
 </span></code></pre></div>
 <figure class="matmul-figure">
-  <a href="/assets/images/solvcon/planned-matmul/batch-offset-mapping.svg">
-    <img src="/assets/images/solvcon/planned-matmul/batch-offset-mapping.svg"
+  <a href="/assets/images/solvcon/matmul/generic/batch-offset-mapping.svg">
+    <img src="/assets/images/solvcon/matmul/generic/batch-offset-mapping.svg"
          alt="二乘五 batch domain 中 lhs 沿欄重用、rhs 沿列重用"
          loading="lazy">
   </a>
