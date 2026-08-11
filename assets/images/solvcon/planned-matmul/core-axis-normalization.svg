@@ -1,95 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
-  <title id="title">Four matmul roles normalized to the same M, N, K core axes</title>
-  <desc id="desc">DOT, GEVM, GEMV, and GEMM become the same matrix contraction by adding synthetic axes of length one for vector operands.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" role="img" aria-labelledby="title desc">
+  <title id="title">四種 matmul role 匯入同一個核心 contraction</title>
+  <desc id="desc">DOT、GEVM、GEMV、GEMM 只在 synthetic M 或 N 軸不同，正規化後都交給 A[M,K] 乘 B[K,N] 得到 C[M,N]。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
   <style>
-    .heading { font: 600 25px Inter, "Noto Sans TC", sans-serif; fill: #172033; }
-    .column { font: 600 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; letter-spacing: .06em; }
-    .role { font: 700 18px Inter, ui-monospace, monospace; fill: #172033; }
-    .shape { font: 500 17px Inter, ui-monospace, monospace; fill: #334155; }
-    .axis-text { font: 700 17px Inter, ui-monospace, monospace; text-anchor: middle; dominant-baseline: middle; }
-    .output { font: 700 17px Inter, ui-monospace, monospace; fill: #166534; }
-    .note { font: 500 14px Inter, "Noto Sans TC", sans-serif; fill: #64748b; }
-    .rule { stroke: #dbe3ee; stroke-width: 1; }
-    .axis-m { fill: #eff6ff; stroke: #2563eb; stroke-width: 1.5; }
-    .axis-k { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.5; }
-    .axis-n { fill: #f0fdf4; stroke: #16a34a; stroke-width: 1.5; }
-    .synthetic { stroke-dasharray: 6 4; }
+    .title { font: 700 30px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #0f172a; }
+    .subtitle { font: 500 20px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #475569; }
+    .role { font: 700 23px Inter, ui-monospace, monospace; fill: #0f172a; }
+    .detail { font: 600 20px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #334155; }
+    .small { font: 500 20px Inter, "Noto Sans TC", "Microsoft JhengHei", sans-serif; fill: #64748b; }
+    .core { font: 700 34px Inter, ui-monospace, monospace; }
+    .axis { font: 700 22px Inter, ui-monospace, monospace; text-anchor: middle; dominant-baseline: middle; }
+    .lhs { fill: #2563eb; }
+    .rhs { fill: #ea580c; }
+    .out { fill: #16a34a; }
+    .shared { fill: #7c3aed; }
+    .card { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+    .synthetic { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 7 5; }
+    .native { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    .funnel { fill: #f5f3ff; stroke: #7c3aed; stroke-width: 2; }
+    .flow { fill: none; stroke: #7c3aed; stroke-width: 2.5; marker-end: url(#arrow); }
+    .panel { fill: #ffffff; stroke: #d8b4fe; stroke-width: 2; }
   </style>
-  <rect width="1200" height="560" fill="#ffffff"/>
+  <rect width="960" height="600" fill="#ffffff"/>
 
-  <text x="36" y="42" class="heading">Core-axis normalization</text>
-  <text x="36" y="70" class="note">Public shapes change by role; the executor always receives A[M,K] @ B[K,N].</text>
+  <text x="36" y="48" class="title">四種介面，最後都進入同一個 M×K @ K×N contraction</text>
+  <text x="36" y="82" class="subtitle">vector role 補上長度為 1 的 synthetic 軸；batch axes 留在 core contraction 之外。</text>
 
-  <text x="36" y="111" class="column">ROLE</text>
-  <text x="142" y="111" class="column">PUBLIC OPERANDS</text>
-  <text x="454" y="111" class="column">NORMALIZED CORE</text>
-  <text x="997" y="111" class="column">PUBLIC OUTPUT</text>
-  <line x1="36" y1="124" x2="1164" y2="124" class="rule"/>
-
-  <g transform="translate(0 137)">
-    <text x="36" y="34" class="role">DOT</text>
-    <text x="142" y="34" class="shape">(K,) @ (K,)</text>
-    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m synthetic"/>
-    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M=1</text>
-    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="624" y="36" class="role">@</text>
-    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n synthetic"/>
-    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="777" y="35" class="axis-text" fill="#15803d">N=1</text>
-    <text x="997" y="35" class="output">(1,)</text>
+  <g transform="translate(36 122)">
+    <rect width="204" height="132" rx="12" class="card"/>
+    <text x="18" y="36" class="role">DOT</text>
+    <rect x="18" y="55" width="76" height="42" rx="7" class="synthetic"/>
+    <rect x="110" y="55" width="76" height="42" rx="7" class="synthetic"/>
+    <text x="56" y="77" class="axis shared">M=1</text>
+    <text x="148" y="77" class="axis shared">N=1</text>
+    <text x="18" y="119" class="small">兩側都是 vector</text>
   </g>
-  <line x1="36" y1="211" x2="1164" y2="211" class="rule"/>
 
-  <g transform="translate(0 224)">
-    <text x="36" y="34" class="role">GEVM</text>
-    <text x="142" y="34" class="shape">(K,) @ (...,K,N)</text>
-    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m synthetic"/>
-    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M=1</text>
-    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="624" y="36" class="role">@</text>
-    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n"/>
-    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="777" y="35" class="axis-text" fill="#15803d">N</text>
-    <text x="997" y="35" class="output">(...,N)</text>
+  <g transform="translate(264 122)">
+    <rect width="204" height="132" rx="12" class="card"/>
+    <text x="18" y="36" class="role">GEVM</text>
+    <rect x="18" y="55" width="76" height="42" rx="7" class="synthetic"/>
+    <rect x="110" y="55" width="76" height="42" rx="7" class="native"/>
+    <text x="56" y="77" class="axis shared">M=1</text>
+    <text x="148" y="77" class="axis out">N</text>
+    <text x="18" y="119" class="small">lhs 是 vector</text>
   </g>
-  <line x1="36" y1="298" x2="1164" y2="298" class="rule"/>
 
-  <g transform="translate(0 311)">
-    <text x="36" y="34" class="role">GEMV</text>
-    <text x="142" y="34" class="shape">(...,M,K) @ (K,)</text>
-    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m"/>
-    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M</text>
-    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="624" y="36" class="role">@</text>
-    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n synthetic"/>
-    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="777" y="35" class="axis-text" fill="#15803d">N=1</text>
-    <text x="997" y="35" class="output">(...,M)</text>
+  <g transform="translate(492 122)">
+    <rect width="204" height="132" rx="12" class="card"/>
+    <text x="18" y="36" class="role">GEMV</text>
+    <rect x="18" y="55" width="76" height="42" rx="7" class="native"/>
+    <rect x="110" y="55" width="76" height="42" rx="7" class="synthetic"/>
+    <text x="56" y="77" class="axis lhs">M</text>
+    <text x="148" y="77" class="axis shared">N=1</text>
+    <text x="18" y="119" class="small">rhs 是 vector</text>
   </g>
-  <line x1="36" y1="385" x2="1164" y2="385" class="rule"/>
 
-  <g transform="translate(0 398)">
-    <text x="36" y="34" class="role">GEMM</text>
-    <text x="142" y="34" class="shape">(...,M,K) @ (...,K,N)</text>
-    <rect x="447" y="8" width="74" height="52" rx="5" class="axis-m"/>
-    <rect x="527" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <text x="484" y="35" class="axis-text" fill="#1d4ed8">M</text>
-    <text x="564" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="624" y="36" class="role">@</text>
-    <rect x="660" y="8" width="74" height="52" rx="5" class="axis-k"/>
-    <rect x="740" y="8" width="74" height="52" rx="5" class="axis-n"/>
-    <text x="697" y="35" class="axis-text" fill="#c2410c">K</text>
-    <text x="777" y="35" class="axis-text" fill="#15803d">N</text>
-    <text x="997" y="35" class="output">(...,M,N)</text>
+  <g transform="translate(720 122)">
+    <rect width="204" height="132" rx="12" class="card"/>
+    <text x="18" y="36" class="role">GEMM</text>
+    <rect x="18" y="55" width="76" height="42" rx="7" class="native"/>
+    <rect x="110" y="55" width="76" height="42" rx="7" class="native"/>
+    <text x="56" y="77" class="axis lhs">M</text>
+    <text x="148" y="77" class="axis out">N</text>
+    <text x="18" y="119" class="small">兩側都是 matrix</text>
   </g>
-  <line x1="36" y1="472" x2="1164" y2="472" class="rule"/>
 
-  <rect x="447" y="500" width="42" height="28" rx="4" class="axis-m synthetic"/>
-  <text x="505" y="519" class="note">dashed axis = synthetic length-one axis; omitted from the public output shape</text>
+  <path d="M138 254 C138 300 360 294 431 336" class="flow"/>
+  <path d="M366 254 C366 294 421 302 455 336" class="flow"/>
+  <path d="M594 254 C594 294 539 302 505 336" class="flow"/>
+  <path d="M822 254 C822 300 600 294 529 336" class="flow"/>
+
+  <rect x="390" y="326" width="180" height="52" rx="26" class="funnel"/>
+  <text x="480" y="353" class="detail" text-anchor="middle">core-axis 正規化</text>
+  <path d="M480 378 L480 414" class="flow"/>
+
+  <rect x="72" y="424" width="816" height="122" rx="16" class="panel"/>
+  <text x="480" y="462" class="detail" text-anchor="middle">所有 role 共用同一個 executor core</text>
+  <text x="480" y="515" class="core" text-anchor="middle">
+    <tspan class="lhs">A[M,</tspan><tspan class="shared">K</tspan><tspan class="lhs">]</tspan>
+    <tspan fill="#64748b">  @  </tspan>
+    <tspan class="rhs">B[</tspan><tspan class="shared">K</tspan><tspan class="rhs">,N]</tspan>
+    <tspan fill="#64748b">  →  </tspan>
+    <tspan class="out">C[M,N]</tspan>
+  </text>
+  <text x="480" y="578" class="small" text-anchor="middle">虛線框是 synthetic 軸；它決定 public output shape，但不需要另一份 generic kernel。</text>
 </svg>
