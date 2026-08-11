@@ -25,7 +25,7 @@
     
     
       
-        <title>Batched vectors - 君實的技術筆記</title>
+        <title>Vector reuse - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#batched-vectors" class="md-skip">
+        <a href="#vector-reuse" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Batched vectors
+              Vector reuse
             
           </span>
         </div>
@@ -1207,7 +1207,7 @@
   
     <li class="md-nav__item">
       <a href="../../generic/signed-strides/" class="md-nav__link">
-        Layout
+        Strides
       </a>
     </li>
   
@@ -1291,7 +1291,7 @@
   
     <li class="md-nav__item">
       <a href="../direct-blas/" class="md-nav__link">
-        Direct BLAS
+        BLAS views
       </a>
     </li>
   
@@ -1305,7 +1305,7 @@
   
     <li class="md-nav__item">
       <a href="../packing/" class="md-nav__link">
-        Packing
+        Pack once
       </a>
     </li>
   
@@ -1328,12 +1328,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Batched vectors
+          Vector reuse
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Batched vectors
+        Vector reuse
       </a>
       
         
@@ -1494,7 +1494,7 @@
 
 
 
-<h1 id="batched-vectors">Batched vectors</h1>
+<h1 id="vector-reuse">Vector reuse</h1>
 <h2 id="direct">Direct</h2>
 <p>compatible matrix view 是 batched <code>GEVM</code> / <code>GEMV</code> 進 BLAS 的第一個條件。
 direct route 還需要 positive vector stride，並跨過 matrix-work threshold：</p>

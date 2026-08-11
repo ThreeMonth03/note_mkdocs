@@ -25,7 +25,7 @@
     
     
       
-        <title>Direct BLAS - 君實的技術筆記</title>
+        <title>BLAS views - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#direct-blas" class="md-skip">
+        <a href="#blas-views" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Direct BLAS
+              BLAS views
             
           </span>
         </div>
@@ -1207,7 +1207,7 @@
   
     <li class="md-nav__item">
       <a href="../../generic/signed-strides/" class="md-nav__link">
-        Layout
+        Strides
       </a>
     </li>
   
@@ -1300,12 +1300,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Direct BLAS
+          BLAS views
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Direct BLAS
+        BLAS views
       </a>
       
         
@@ -1360,7 +1360,7 @@
   
     <li class="md-nav__item">
       <a href="../packing/" class="md-nav__link">
-        Packing
+        Pack once
       </a>
     </li>
   
@@ -1374,7 +1374,7 @@
   
     <li class="md-nav__item">
       <a href="../batched-vectors/" class="md-nav__link">
-        Batched vectors
+        Vector reuse
       </a>
     </li>
   
@@ -1480,7 +1480,7 @@
 
 
 
-<h1 id="direct-blas">Direct BLAS</h1>
+<h1 id="blas-views">BLAS views</h1>
 <h2 id="matrix-view">Matrix view</h2>
 <p>matrix view 能直接進 BLAS，只有兩個 layout predicates：</p>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">column_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">columns</span><span class="p">)</span>
