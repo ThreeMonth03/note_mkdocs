@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="solvcon 如何利用 array layout 與 batch reuse，做出在特定 workload 比 NumPy 更快的矩陣乘法。">
+        <meta name="description" content="solvcon 如何從 array layout 與 batch reuse，做出比 NumPy 更快的矩陣乘法。">
       
       
         <meta name="author" content="張君實">
@@ -1251,33 +1251,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#cost" class="md-nav__link">
-    Cost
+  <a href="#layout" class="md-nav__link">
+    Layout
   </a>
-
+  
 </li>
-
+      
         <li class="md-nav__item">
-  <a href="#semantics" class="md-nav__link">
-    Semantics
+  <a href="#generic" class="md-nav__link">
+    Generic
   </a>
-
+  
 </li>
-
-        <li class="md-nav__item">
-  <a href="#generic-wall" class="md-nav__link">
-    Generic Wall
-  </a>
-
-</li>
-
+      
         <li class="md-nav__item">
   <a href="#blas" class="md-nav__link">
     BLAS
   </a>
-
+  
 </li>
-
+      
         <li class="md-nav__item">
   <a href="#pack-once" class="md-nav__link">
     Pack Once
@@ -1286,22 +1279,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#select-once" class="md-nav__link">
-    Select Once
+  <a href="#results" class="md-nav__link">
+    Results
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reading" class="md-nav__link">
-    Reading
-  </a>
-
-</li>
-
-        <li class="md-nav__item">
-  <a href="#sources" class="md-nav__link">
-    Sources
+  <a href="#contributions" class="md-nav__link">
+    Contributions
   </a>
   
 </li>
@@ -1325,133 +1311,192 @@
 
 
 <h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p>先看結果。這個 workload 把同一個 reversed matrix 在 batch 中使用十次：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>lhs  (1, S, S), element strides (S², S, -1)
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>rhs  (10, S, S), C-contiguous
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>out  (10, S, S)
+<p>一個 <code>::-1</code>，讓同一組 batched GEMM 在 NumPy 從約 <code>12 ms</code> 變成
+<code>1998 ms</code>；把那份反向資料只整理一次，時間又回到 <code>12 ms</code>。這個落差最後
+長成 solvcon 的 execution plan、signed-stride generic kernel 與 pack-once
+dispatch；正式 route 在 <code>S=32</code> 的同類 workload 比 NumPy 快 <code>2.44x</code>。</p>
+<p>產生問題的 NumPy view 很普通：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">S</span> <span class="o">=</span> <span class="mi">256</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">storage</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">S</span><span class="p">))</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">lhs</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>       <span class="c1"># shape (1, S, S), 最後一軸反向</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">rhs</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">64</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">S</span><span class="p">))</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos="8 "></span></a><span class="n">out</span> <span class="o">=</span> <span class="n">lhs</span> <span class="o">@</span> <span class="n">rhs</span>                 <span class="c1"># 同一個 lhs 被重用 64 次</span>
 </span></code></pre></div>
-<p>在 <a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 的 native macOS arm64、
-NumPy 2.5.1、Accelerate 單執行緒量測中，<code>S &gt;= 16</code> 的 72 個 affected cases
-全部比 NumPy 快，範圍是 <code>1.11x–2.97x</code>。圖中這組 float64 case 在 <code>S=32</code>
-是 <code>0.0100 ms</code> 對 NumPy 的 <code>0.0244 ms</code>，約快 <code>2.44x</code>。</p>
+<p><code>lhs</code> 沒有複製資料。它仍指向 <code>storage</code> 的 buffer，只把最後一軸的 element
+stride 改成 <code>-1</code>。第一個 batch axis 的長度又是 <code>1</code>，所以矩陣乘法會把這個
+reversed view broadcast 到 64 個 products。</p>
+<p>solvcon 仍讓 BLAS 負責乘法。真正的問題出現在乘法開始以前。</p>
+<h2 id="layout">Layout</h2>
+<p><a href="https://github.com/solvcon/solvcon/issues/1172">Issue #1172</a> 在 Apple M1、
+Accelerate 單執行緒上，用 <code>(1,256,256) @ (64,256,256)</code> 做了三組對照：</p>
+<table>
+<thead>
+<tr>
+<th>LHS layout</th>
+<th style="text-align: right;">NumPy</th>
+<th style="text-align: right;">solvcon prototype</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dense</td>
+<td style="text-align: right;"><code>11.960 ms</code></td>
+<td style="text-align: right;"><code>11.873 ms</code></td>
+</tr>
+<tr>
+<td>reversed columns</td>
+<td style="text-align: right;"><code>1997.845 ms</code></td>
+<td style="text-align: right;"><code>12.099 ms</code></td>
+</tr>
+<tr>
+<td>同一組 reversed values，計時前排成 contiguous</td>
+<td style="text-align: right;"><code>11.967 ms</code></td>
+<td style="text-align: right;"><code>11.950 ms</code></td>
+</tr>
+</tbody>
+</table>
+<p>Dense 時兩邊幾乎相同。只把 columns reverse，NumPy 的時間從約 12 ms 變成
+1998 ms；把完全相同的 values 在計時前排成 contiguous，時間又回到 12 ms。
+乘法規模、broadcast 次數與數值都沒有變，差別只剩資料排列。</p>
+<p>Prototype 的 <code>12.099 ms</code> 也不是來自更快的乘法。它在 timed call 內把唯一一份
+LHS 排成連續資料，再讓後面 64 次 GEMM 共用。三組 control 因而把問題縮成一個
+可以實作的設計：公式與 FLOP 數不變，只把整理資料的成本從多次降成一次。</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>B x strided contraction   versus   one pack + B x BLAS
+</span></code></pre></div>
+<p>問題不再是「copy 很慢，要不要避免 copy」，而是「copy 放在哪裡，之後能重用
+幾次」。</p>
+<p>這正是做 HPC 有趣的地方。看似無害的一個 stride 負號，可以讓時間差兩個
+數量級；把一次 copy 放到正確的位置，又能把成本收回來。效能問題不一定藏在
+乘法裡，也可能藏在資料抵達乘法以前走過的路。</p>
+<h2 id="generic">Generic</h2>
+<p>在選快路徑以前，Matmul 必須先能算對每一種合法 layout。Plan 先把 DOT、
+vector-matrix、matrix-vector 與 matrix-matrix 都正規化成 <code>M x K @ K x N</code>。
+Batch axes 從右側對齊；broadcasting 在位址 mapping 中記成 zero stride，
+不配置 expanded array。Core 則保留原始 signed strides，讓 transpose、slice、
+reverse 與 step-two views 都能直接走訪。</p>
+<p>到了 inner loop，rank、broadcast 與 layout 判斷都已經消失，只剩兩個 offset
+increments 和 multiply-add。</p>
+<p>這條 generic contraction 是完整語意，也是其他 kernel 的 correctness baseline。
+它的重要性不在大型矩陣跑得最快，而在於任何 specialized route 不適用時，結果
+仍然有一條簡單、可檢查的退路。DOT、GEVM、GEMV、GEMM 與 exact address walk
+在 <a href="https://github.com/solvcon/solvcon/pull/1208">PR #1208</a> 補齊，實作與位址推導
+詳見 <a href="implementation/generic/">Generic</a>。</p>
+<h2 id="blas">BLAS</h2>
+<p>Generic 完成後，profiling 很快撞到牆。PR #1208 的大型 C-contiguous
+GEVM/GEMV 曾比 NumPy 慢 4 到 14 倍，因為規則、連續的資料仍在跑 scalar
+contraction。</p>
+<p>對 BLAS 而言，一個 matrix view 不必真的 C-contiguous。其中一個 core axis
+必須是 unit stride，另一個 axis 還必須能作為合法的 positive leading
+dimension；通過後便能用 pointer、leading dimension 與 transpose flag 描述。</p>
+<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 加入這條 no-copy BLAS
+route，並以 forced-generic / forced-CBLAS 對照量 crossover。以 GEMM 為例，
+merged boundary 是 <code>min(M,N,K) &gt;= 8</code>；更小的 workload 留在 generic，避免
+BLAS call overhead 吃掉收益。</p>
+<p>這一步讓大型 compatible layouts 回到與 NumPy 相近的速度，也留下真正關鍵的
+缺口：<code>-1</code> 或 step-two inner stride 不能直接表示成 BLAS matrix view。此時只有
+兩個選擇，沿原始 strides 做 generic contraction，或先把資料 pack 成 BLAS
+能讀的排列。</p>
+<h2 id="pack-once">Pack Once</h2>
+<p>單看一個 product，packing 多了一次讀寫，未必划算。Batch broadcasting 卻提供
+了另一個條件：plan 已經知道同一個 operand 將被使用 <code>B</code> 次。只要在 traversal
+開始前 pack，它的成本就能由後面所有 products 分攤：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>generic    ~ B * T_generic
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>pack once  ~ T_pack + B * T_blas_call
+</span></code></pre></div>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/matmul/dispatch/pack-once-ledger-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg"
+           alt="同一個 reversed matrix 走十次 generic contraction，或 pack 一次後走十次 BLAS 的成本比較"
+           loading="eager">
+    </picture>
+  </a>
+  <figcaption>
+    `S=32` 的實際成本帳。原本從 signed strides 做十次 generic contraction；
+    新路徑只整理一次 8 KiB LHS，十個 GEMM 共用同一份 packed storage。
+  </figcaption>
+</figure>
+
+<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 把這個判斷放進
+selector。它只 pack 由 shape broadcasting 證明會重用、而且無法直接交給
+BLAS 的 matrix。Packing 完成後重建 plan，再由原本的 BLAS route 執行整個
+batch。換句話說，這不是另一顆矩陣乘法 kernel，而是改變資料轉換發生的時機。</p>
+<h2 id="results">Results</h2>
+<p>正式 benchmark 的 output batch 固定為十個 contractions，再測試 float32 / float64、
+LHS / RHS / cross broadcasting，以及 negative / step-two inner strides，矩陣邊長
+從 <code>S=8</code> 到 <code>S=256</code>。在 <a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 中，
+<code>S&gt;=16</code> 會選 pack-once；72 個因此改變路徑的 cases 全部比舊 generic route 與
+NumPy 快：</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg">
     <picture>
       <source media="(max-width: 44.984375em)"
               srcset="/assets/images/solvcon/matmul/story/benchmark-pack-once-mobile.svg">
       <img src="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg"
-           alt="PR 1256 中 reversed broadcast matrix 的 NumPy、pack-once 前後執行時間曲線"
-           loading="eager">
+           alt="reversed broadcast matrix 在不同尺寸的 NumPy 相對 solvcon 速度比"
+           loading="lazy">
     </picture>
   </a>
   <figcaption>
-    PR #1256 的正式量測資料。`before` 是 pack-once PR 的 parent；`after`
-    在 `S=16` 起只 pack 一次 LHS，再重用於十個 BLAS GEMM。
+    PR #1256，float64、LHS broadcast、negative inner stride。`1x` 是兩者
+    同速；`S=16` 開始 packing 後，八個尺寸中的六個由 solvcon 勝出。
   </figcaption>
 </figure>
 
-<p>小型 <code>S=8</code>、<code>S=12</code> 沒有走 packing，而且 NumPy 較快。加速不是把十次
-copy 合併成一次，而是用一次 pack 換掉十次 signed-stride scalar contractions：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>B × strided contraction  -&gt;  one copy + B × BLAS
-</span></code></pre></div>
-<h2 id="cost">Cost</h2>
-<p>矩陣乘法的 FLOP 沒有減少。真正改變的是：沿 irregular strides 做
-<code>B</code> 次通用 contraction，還是先整理一次，再做 <code>B</code> 次 BLAS。</p>
-<p><a href="https://github.com/solvcon/solvcon/issues/1172">Issue #1172</a> 最早用
-<code>(1,256,256) @ (64,256,256)</code> 隔離這個問題。dense input 時，NumPy 與
-prototype 都約 <code>11.9 ms</code>；把 broadcast lhs 的 columns reverse 後，NumPy
-是 <code>1997.845 ms</code>，prototype 是 <code>12.099 ms</code>。若在 timer 外先把相同 values
-排成 contiguous，NumPy 又回到 <code>11.967 ms</code>。</p>
-<p>這個 prepacked control 保留 broadcasting topology、values 與 GEMM arithmetic，
-卻把巨大差距縮小到 layout handling。它指出不規則 layout 的代價，但不假設
-NumPy 內部用了哪一種 copy loop。</p>
-<p>做 HPC 最有趣的地方就在這裡。公式沒有變，硬體也沒有變；只要重新畫出
-資料的生命週期，就會發現一次 copy 可以換掉多次更貴的 strided traversal。</p>
-<h2 id="semantics">Semantics</h2>
-<p>安全重用資料需要先把 <code>matmul</code> 的語意做完整，然後才能加入 BLAS。</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1174">PR #1174</a> 把 legacy implementation
-混在一起的 shape rules 與 traversal 分開。review 中對 plan 的定義很精確：</p>
-<blockquote>
-<p>“Plan means the validated, execution-independent metadata derived from the operands.”</p>
-<p>— <a href="https://github.com/solvcon/solvcon/pull/1174#discussion_r3651903814">PR #1174 discussion</a></p>
-</blockquote>
-<p><a href="https://github.com/solvcon/solvcon/pull/1181">PR #1181</a> 接著讓一個 batch
-coordinate 同步產生 output、lhs、rhs offsets，不建立暫時 array views。
-當時有人提議順手加入更多效能特例，review 只回了一句：</p>
-<blockquote>
-<p>“Agree. Let profiling speak.”</p>
-<p>— <a href="https://github.com/solvcon/solvcon/pull/1181#discussion_r3682725603">PR #1181 discussion</a></p>
-</blockquote>
-<p><a href="https://github.com/solvcon/solvcon/pull/1208">PR #1208</a> 再以 zero batch stride
-表示 broadcasting，並用 synthetic <code>M=1</code> 或 <code>N=1</code> 讓 DOT、GEVM、GEMV、GEMM
-共用同一個 signed-stride contraction。</p>
-<p>這三步得到一條完整的 <a href="implementation/generic/">Generic</a> route。任何合法
-layout 都先有共同的語意基線；scalar loop 則留給不適合 specialized route 的尺寸與佈局。</p>
-<h2 id="generic-wall">Generic Wall</h2>
-<p>語意做完整後，profiling 馬上暴露下一個問題。在 PR #1208 的 <code>S=1024</code>
-C-contiguous batched GEVM/GEMV 中，solvcon 對 NumPy 的時間比是
-<code>14.044/7.102</code>（float32）與 <code>6.412/3.929</code>（float64）；mixed 或 negative-stride
-組合反而落在 <code>0.783–0.984</code>。</p>
-<p>同一條 generic loop 在 irregular layout 能接近 NumPy，遇到大型 contiguous
-workload 卻輸得很清楚。這不是再微調幾個 C++ expressions 能解決的問題：
-大塊、規則的 arithmetic 應交給 BLAS。</p>
-<h2 id="blas">BLAS</h2>
-<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 為可以用 pointer、leading
-dimension 與 transpose flag 表示的 operands 建立 no-copy CBLAS route。超過
-實測 crossover 後，DOT、unbatched GEVM/GEMV 與 GEMM 不再走 scalar contraction；大型
-case 從比 NumPy 慢數百倍回到與 NumPy 相近。</p>
-<p>這一步解決的是 compatible layout。reverse 或 step-two core stride 仍不能直接
-描述成 BLAS view，於是問題從「要不要用 BLAS」變成「copy 是否能回本」。</p>
-<h2 id="pack-once">Pack Once</h2>
-<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 利用 plan 已經知道的
-broadcast reuse：如果一個 BLAS-incompatible matrix 會被多個 batch coordinates
-使用，就在 traversal 前 pack 一次，重建 address plan，然後讓所有 products
-共用 packed storage。</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>parent route  = 10 × generic signed-stride contraction
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>pack-once     = 1 × pack reused lhs + 10 × BLAS GEMM
-</span></code></pre></div>
-<p>在該 PR 的 72 個 affected points 中，新 route 相對 parent 快
-<code>3.30x–549.52x</code>，相對 NumPy 快 <code>1.11x–2.97x</code>。這是本文標題最直接的證據。
-核心貢獻是讓 batch reuse 攤提 representation cost，並把真正的乘法交給 BLAS。</p>
-<h2 id="select-once">Select Once</h2>
-<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 把同一個思路延伸到
-batched GEVM/GEMV，並在 traversal 前固定一次 selection。112 個因此改變 route
-的 cases 全部比 parent 快，中位加速 <code>5.03x</code>；32 個 negative-stride vector
-pack-once cases 全部勝過 NumPy，中位加速 <code>6.24x</code>。
-這個改動在 review 裡的總結也很短：</p>
-<blockquote>
-<p>“Good to take this outside the inner.”</p>
-<p>— <a href="https://github.com/solvcon/solvcon/pull/1259#discussion_r3742234445">PR #1259 discussion</a></p>
-</blockquote>
-<p>同一份結果也留下必要的反例：positive-stride direct-BLAS cases 只有 <code>16/80</code>
-勝過 NumPy，整體中位時間是 NumPy 的 <code>1.06x</code>。<a href="implementation/dispatch/">Dispatch</a>
-會同時讀取 shape、layout、reuse 與 measured crossover，再決定 route。</p>
-<h2 id="reading">Reading</h2>
+<table>
+<thead>
+<tr>
+<th>comparison</th>
+<th>result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>pack-once 前的 generic route</td>
+<td><code>3.30x</code> 到 <code>549.52x</code></td>
+</tr>
+<tr>
+<td>NumPy 2.5.1</td>
+<td><code>1.11x</code> 到 <code>2.97x</code></td>
+</tr>
+</tbody>
+</table>
+<p>圖中的 <code>S=32</code> 從 generic route 的 <code>0.2158 ms</code> 降到 <code>0.0100 ms</code>，NumPy 是
+<code>0.0244 ms</code>；到了 <code>S=256</code>，solvcon 是 <code>1.6779 ms</code>，NumPy 是
+<code>1.9245 ms</code>。大型矩陣同樣能勝出，差距來自重用 packed layout，而不是把
+乘法本身重寫一遍。</p>
+<p><code>S=8</code> 與 <code>S=12</code> 由 policy 保留在 generic，而且仍由 NumPy 領先。這兩個點
+很重要：HPC 的答案不是永遠 copy，也不是永遠 zero-copy，而是讓 shape、
+stride、size 與 reuse 一起決定資料該走哪條路。</p>
+<h2 id="contributions">Contributions</h2>
+<p>這次實作把 Matmul 拆成三個彼此獨立的問題：</p>
+<ol>
+<li><strong>Semantics</strong>：用 generic signed-stride contraction 定義所有合法輸入的結果。</li>
+<li><strong>Representation</strong>：能直接描述成 BLAS view 就 zero-copy；不能但會重用，就
+   pack once。</li>
+<li><strong>Selection</strong>：在 batch traversal 以前讀取 shape、stride、size 與 reuse，
+   只決定一次執行路徑。</li>
+</ol>
+<p>效能貢獻來自把 array metadata 變成成本資訊。Shape 不只描述結果長什麼樣子，
+也透露 reuse；stride 不只描述位址，也決定哪顆 kernel 能讀；profiling 則把
+兩條路徑的 crossover 變成 dispatch policy。</p>
+<p>接著可閱讀：</p>
 <ul>
-<li><a href="implementation/generic/">Generic</a>：四種 roles、zero-stride broadcasting 與
-  signed-stride address walk 如何形成共同語意。</li>
-<li><a href="implementation/dispatch/">Dispatch</a>：direct BLAS、pack once 與 batched-vector
-  selection 如何從 profiling 結果長出來。</li>
-<li><a href="profiling/">Benchmarks</a>：PR #1209、#1256、#1259 的結果、量測方法、
-  raw data 與適用邊界。</li>
-<li><a href="../array/">Array</a>：獨立介紹 pybind11 如何保留 buffer、shape、stride
-  與 logical origin。</li>
+<li><a href="../array/">Array</a>：buffer、shape、stride 與 logical origin。</li>
+<li><a href="implementation/generic/">Generic</a>：四種 roles 與 signed-stride address walk。</li>
+<li><a href="implementation/dispatch/">Dispatch</a>：direct BLAS、packing 與完整 selector。</li>
+<li><a href="profiling/">Benchmarks</a>：warm-up、平衡執行順序、raw data 與 thresholds。</li>
 </ul>
-<p>目前這條開發中的 Python entry point 仍是 <code>matmul_planned()</code>；<code>matmul()</code> 與 <code>@</code>
-尚未切換。Strassen kernel 已進 repository，但還沒有接到本文的 selector。</p>
-<h2 id="sources">Sources</h2>
-<ul>
-<li><a href="https://github.com/solvcon/solvcon/issues/1172">Issue #1172: layout-aware batched matmul</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1208">PR #1208: complete generic roles</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209: direct BLAS routes</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256: pack reused matrices once</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259: tune batched vector routes</a></li>
-</ul>
-<div class="admonition info">
-<p class="admonition-title">Implementation snapshot</p>
-<p>文章中的 merged implementation 對應 solvcon upstream <code>master</code>
-<a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>。
-數字則各自標示其 PR 的量測環境與 artifact；它們不是跨機器的普遍上限。</p>
+<div class="admonition note">
+<p class="admonition-title">To be continued</p>
+<p>目前 Python 的 opt-in entry point 是 <code>matmul_planned()</code>；<code>matmul()</code> 與 <code>@</code>
+尚未切換。一般 API 的整合與後續 routes 仍在收尾，本文會隨 merged
+implementation 繼續更新。</p>
 </div>
 
 

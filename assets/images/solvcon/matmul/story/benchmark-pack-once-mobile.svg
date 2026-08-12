@@ -1,57 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 820" role="img" aria-labelledby="title desc">
-  <title id="title">Mobile pack-once benchmark from solvcon pull request 1256</title>
-  <desc id="desc">Log-scale execution time for NumPy, the generic parent, and pack-once solvcon on a reused reversed float64 matrix.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 790" role="img" aria-labelledby="title desc">
+  <title id="title">Pack-once speedup over NumPy by matrix size</title>
+  <desc id="desc">For one float64 reversed LHS broadcast to ten matrix products, NumPy time divided by solvcon time is below one at sizes eight and twelve, crosses above one at size sixteen when packing begins, peaks at 2.44 at size thirty-two, and remains above one through size 256.</desc>
   <style>
-    .title { font-family: Arial; font-size: 28px; font-weight: 700; fill: #172033; }
-    .subtitle { font-family: Consolas; font-size: 18px; font-weight: 500; fill: #475569; }
-    .axis { font-family: Arial; font-size: 18px; font-weight: 500; fill: #475569; }
-    .label { font-family: Arial; font-size: 19px; font-weight: 700; }
-    .note { font-family: Arial; font-size: 19px; font-weight: 500; fill: #334155; }
-    .strong { font-family: Arial; font-size: 21px; font-weight: 700; fill: #172033; }
-    .grid { stroke: #dbe3ee; stroke-width: 1; }
-    .frame { fill: none; stroke: #94a3b8; stroke-width: 1.5; }
-    .threshold { stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 7 6; }
-    .numpy { fill: none; stroke: #2563eb; stroke-width: 4; stroke-linejoin: round; }
-    .before { fill: none; stroke: #dc2626; stroke-width: 4; stroke-linejoin: round; }
-    .after { fill: none; stroke: #16a34a; stroke-width: 5; stroke-linejoin: round; }
-    .dot-n { fill: #fff; stroke: #2563eb; stroke-width: 3; }
-    .dot-b { fill: #fff; stroke: #dc2626; stroke-width: 3; }
-    .dot-a { fill: #16a34a; stroke: #fff; stroke-width: 2; }
+    .title { font-family: Arial, sans-serif; font-size: 30px; font-weight: 700; fill: #172033; }
+    .subtitle { font-family: Arial, sans-serif; font-size: 22px; font-weight: 500; fill: #475569; }
+    .axis { font-family: Arial, sans-serif; font-size: 22px; font-weight: 600; fill: #475569; }
+    .tick { font-family: Consolas, monospace; font-size: 21px; font-weight: 500; fill: #64748b; }
+    .callout { font-family: Arial, sans-serif; font-size: 22px; font-weight: 700; fill: #172033; }
+    .note { font-family: Arial, sans-serif; font-size: 21px; font-weight: 500; fill: #64748b; }
+    .grid { stroke: #cbd5e1; stroke-width: 1.5; }
+    .baseline { stroke: #334155; stroke-width: 3; stroke-dasharray: 9 7; }
+    .series { fill: none; stroke: #2563eb; stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
   </style>
-  <rect width="640" height="820" fill="#fff"/>
-  <text x="24" y="40" class="title">One reversed matrix, reused ×10</text>
-  <text x="24" y="75" class="subtitle">lhs (1,S,S), strides (S²,S,-1)</text>
-  <text x="24" y="103" class="subtitle">rhs (10,S,S), C-contiguous · float64</text>
 
-  <g class="grid">
-    <line x1="78" y1="150" x2="610" y2="150"/><line x1="78" y1="210" x2="610" y2="210"/><line x1="78" y1="270" x2="610" y2="270"/><line x1="78" y1="330" x2="610" y2="330"/><line x1="78" y1="390" x2="610" y2="390"/><line x1="78" y1="450" x2="610" y2="450"/><line x1="78" y1="510" x2="610" y2="510"/>
-  </g>
-  <rect x="78" y="150" width="532" height="360" class="frame"/>
-  <g class="axis" text-anchor="end">
-    <text x="68" y="156">1000</text><text x="68" y="216">100</text><text x="68" y="276">10</text><text x="68" y="336">1</text><text x="68" y="396">.1</text><text x="68" y="456">.01</text><text x="68" y="516">.001</text>
-  </g>
-  <line x1="199" y1="150" x2="199" y2="510" class="threshold"/>
-  <text x="208" y="174" class="label" fill="#7c3aed">pack once ≥16</text>
+  <rect width="640" height="790" fill="#ffffff"/>
+  <text x="24" y="42" class="title">when one copy pays off</text>
+  <text x="24" y="79" class="subtitle">float64 · reversed LHS reused 10 times</text>
+  <text x="24" y="111" class="subtitle">NumPy time / solvcon time</text>
 
-  <polyline points="100,481 169,464 238,459 307,438 376,426 445,396 514,359 583,310" class="numpy"/>
-  <polyline points="100,470 169,443 238,424 307,394 376,368 445,305 514,242 583,181" class="before"/>
-  <polyline points="100,470 169,443 238,468 307,453 376,449 445,415 514,368 583,314" class="after"/>
-  <g>
-    <circle cx="100" cy="481" r="5" class="dot-n"/><circle cx="169" cy="464" r="5" class="dot-n"/><circle cx="238" cy="459" r="5" class="dot-n"/><circle cx="307" cy="438" r="5" class="dot-n"/><circle cx="376" cy="426" r="5" class="dot-n"/><circle cx="445" cy="396" r="5" class="dot-n"/><circle cx="514" cy="359" r="5" class="dot-n"/><circle cx="583" cy="310" r="5" class="dot-n"/>
-    <circle cx="100" cy="470" r="5" class="dot-b"/><circle cx="169" cy="443" r="5" class="dot-b"/><circle cx="238" cy="424" r="5" class="dot-b"/><circle cx="307" cy="394" r="5" class="dot-b"/><circle cx="376" cy="368" r="5" class="dot-b"/><circle cx="445" cy="305" r="5" class="dot-b"/><circle cx="514" cy="242" r="5" class="dot-b"/><circle cx="583" cy="181" r="5" class="dot-b"/>
-    <circle cx="100" cy="470" r="6" class="dot-a"/><circle cx="169" cy="443" r="6" class="dot-a"/><circle cx="238" cy="468" r="6" class="dot-a"/><circle cx="307" cy="453" r="6" class="dot-a"/><circle cx="376" cy="449" r="6" class="dot-a"/><circle cx="445" cy="415" r="6" class="dot-a"/><circle cx="514" cy="368" r="6" class="dot-a"/><circle cx="583" cy="314" r="6" class="dot-a"/>
-  </g>
-  <g class="axis" text-anchor="middle">
-    <text x="100" y="538">8</text><text x="169" y="538">12</text><text x="238" y="538">16</text><text x="307" y="538">24</text><text x="376" y="538">32</text><text x="445" y="538">64</text><text x="514" y="538">128</text><text x="583" y="538">256</text>
-  </g>
-  <text x="344" y="566" class="axis" text-anchor="middle">matrix side S · ms/call log scale</text>
+  <rect x="80" y="148" width="536" height="270" fill="#f0fdf4"/>
+  <rect x="80" y="418" width="536" height="162" fill="#fff7ed"/>
+  <text x="96" y="179" class="axis" fill="#15803d">solvcon faster</text>
+  <text x="96" y="558" class="axis" fill="#c2410c">NumPy faster</text>
 
-  <line x1="24" y1="604" x2="62" y2="604" class="before"/><text x="72" y="611" class="label" fill="#dc2626">parent generic</text>
-  <line x1="250" y1="604" x2="288" y2="604" class="numpy"/><text x="298" y="611" class="label" fill="#2563eb">NumPy</text>
-  <line x1="442" y1="604" x2="480" y2="604" class="after"/><text x="490" y="611" class="label" fill="#16a34a">pack once</text>
+  <line x1="80" y1="499" x2="616" y2="499" class="grid"/>
+  <line x1="80" y1="418" x2="616" y2="418" class="baseline"/>
+  <line x1="80" y1="337" x2="616" y2="337" class="grid"/>
+  <line x1="80" y1="256" x2="616" y2="256" class="grid"/>
+  <line x1="80" y1="175" x2="616" y2="175" class="grid"/>
+  <text x="66" y="506" class="tick" text-anchor="end">0.5</text>
+  <text x="66" y="425" class="tick" text-anchor="end">1.0</text>
+  <text x="66" y="344" class="tick" text-anchor="end">1.5</text>
+  <text x="66" y="263" class="tick" text-anchor="end">2.0</text>
+  <text x="66" y="182" class="tick" text-anchor="end">2.5</text>
 
-  <text x="24" y="660" class="strong">S=32 · 0.0100 vs 0.0244 ms · 2.44×</text>
-  <text x="24" y="698" class="note">S ≥ 16: all 72 affected points beat NumPy</text>
-  <text x="24" y="730" class="note">range 1.11×–2.97× · PR #1256</text>
-  <text x="24" y="774" class="axis">macOS arm64 · NumPy 2.5.1 · Accelerate · 1 thread</text>
+  <polyline points="94,475 166,506 238,344 310,273 382,175 454,245 526,353 598,394" class="series"/>
+  <circle cx="94" cy="475" r="8" fill="#ea580c" stroke="#fff" stroke-width="2"/>
+  <circle cx="166" cy="506" r="8" fill="#ea580c" stroke="#fff" stroke-width="2"/>
+  <circle cx="238" cy="344" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+  <circle cx="310" cy="273" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+  <circle cx="382" cy="175" r="9" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+  <circle cx="454" cy="245" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+  <circle cx="526" cy="353" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+  <circle cx="598" cy="394" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+
+  <text x="382" y="157" class="callout" text-anchor="middle">2.44x</text>
+  <path d="M238 333 V298 H273" fill="none" stroke="#16a34a" stroke-width="2.5"/>
+  <text x="280" y="291" class="callout">packing starts</text>
+
+  <text x="94" y="615" class="tick" text-anchor="middle">8</text>
+  <text x="166" y="615" class="tick" text-anchor="middle">12</text>
+  <text x="238" y="615" class="tick" text-anchor="middle">16</text>
+  <text x="310" y="615" class="tick" text-anchor="middle">24</text>
+  <text x="382" y="615" class="tick" text-anchor="middle">32</text>
+  <text x="454" y="615" class="tick" text-anchor="middle">64</text>
+  <text x="526" y="615" class="tick" text-anchor="middle">128</text>
+  <text x="598" y="615" class="tick" text-anchor="middle">256</text>
+  <text x="348" y="654" class="axis" text-anchor="middle">matrix size S</text>
+
+  <text x="24" y="708" class="note">PR #1256 · native macOS arm64</text>
+  <text x="24" y="738" class="note">NumPy 2.5.1 · Accelerate · 1 thread</text>
+  <text x="24" y="768" class="note">below 1x: NumPy is faster</text>
 </svg>

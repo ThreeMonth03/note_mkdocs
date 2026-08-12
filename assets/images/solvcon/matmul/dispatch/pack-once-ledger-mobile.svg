@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 900" role="img" aria-labelledby="title desc">
   <title id="title">Pack-once cost ledger for a reused reversed matrix</title>
-  <desc id="desc">For the float64 size 32 benchmark in pull request 1256, the parent runs ten generic contractions directly from one reversed matrix. Pack once copies its 8 KiB payload to row-major storage once, then runs ten BLAS contractions. Runtime falls from 0.215773 to 0.010001 milliseconds, 2.44 times faster than NumPy.</desc>
+  <desc id="desc">For the float64 size 32 benchmark in pull request 1256, the strided route runs ten generic contractions directly from one reversed matrix. The pack-once route copies its 8 KiB payload to row-major storage once, then runs ten BLAS contractions. Runtime falls from 0.215773 to 0.010001 milliseconds, 2.44 times faster than NumPy.</desc>
   <defs>
     <marker id="arrow-mobile" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/>
@@ -39,7 +39,7 @@
   <text x="315" y="178" class="mono">stride -1 · reuse 10</text>
 
   <line x1="24" y1="202" x2="616" y2="202" class="divider"/>
-  <text x="24" y="236" class="heading">Parent: generic from original strides</text>
+  <text x="24" y="236" class="heading">Strided route: generic x10</text>
   <text x="24" y="270" class="row-label">SETUP</text>
   <text x="154" y="270" class="label">No materialization</text>
   <text x="154" y="296" class="small">reads the negative stride directly</text>
@@ -58,7 +58,7 @@
   <text x="154" y="432" class="metric" fill="#dc2626">0.215773 ms</text>
 
   <line x1="24" y1="461" x2="616" y2="461" class="divider"/>
-  <text x="24" y="495" class="heading">After: one copy, then BLAS</text>
+  <text x="24" y="495" class="heading">Pack once: copy x1, BLAS x10</text>
   <text x="24" y="533" class="row-label">SETUP</text>
   <rect x="154" y="505" width="166" height="58" rx="4" class="packed"/>
   <text x="237" y="542" class="label" text-anchor="middle">one 8 KiB copy</text>

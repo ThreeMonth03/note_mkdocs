@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
   <title id="title">Pack-once cost ledger for a reused reversed matrix</title>
-  <desc id="desc">For the float64 size 32 benchmark in pull request 1256, the parent runs ten generic contractions directly from one reversed matrix. Pack once copies its 8 KiB payload to row-major storage once, then runs ten BLAS contractions. Runtime falls from 0.215773 to 0.010001 milliseconds, 2.44 times faster than NumPy.</desc>
+  <desc id="desc">For the float64 size 32 benchmark in pull request 1256, the strided route runs ten generic contractions directly from one reversed matrix. The pack-once route copies its 8 KiB payload to row-major storage once, then runs ten BLAS contractions. Runtime falls from 0.215773 to 0.010001 milliseconds, 2.44 times faster than NumPy.</desc>
   <defs>
     <marker id="arrow-ledger" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/>
@@ -31,8 +31,8 @@
   <line x1="32" y1="89" x2="928" y2="89" class="divider"/>
   <line x1="166" y1="89" x2="166" y2="447" class="rule"/>
   <line x1="547" y1="89" x2="547" y2="447" class="divider"/>
-  <text x="183" y="119" class="column">Parent: generic from original strides</text>
-  <text x="564" y="119" class="column">After: pack once, then BLAS</text>
+  <text x="183" y="119" class="column">Strided route: generic x10</text>
+  <text x="564" y="119" class="column">Pack-once route: copy x1, BLAS x10</text>
 
   <line x1="32" y1="137" x2="928" y2="137" class="rule"/>
   <line x1="32" y1="216" x2="928" y2="216" class="rule"/>

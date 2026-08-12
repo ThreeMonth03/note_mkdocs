@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="用可稽核的 benchmark 證據說明 matmul 的 route selection、pack-once reuse 與 NumPy crossover。">
+        <meta name="description" content="Matmul 在哪些 workload 勝過、持平或輸給 NumPy，以及如何重算公開的 profiling data。">
       
       
         <meta name="author" content="張君實">
@@ -23,7 +23,7 @@
     
     
       
-        <title>Benchmark Evidence - 君實的技術筆記</title>
+        <title>Benchmarks - 君實的技術筆記</title>
       
     
     
@@ -118,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#benchmark-evidence" class="md-skip">
+        <a href="#benchmarks" class="md-skip">
           跳轉到
         </a>
       
@@ -153,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Benchmark Evidence
+              Benchmarks
             
           </span>
         </div>
@@ -1239,18 +1239,45 @@
     Results
   </a>
   
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#win" class="md-nav__link">
+    Win
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parity" class="md-nav__link">
+    Parity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lose" class="md-nav__link">
+    Lose
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#method" class="md-nav__link">
-    Method
+  <a href="#calibration" class="md-nav__link">
+    Calibration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#thresholds" class="md-nav__link">
-    Thresholds
+  <a href="#method" class="md-nav__link">
+    Method
   </a>
   
 </li>
@@ -1322,18 +1349,45 @@
     Results
   </a>
   
+    <nav class="md-nav" aria-label="Results">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#win" class="md-nav__link">
+    Win
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parity" class="md-nav__link">
+    Parity
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lose" class="md-nav__link">
+    Lose
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#method" class="md-nav__link">
-    Method
+  <a href="#calibration" class="md-nav__link">
+    Calibration
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#thresholds" class="md-nav__link">
-    Thresholds
+  <a href="#method" class="md-nav__link">
+    Method
   </a>
   
 </li>
@@ -1370,187 +1424,167 @@
 
 
 
-<h1 id="benchmark-evidence">Benchmark Evidence</h1>
-<p>copy 當然有成本。真正的問題是：這份成本要付一次，還是讓每一次矩陣乘法
-都繼續繞過 BLAS？</p>
-<p>當一個 strided matrix 被 broadcasting 到多個 batch coordinates，舊 route 會在
-每個 coordinate 重跑 generic scalar loop。<a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a>
-改成先把無法直接交給 CBLAS、但會被重用的 operand pack 一次，再讓後面的
-contractions 共用同一份 contiguous data。兩條 route 的成本可以寫成：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>generic   ≈ B × strided contraction
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>pack once ≈ one copy + B × BLAS
-</span></code></pre></div>
-<p>其中 <code>B</code> 是重用同一個 operand 的 contractions 數量。這不是「copy 免費」，
-而是用一次 copy 換掉 <span class="arithmatex">\(B\)</span> 次昂貴的 strided traversal。以下數據檢查的正是
-這筆帳。</p>
+<h1 id="benchmarks">Benchmarks</h1>
+<p><code>matmul_planned()</code> 並不是在每一種矩陣乘法都比 NumPy 快。結果有三個區域：
+重用不相容 layout 時明顯勝出；兩邊都直接呼叫 Accelerate 時大致持平；小矩陣
+與部分 vector route 仍由 NumPy 領先。這一頁只處理這張結果地圖，以及產生它的
+量測證據。</p>
 <h2 id="results">Results</h2>
-<p>主 benchmark 使用 <code>float32</code> 與 <code>float64</code> square GEMM，矩陣邊長
-<code>S = 8, 12, 16, 24, 32, 64, 128, 256</code>。它分別讓 LHS、RHS，或兩邊同時
-broadcast，並為被重用的矩陣建立 negative-inner-stride 與 step-two-inner-stride
-layouts。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/matmul/story/benchmark-pack-once-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg"
-           alt="PR 1256 中 reversed broadcast matrix 的 NumPy、pack-once 前後執行時間曲線"
-           loading="lazy">
-    </picture>
-  </a>
-  <figcaption>
-    圖中是 float64、lhs-broadcast、negative-inner-stride workload。PR #1256
-    另外測了 float32、rhs/cross broadcasting 與 step-two layouts。
-  </figcaption>
-</figure>
-
-<p>96 個 workload points 中，<code>S = 8</code> 與 <code>S = 12</code> 的 24 點保留 generic route，
-作為未受新 policy 影響的 controls。其餘 <code>S &gt;= 16</code> 的 72 點會走新的
-pack-once route，結果是：</p>
-<table>
-<thead>
-<tr>
-<th>comparison</th>
-<th>72 個 affected points</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>相對 PR parent</td>
-<td>全部較快，speedup <code>3.30x</code> 到 <code>549.52x</code></td>
-</tr>
-<tr>
-<td>相對 NumPy 2.5.1</td>
-<td>全部較快，speedup <code>1.11x</code> 到 <code>2.97x</code></td>
-</tr>
-</tbody>
-</table>
-<p>這 96 個 comparison points 全部通過 correctness 與 sampling audit；最大 relative
-Frobenius error 是 <code>1.32e-16</code>。因此這份證據支持的是一個明確而有限的結論：
-在這台機器、這些 broadcast reuse 與 unsupported layouts 上，<code>S &gt;= 16</code> 的
-pack-once route 比 PR parent 和 NumPy 都快。它不把這個結論外推成「所有
-matmul 都比 NumPy 快」。</p>
+<h3 id="win">Win</h3>
+<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 測量同一個 strided
+matrix 被 batch broadcasting 重用的 square GEMM。測試涵蓋 <code>float32</code>、
+<code>float64</code>，LHS、RHS、cross broadcasting，以及 negative-inner-stride、
+step-two-inner-stride layouts。<code>S &gt;= 16</code> 時會選 pack-once route：</p>
+<ul>
+<li>72 個受影響的 points 全部快過 PR parent，speedup 為 <code>3.30x</code> 到 <code>549.52x</code>。</li>
+<li>同一批 72 points 全部快過 NumPy 2.5.1，speedup 為 <code>1.11x</code> 到 <code>2.97x</code>。</li>
+<li>其中 float64、LHS broadcast、negative stride、<code>S=32</code> 的中位時間是
+  solvcon <code>0.010001 ms</code>、NumPy <code>0.024410 ms</code>，即 <code>2.44x</code>。</li>
+</ul>
+<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 再測 batched
+GEVM/GEMV。32 個會重用 negative-stride vector 的 pack-once points 全部快過
+NumPy，中位 speedup 為 <code>6.24x</code>。</p>
+<p>這兩組勝利有相同前提：layout 不能直接交給 BLAS，但 planner 看得見跨
+contractions 的 reuse，因此一次 packing 可以被重複使用。</p>
+<h3 id="parity">Parity</h3>
+<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 的四個
+C-contiguous、<code>S=256</code> batched GEMM controls 不需要 packing。solvcon 與 NumPy
+都使用單執行緒 Apple Accelerate；獨立重跑的 <code>solvcon / NumPy</code> runtime ratio
+範圍為 <code>0.951</code> 到 <code>1.031</code>，各 case median 為 <code>0.995</code> 到 <code>1.008</code>。</p>
+<p>這裡沒有新的 data-reuse advantage。兩邊把相同的大型 GEMM 送進相同 backend，
+合理結果就是 parity，而不是大幅超越 NumPy。</p>
+<h3 id="lose">Lose</h3>
+<p>負面結果決定 selector 不能只有一句「可用 BLAS 就用 BLAS」。</p>
+<ul>
+<li>PR #1256 的 <code>S=8</code>、<code>S=12</code> 共 24 個 control points 不啟用 packing，24 點
+  全部由 NumPy 領先。solvcon runtime 是 NumPy 的 <code>1.37x</code> 到 <code>2.33x</code>；packing
+  policy 在這些尺寸保留 Generic。</li>
+<li>PR #1259 的 80 個 positive-stride vector points 可以 direct BLAS，而且
+  全部快過 PR parent；但只有 16 點快過 NumPy。整組 median runtime 是 NumPy
+  的 <code>1.06x</code>。</li>
+</ul>
+<h2 id="calibration">Calibration</h2>
+<p>Calibration 用來選 policy boundary，不用來宣稱最終 API 的 speedup。</p>
+<p>PR #1209 讓 forced-generic 與 forced-CBLAS 使用相同 inputs，並以
+<code>generic, CBLAS, CBLAS, generic</code> 的順序量 crossover。vector routes 共掃過
+1,632 組 shapes 與 layouts。這批資料產生當時 merged selector 的幾個主要
+boundaries：DOT <code>K &gt;= 128</code>、compact GEVM <code>K*N &gt;= 729</code>、其他 unbatched
+GEVM/GEMV 的 relevant minimum dimension <code>&gt;= 32</code>，以及 GEMM
+<code>min(M,N,K) &gt;= 8</code>。</p>
+<p>這些數字回答「同一輸入在哪裡值得切 route」。它們不是 correctness contract，
+也不是跨 CPU、dtype 或 BLAS backend 都成立的常數。完整 selector 還要先通過
+role、dtype、backend 與 layout eligibility；細節見 <a href="../implementation/dispatch/">Dispatch</a>。</p>
 <h2 id="method">Method</h2>
-<p>這組數字來自 native macOS 26.5.1 arm64、Python 3.14.6、
-NumPy 2.5.1 與 Apple Accelerate。所有 BLAS-related thread limits 都設為一，
-NumPy 與 solvcon 因此在相同 thread setting 下使用 Accelerate。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/profiling/benchmark-method.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/matmul/profiling/benchmark-method-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/profiling/benchmark-method.svg"
-           alt="三個 implementations 以六種平衡順序執行，每輪 warm up 後收集十五個 calibrated timing batches"
-           loading="lazy">
-    </picture>
-  </a>
-  <figcaption>
-    六個 rounds 各使用一種 method permutation。每個 method、每個 workload
-    最後有 90 筆 per-call estimates，再取未裁切的 median。
-  </figcaption>
-</figure>
-
-<p>每個 workload 比較三個 implementations：NumPy、PR parent，以及 PR #1256。
-正式量測前，每個 method 各先做一次丟棄的 preconditioning run。接著六個 balanced rounds
-恰好走過三個 methods 的六種 permutations，避免某個 implementation 永遠先跑
-或永遠最後跑。</p>
-<p>每一輪中，每個 method 先執行兩個 untimed warm-up batches，再執行 15 個
-timed batches。這裡的 timed batch 是一段量測區塊，與 matmul 的 batch axis
-無關。區塊內的 inner-loop count 先校準到足夠長的量測時間，再用 elapsed time
-除以 call count，得到一筆 per-call estimate。如此不會讓極短 calls 被 timer
-overhead 主導。</p>
-<p>所以每個圖上的 method point 有
-<code>6 rounds × 15 timed batches = 90 per-call estimates</code>。</p>
-<p>報告值是這 90 筆數據的 untrimmed median，不先刪除最快或最慢的 samples。
-inputs、conversion、correctness checks 與 warm-up 都不計時；timed region 比較
-完整的 <code>np.matmul()</code> 與 <code>matmul_planned()</code> calls，而不是只抽出 GEMM kernel。</p>
-<p>完整輸出有 1,728 筆 JSONL records：
-<code>96 workloads × 3 methods × 6 rounds = 1,728</code>。</p>
-<p>每筆 record 保留 dtype、case、size、strides、method order、inner-loop count、
-15 筆 estimates 與 numerical error，因此圖上的 aggregate 可以從 raw data
-重新計算，而不必相信一張截圖。</p>
-<h2 id="thresholds">Thresholds</h2>
-<p>dispatch threshold 不能只是一個寫進 header 的 magic number。它必須回答：
-從哪個 workload 開始，BLAS 節省的計算成本足以償還 dispatch 或 packing？</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 先建立 direct BLAS
-baseline。forced-generic 與 forced-CBLAS 使用相同 inputs，按
-generic、CBLAS、CBLAS、generic 的順序執行 calibrated timing chunks；vector
-routes 另外掃過 1,632 組 shape 與 layout combinations。量到的 routing
-boundaries 是：</p>
-<table>
-<thead>
-<tr>
-<th>operation</th>
-<th>direct-BLAS boundary</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>DOT</td>
-<td><code>K &gt;= 128</code></td>
-</tr>
-<tr>
-<td>compact C-layout GEVM</td>
-<td><code>K * N &gt;= 729</code></td>
-</tr>
-<tr>
-<td>other unbatched GEVM/GEMV</td>
-<td>matrix 的最小 dimension 至少 <code>32</code></td>
-</tr>
-<tr>
-<td>GEMM</td>
-<td><code>M</code>、<code>N</code>、<code>K</code> 的最小值至少 <code>8</code></td>
-</tr>
-</tbody>
-</table>
-<p>direct BLAS 的大型 controls 也提供一個重要基準：四個 C-contiguous、<code>S = 256</code>
-batch GEMM cases 各自獨立重跑五次，solvcon/NumPy runtime ratio 的完整範圍是
-<code>0.951</code> 到 <code>1.031</code>，各 case median 落在 <code>0.995</code> 到 <code>1.008</code>。也就是說，
-compatible layout 直接進入同一個 BLAS backend 時，合理期待首先是 parity，
-而不是憑空大幅勝過 NumPy。</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 提供了更有用的反例。
-32 個 negative-stride vector points 先 pack 被 batch reuse 的 vector，全部快過
-NumPy，median speedup 是 <code>6.24x</code>。但 80 個 positive-stride points 可以直接
-進 BLAS，雖然全部快過 PR parent，只有 16 點快過 NumPy；整組 median runtime
-反而是 NumPy 的 <code>1.06x</code>。</p>
-<p>因此「direct BLAS」不是勝過 NumPy 的充分條件。真正能改變 crossover 的，是
-layout、problem size、copy cost 與 reuse count 的組合。PR #1256 的 <code>S = 8, 12</code>
-controls 留在 generic route、<code>S &gt;= 16</code> 才 pack，也是同一原則：先量 crossover，
-再讓 policy 選 route。</p>
+<p>三組實驗都量完整 call。input construction、warm-up 與 correctness check
+不在 timer 內；wrapper dispatch、output allocation、kernel execution 與 return
+都在 timer 內。因此結果描述使用者呼叫的成本，不只是 BLAS kernel。</p>
+<p>PR #1256 的正式資料來自 native macOS 26.5.1 arm64、Python 3.14.6、
+NumPy 2.5.1 與單執行緒 Apple Accelerate。每個 workload 比較 NumPy、parent、
+after 三個 methods：</p>
+<ol>
+<li>每個 method 先做一次不記錄的 preconditioning。</li>
+<li>六個 rounds 走遍三個 methods 的六種 execution orders。</li>
+<li>每個 method、每個 round 先跑兩個 untimed warm-up batches。</li>
+<li>inner-loop count 先校準，使一個 timed batch 約為 <code>30 ms</code>；再收集 15 個
+   elapsed-time samples，除以 call count 得到 per-call estimates。</li>
+<li>每個 method 最後得到 <code>6 x 15 = 90</code> 筆 estimates，報告 untrimmed median。</li>
+</ol>
+<p>完整 artifact 有 <code>96 workloads x 3 methods x 6 rounds = 1,728</code> 筆 JSONL
+records。每筆保留 execution order、shape、element strides、loop count、15 筆
+samples 與 numerical error。96 個 workloads 全部通過 correctness audit，最大
+relative Frobenius error 為 <code>1.32e-16</code>。</p>
+<p>PR #1209 使用五個 rounds，每 round 兩次 warm-up 與 15 次 individually timed
+calls，再取 75 筆的 untrimmed median。PR #1259 則保留 persistent processes、
+約 <code>15 ms</code> 的 calibrated timed batches 與 12 個 rounds；六種 method orders
+各出現兩次。不同 PR 的數字各自使用自己的 protocol，不把 samples 混成一個
+跨實驗 aggregate。</p>
 <h2 id="limits">Limits</h2>
-<p>這份 benchmark 不是所有 matmul、所有 layout 或所有機器的排行榜。</p>
-<ul>
-<li>它只涵蓋一個 native macOS arm64 環境、一個 Accelerate backend、單一 BLAS thread setting，
-  以及列出的 <code>float32</code>/<code>float64</code> square GEMM cases。</li>
-<li><code>1.11x</code> 到 <code>2.97x</code> 是 PR #1256 affected workloads 的結果，不代表 non-square
-  GEMM、DOT、GEVM、GEMV、其他 batch shapes、其他 CPUs 或多執行緒也有同樣
-  speedup。</li>
-<li><code>549.52x</code> 的 parent speedup 主要描述從重複 generic strided traversal 切換到
-  pack-once BLAS route，不能解讀成 solvcon 發明了快 549 倍的 GEMM kernel。</li>
-<li>NumPy 與 solvcon 的 BLAS routes 都使用 Accelerate。這裡證明的是 planning、
-  layout handling、data movement 與 reuse policy 的 end-to-end 效果，不是
-  solvcon 的底層 BLAS kernel 比 NumPy 的底層 BLAS kernel 更快。</li>
-<li>公開 API 目前仍是 opt-in 的 <code>matmul_planned()</code>；一般 array API 不會因為這份
-  benchmark 就自動取得相同 route。</li>
-</ul>
-<p>這些限制不削弱結果，反而界定了它可以回答的問題：當 unsupported strided
-operand 會被 batch broadcasting 重用時，一次 materialization 是否能回本？
-在 PR #1256 測到的 72 個 affected points 中，答案是可以。</p>
+<p>這份結果只界定一台 native macOS arm64 機器、NumPy 2.5.1、Apple Accelerate、
+單一 BLAS thread，以及各 PR 列出的 <code>float32</code> / <code>float64</code> workloads。</p>
+<p>它沒有證明 non-square GEMM、其他 batch shapes、其他 CPUs、其他 BLAS backend
+或多執行緒會得到同一組 crossover。<code>549.52x</code> 是相對 PR parent；相對 NumPy
+的範圍是 <code>1.11x</code> 到 <code>2.97x</code>。</p>
+<p>目前一般 <code>matmul()</code> 與 <code>@</code> 也尚未切到這個 selector。上述數據對應 opt-in 的
+<code>matmul_planned()</code> 與各 PR 記錄的 commit，不能當成現行所有 array operation
+的結果。</p>
 <h2 id="reproduce">Reproduce</h2>
-<p>原始資料不是摘要表的附錄，而是這一頁的依據：</p>
+<p>PR #1256 的 raw data 可以只用 Python standard library 重算。以下命令下載
+1,728-record artifact，聚合每個 <code>(dtype, case, size, method)</code> 在六個 rounds 的
+<code>samples_ms</code>，並重現本頁的 affected range 與 <code>S=32</code> 例子：</p>
+<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a>curl<span class="w"> </span>-L<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">  </span>https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">  </span>-o<span class="w"> </span>pr1256.jsonl
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a>python3<span class="w"> </span>-<span class="w"> </span>pr1256.jsonl<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="s">import collections</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="s">import json</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="s">import statistics</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="s">import sys</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="s">samples = collections.defaultdict(list)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="s">with open(sys.argv[1], encoding=&quot;utf-8&quot;) as stream:</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="s">    for line in stream:</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="s">        row = json.loads(line)</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="s">        key = (row[&quot;dtype&quot;], row[&quot;case&quot;], row[&quot;size&quot;], row[&quot;method&quot;])</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="s">        samples[key].extend(row[&quot;samples_ms&quot;])</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="s">medians = {</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="s">    key: statistics.median(values)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="s">    for key, values in samples.items()</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="s">}</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="s">workloads = sorted({key[:3] for key in samples})</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="s">affected = [key for key in workloads if key[2] &gt;= 16]</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a><a href="#__codelineno-0-24"><span class="linenos" data-linenos="24 "></span></a><span class="s">controls = [key for key in workloads if key[2] &lt; 16]</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><a href="#__codelineno-0-25"><span class="linenos" data-linenos="25 "></span></a>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><a href="#__codelineno-0-26"><span class="linenos" data-linenos="26 "></span></a><span class="s">numpy_speedups = [</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><a href="#__codelineno-0-27"><span class="linenos" data-linenos="27 "></span></a><span class="s">    medians[key + (&quot;numpy&quot;,)] / medians[key + (&quot;after&quot;,)]</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><a href="#__codelineno-0-28"><span class="linenos" data-linenos="28 "></span></a><span class="s">    for key in affected</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><a href="#__codelineno-0-29"><span class="linenos" data-linenos="29 "></span></a><span class="s">]</span>
+</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><a href="#__codelineno-0-30"><span class="linenos" data-linenos="30 "></span></a><span class="s">parent_speedups = [</span>
+</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><a href="#__codelineno-0-31"><span class="linenos" data-linenos="31 "></span></a><span class="s">    medians[key + (&quot;before&quot;,)] / medians[key + (&quot;after&quot;,)]</span>
+</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><a href="#__codelineno-0-32"><span class="linenos" data-linenos="32 "></span></a><span class="s">    for key in affected</span>
+</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><a href="#__codelineno-0-33"><span class="linenos" data-linenos="33 "></span></a><span class="s">]</span>
+</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><a href="#__codelineno-0-34"><span class="linenos" data-linenos="34 "></span></a><span class="s">control_slowdowns = [</span>
+</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><a href="#__codelineno-0-35"><span class="linenos" data-linenos="35 "></span></a><span class="s">    medians[key + (&quot;after&quot;,)] / medians[key + (&quot;numpy&quot;,)]</span>
+</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><a href="#__codelineno-0-36"><span class="linenos" data-linenos="36 "></span></a><span class="s">    for key in controls</span>
+</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><a href="#__codelineno-0-37"><span class="linenos" data-linenos="37 "></span></a><span class="s">]</span>
+</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a><a href="#__codelineno-0-38"><span class="linenos" data-linenos="38 "></span></a>
+</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><a href="#__codelineno-0-39"><span class="linenos" data-linenos="39 "></span></a><span class="s">print(f&quot;workloads: {len(workloads)}; affected: {len(affected)}&quot;)</span>
+</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><a href="#__codelineno-0-40"><span class="linenos" data-linenos="40 "></span></a><span class="s">print(</span>
+</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><a href="#__codelineno-0-41"><span class="linenos" data-linenos="41 "></span></a><span class="s">    &quot;NumPy/after: &quot;</span>
+</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><a href="#__codelineno-0-42"><span class="linenos" data-linenos="42 "></span></a><span class="s">    f&quot;{min(numpy_speedups):.2f}x..{max(numpy_speedups):.2f}x&quot;</span>
+</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><a href="#__codelineno-0-43"><span class="linenos" data-linenos="43 "></span></a><span class="s">)</span>
+</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><a href="#__codelineno-0-44"><span class="linenos" data-linenos="44 "></span></a><span class="s">print(</span>
+</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><a href="#__codelineno-0-45"><span class="linenos" data-linenos="45 "></span></a><span class="s">    &quot;before/after: &quot;</span>
+</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><a href="#__codelineno-0-46"><span class="linenos" data-linenos="46 "></span></a><span class="s">    f&quot;{min(parent_speedups):.2f}x..{max(parent_speedups):.2f}x&quot;</span>
+</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><a href="#__codelineno-0-47"><span class="linenos" data-linenos="47 "></span></a><span class="s">)</span>
+</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><a href="#__codelineno-0-48"><span class="linenos" data-linenos="48 "></span></a><span class="s">print(</span>
+</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><a href="#__codelineno-0-49"><span class="linenos" data-linenos="49 "></span></a><span class="s">    &quot;control after/NumPy: &quot;</span>
+</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><a href="#__codelineno-0-50"><span class="linenos" data-linenos="50 "></span></a><span class="s">    f&quot;{min(control_slowdowns):.2f}x..{max(control_slowdowns):.2f}x&quot;</span>
+</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><a href="#__codelineno-0-51"><span class="linenos" data-linenos="51 "></span></a><span class="s">)</span>
+</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><a href="#__codelineno-0-52"><span class="linenos" data-linenos="52 "></span></a>
+</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><a href="#__codelineno-0-53"><span class="linenos" data-linenos="53 "></span></a><span class="s">example = (&quot;float64&quot;, &quot;lhs_broadcast_negative&quot;, 32)</span>
+</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><a href="#__codelineno-0-54"><span class="linenos" data-linenos="54 "></span></a><span class="s">for method in (&quot;numpy&quot;, &quot;before&quot;, &quot;after&quot;):</span>
+</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><a href="#__codelineno-0-55"><span class="linenos" data-linenos="55 "></span></a><span class="s">    values = samples[example + (method,)]</span>
+</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><a href="#__codelineno-0-56"><span class="linenos" data-linenos="56 "></span></a><span class="s">    print(method, len(values), f&quot;{statistics.median(values):.6f} ms&quot;)</span>
+</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><a href="#__codelineno-0-57"><span class="linenos" data-linenos="57 "></span></a><span class="s">PY</span>
+</span></code></pre></div>
+<p>預期輸出：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>workloads: 96; affected: 72
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>NumPy/after: 1.11x..2.97x
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>before/after: 3.30x..549.52x
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a>control after/NumPy: 1.37x..2.33x
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a>numpy 90 0.024410 ms
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>before 90 0.215773 ms
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a>after 90 0.010001 ms
+</span></code></pre></div>
+<p>artifact 內也記錄 benchmarked revisions：<code>before</code> 是 <code>d3464749</code>，<code>after</code> 是
+<code>d4c1c98e</code>，NumPy record 是 <code>numpy-2.5.1</code>。其他實驗的公開資料在：</p>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256：pack reused matrices once</a></li>
-<li><a href="https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt">PR #1256：1,728-record JSONL raw data</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209：direct BLAS thresholds 與 plots</a></li>
-<li><a href="https://github.com/user-attachments/files/30631476/pr1209-profile-matrix-ops-2f5f055b.txt">PR #1209：after-PR raw profile output</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259：batched vector routing evidence</a></li>
-<li><a href="https://github.com/user-attachments/files/30860020/pr1259-formal-profiling.jsonl.txt">PR #1259：6,912-record formal JSONL</a></li>
-<li><a href="https://github.com/user-attachments/files/30860041/pr1259-targeted-confirmation.jsonl.txt">PR #1259：144-record targeted confirmation JSONL</a></li>
+<li><a href="https://github.com/user-attachments/files/30631476/pr1209-profile-matrix-ops-2f5f055b.txt">PR #1209 raw profile</a></li>
+<li><a href="https://github.com/user-attachments/files/30860020/pr1259-formal-profiling.jsonl.txt">PR #1259 formal JSONL</a></li>
+<li><a href="https://github.com/user-attachments/files/30860041/pr1259-targeted-confirmation.jsonl.txt">PR #1259 targeted confirmation JSONL</a></li>
 </ul>
-<p>要重算 PR #1256 的一個 plotted value，以 <code>(dtype, case, size, method)</code> 分組，
-依序展開六個 rounds 中的 <code>samples_ms</code>，確認得到 90 筆 estimates，再取未裁切
-median。<code>method_order</code> 用來稽核六種 execution orders；shape、element strides
-與 error fields 則用來確認比較的是同一個 workload 與有效結果。</p>
 
 
 

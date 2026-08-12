@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="從 generic performance wall、direct BLAS 到 pack-once reuse 的 Matmul kernel selection。">
+        <meta name="description" content="從 workload 的 role、shape、layout 與 reuse，選擇 Generic、direct BLAS 或 pack-once BLAS。">
       
       
         <meta name="author" content="張君實">
@@ -1223,43 +1223,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generic-wall" class="md-nav__link">
-    Generic Wall
+  <a href="#facts" class="md-nav__link">
+    Facts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#direct-blas" class="md-nav__link">
-    Direct BLAS
+  <a href="#layout" class="md-nav__link">
+    Layout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pack-once" class="md-nav__link">
-    Pack Once
+  <a href="#reuse" class="md-nav__link">
+    Reuse
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#vectors" class="md-nav__link">
-    Vectors
+  <a href="#cost" class="md-nav__link">
+    Cost
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#selection" class="md-nav__link">
-    Selection
+  <a href="#trace" class="md-nav__link">
+    Trace
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#evidence" class="md-nav__link">
-    Evidence
+  <a href="#policy" class="md-nav__link">
+    Policy
   </a>
   
 </li>
@@ -1334,43 +1334,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#generic-wall" class="md-nav__link">
-    Generic Wall
+  <a href="#facts" class="md-nav__link">
+    Facts
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#direct-blas" class="md-nav__link">
-    Direct BLAS
+  <a href="#layout" class="md-nav__link">
+    Layout
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#pack-once" class="md-nav__link">
-    Pack Once
+  <a href="#reuse" class="md-nav__link">
+    Reuse
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#vectors" class="md-nav__link">
-    Vectors
+  <a href="#cost" class="md-nav__link">
+    Cost
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#selection" class="md-nav__link">
-    Selection
+  <a href="#trace" class="md-nav__link">
+    Trace
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#evidence" class="md-nav__link">
-    Evidence
+  <a href="#policy" class="md-nav__link">
+    Policy
   </a>
   
 </li>
@@ -1401,245 +1401,242 @@
 
 
 <h1 id="dispatch">Dispatch</h1>
-<p>一個 kernel 可以算對所有 layout，卻不可能在所有 layout 都最快。</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1208">PR #1208</a> 完成 <code>DOT</code>、
-<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code> 與 batch broadcasting 後，profiling 留下一個很有用的
-矛盾：同一個 generic executor，遇到 C-contiguous batched vector products 時可比
-NumPy 慢十四倍，遇到其他 stride 組合卻能接近甚至快過 NumPy。這不是再微調三層
-loop 就能解決的問題。layout 已經透露更適合的路徑，Matmul 應該在計算開始前讀懂它。</p>
-<p>這一章追蹤三次實際改動：能直接交給 BLAS 的 view 不複製；不能直接交給 BLAS、
-但會被 batch broadcasting 重用的 operand 只 pack 一次；其他情況繼續使用完整的
-signed-stride generic kernel。</p>
-<h2 id="generic-wall">Generic Wall</h2>
-<p>generic kernel 的價值是涵蓋 semantics。它直接以 signed strides 做 contraction，
-所以 negative stride、step-two view、unequal batch axes 與四種 operand roles 都不必
-先 materialize。代價是每一個 scalar multiply-add 都留在通用的 C++ traversal 裡。</p>
-<p>PR #1208 在 <code>S = 1024</code> 的 C-contiguous batch <code>GEVM</code> / <code>GEMV</code> 測到以下
-<code>solvcon / NumPy</code> runtime ratios：</p>
+<p>Dispatch 不改變矩陣乘法的語意。<code>MatmulPlan</code> 已經驗證 shape、解析
+broadcasting，並把 operands 表示成 <code>M x K @ K x N</code>。Dispatch 只回答下一個
+問題：這份 plan 應該由哪一個 kernel 執行，開始前是否需要 packing？</p>
+<p>答案是一個很小的 value：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">struct</span><span class="w"> </span><span class="nc">MatmulSelection</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">MatmulKernel</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">Generic</span><span class="p">;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">PackingState</span><span class="w"> </span><span class="n">packing</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+<p>它在 batch traversal 前只計算一次。若要 packing，executor 先建立新的
+row-major operands 並重建 plan；之後的每個 batch coordinate 都使用已固定的
+kernel，不會在 inner loop 裡重新判斷 layout。</p>
+<h2 id="facts">Facts</h2>
+<p>Selector 讀取的是 plan 中已經確定的 facts，不是 array 曾經經過哪些 slice 或
+transpose operations：</p>
 <table>
 <thead>
 <tr>
-<th>dtype</th>
-<th style="text-align: right;"><code>GEVM</code></th>
-<th style="text-align: right;"><code>GEMV</code></th>
+<th>fact</th>
+<th>它回答的問題</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>float32</code></td>
-<td style="text-align: right;">14.044</td>
-<td style="text-align: right;">7.102</td>
+<td>role</td>
+<td>這是 DOT、GEVM、GEMV 還是 GEMM？</td>
 </tr>
 <tr>
-<td><code>float64</code></td>
-<td style="text-align: right;">6.412</td>
-<td style="text-align: right;">3.929</td>
+<td><code>M, N, K</code></td>
+<td>一次 contraction 有多大？</td>
+</tr>
+<tr>
+<td>batch domain</td>
+<td>kernel 會被呼叫幾次？</td>
+</tr>
+<tr>
+<td>core strides</td>
+<td>operand 能否直接表示成 BLAS matrix 或 vector view？</td>
+</tr>
+<tr>
+<td>shape broadcasting</td>
+<td>同一份 logical data 是否會被多個 batch coordinates 重用？</td>
+</tr>
+<tr>
+<td>dtype 與 backend</td>
+<td>目前 build 是否有相應的 BLAS function？</td>
 </tr>
 </tbody>
 </table>
-<p>同一組測試的另外三種 C-contiguous / negative-contraction-stride 組合則落在
-<code>0.783–0.984</code>。generic 不是「慢速備案」；它在 BLAS 不容易直接描述的 layout
-仍然有競爭力。真正的問題是：對於 BLAS 已經能原樣讀取的資料，Matmul 仍在重做
-BLAS 擅長的工作。</p>
-<h2 id="direct-blas">Direct BLAS</h2>
-<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 的第一步不是 copy，
-而是判斷二維 core 能否直接表示成 BLAS matrix view。merged implementation 的
-predicate 只有兩種：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">column_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">columns</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">row_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">None</span><span class="p">};</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">}</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">column_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">column_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">Transpose</span><span class="p">};</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+<p>這些 facts 依下列順序收斂成 route：</p>
+<ol>
+<li>沒有可用 BLAS，或 dtype 不受 BLAS route 支援，選 <code>Generic</code>。</li>
+<li>依 role 檢查 matrix view 與 vector stride 是否可由 BLAS 表示。</li>
+<li>若 layout 可直接使用，而且 workload 已跨過目前實測的 crossover boundary，選
+   direct BLAS。</li>
+<li>若 layout 不能直接使用，檢查不相容的 operand 是否能安全地 pack，且 packed
+   storage 是否會被重用。成立時選 pack-once BLAS。</li>
+<li>其餘情況回到 <code>Generic</code>。它是完整的 signed-stride implementation，不是錯誤
+   路徑。</li>
+</ol>
+<p>不同 role 可用的 routes 並不完全相同：</p>
+<ul>
+<li><strong>DOT</strong>：兩個 vector strides 符合 policy 時 direct BLAS；目前不 packing。</li>
+<li><strong>GEVM / GEMV</strong>：matrix 和 vector stride 都可表示時 direct BLAS；batched
+  operation 若重用 non-positive-stride vector，才考慮 pack once。</li>
+<li><strong>GEMM</strong>：兩個 matrices 都可表示時 direct BLAS；否則只考慮 packing
+  被 shape broadcasting 重用的不相容 matrix。</li>
+</ul>
+<p>不符合上述條件的任何 role 都回到 Generic。</p>
+<h2 id="layout">Layout</h2>
+<p>BLAS matrix view 需要 pointer、leading dimension 與 transpose flag。solvcon
+接受 row-major-compatible 與 column-major-compatible 兩種 core layout；padding
+可以存在，但其中一個 axis 必須是 unit stride。merged implementation 的判斷就是：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">column_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">columns</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">row_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">None</span><span class="p">};</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">column_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">column_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">Transpose</span><span class="p">};</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
 </span></code></pre></div>
-<p>第一種是 row-major-compatible view。第二種沒有真的 transpose 資料，只把另一個
-unit-stride axis 表示成 BLAS transpose flag。pointer、leading dimension 與
-transpose state 已經足夠，沒有 allocation，也沒有 copy。</p>
-<p>batch 不需要另一套 BLAS API。<code>MatmulPlan</code> 先解析每一個 batch coordinate 的
-lhs / rhs / output offsets；固定的 <code>BlasGemm</code> 再以同一組 <code>M, N, K</code> 處理每個
-coordinate。PR #1209 因此同時涵蓋 2D、equal-batch 與 cross-broadcast GEMM。</p>
-<p>效果不只是「用了 BLAS」。PR #1209 的 after-PR route 在 threshold 以上貼近
-NumPy；四個 C-contiguous、<code>S = 256</code> batch GEMM controls 經獨立重跑後，
-ratio ranges 為 <code>0.951–1.031</code>，median 為 <code>0.995–1.008</code>。在最大的 GEMM
-cases，相較修改前的 generic loop 則快了數百倍。</p>
-<h2 id="pack-once">Pack Once</h2>
-<p>direct BLAS 還留下一個洞。以下 operand 只是一個普通 matrix 的 strided view，
-而且沿 batch axis 被重用：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">lhs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">out</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs_batch</span><span class="p">)</span>
+<p>第二種沒有搬動或 transpose data。它只是交換 BLAS 看待 axes 的方式。negative
+stride、step-two inner stride，或兩個 core axes 都不是 unit stride 時，這個
+predicate 會回傳 <code>nullopt</code>。</p>
+<p>Vector 的規則由各 role 決定。DOT 目前只直接接受兩邊都是 <code>+1</code>，或兩邊都是
+<code>-1</code>；GEVM / GEMV 的 BLAS wrapper 可以使用 positive vector stride。batched
+GEVM / GEMV 遇到被重用的 non-positive-stride vector 時，才考慮先 pack vector。</p>
+<h2 id="reuse">Reuse</h2>
+<p>「某個 batch offset 是零」不一定代表可以 pack once。Planner 區分兩件事：</p>
+<ul>
+<li>shape broadcasting 產生的 mapping stride <code>0</code>：例如 <code>(1,M,K)</code> 對
+  <code>(B,K,N)</code>，extent <code>1</code> 讓同一個 matrix 合法地重用 <code>B</code> 次；</li>
+<li>原始 view 在 extent 大於 <code>1</code> 的 batch axis 上有 physical stride <code>0</code>：多個
+  logical indices alias 同一份 storage。</li>
+</ul>
+<p>目前 matrix-packing route 只接受第一種。若不相容的 operand 並未被 shape
+broadcast，或原始 batch view 自己有 zero stride，就保留 Generic。exact predicate
+如下：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">required</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">!</span><span class="n">rhs_supported</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">{</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PackingState</span><span class="p">{};</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a><span class="p">}</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">required</span><span class="p">;</span>
 </span></code></pre></div>
-<p>BLAS 無法直接描述 <code>lhs</code> 的 core strides。如果每個 batch coordinate 都重新 copy，
-copy cost 只會換個地方重複。shape broadcasting 已經告訴 planner：每次 contraction
-讀到的是同一個 <code>lhs</code>。因此 <a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a>
-把成本式從</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>generic:       B × T_generic
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>pack per product: B × (T_copy + T_blas)
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a>pack once:     T_copy + B × T_blas
+<p><code>required.lhs</code> 或 <code>required.rhs</code> 只標記無法建立 BLAS matrix view 的 operand。
+Packing 不會複製已經相容的一側。完成後必須重建 plan，因為 logical values 沒有
+變，但 core strides 與 data pointer 已經改變：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><a href="#__codelineno-3-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
 </span></code></pre></div>
-<p>改成最後一行。<code>B</code> 越大，唯一一次 copy 越容易被後面的 contractions 攤提。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/matmul/dispatch/pack-once-ledger-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg"
-           alt="同一個 broadcast operand 在 parent generic 與 pack-once BLAS 兩種路徑的成本帳"
-           loading="lazy">
-    </picture>
-  </a>
-  <figcaption>
-    Parent 直接做十個 generic contractions；新 route 把 8 KiB LHS payload
-    pack 一次，再讓十個 BLAS GEMM 共用它。
-  </figcaption>
-</figure>
-
-<p>selector 只接受由 shape broadcasting 證明的 reuse，並排除 explicit zero-stride
-batch views：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
+<h2 id="cost">Cost</h2>
+<p>能 pack 不代表應該 pack。先看一個 logical matrix 被重用 <code>B</code> 次的簡化模型。
+令：</p>
+<ul>
+<li><code>T_generic(M,N,K,L)</code> 是 layout <code>L</code> 上一次 signed-stride contraction 的時間；</li>
+<li><code>T_blas(M,N,K)</code> 是 BLAS kernel 做相同 arithmetic 的時間；</li>
+<li><code>T_pack(P,L)</code> 是把 <code>P</code> 個 strided elements 寫成 contiguous storage 的時間；</li>
+<li><code>H_call</code> 是一次 BLAS call 的固定成本；</li>
+<li><code>H_route</code> 是建立 packed storage、重建 plan 等相對於 Generic 多出的一次性
+  bookkeeping cost。</li>
+</ul>
+<p>三條 route 的主要差異可以寫成：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a>Generic:          B * T_generic
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a>direct BLAS:      B * (H_call + T_blas)
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>pack-once BLAS:   T_pack + H_route + B * (H_call + T_blas)
 </span></code></pre></div>
-<p>eligible operand 在 traversal 前轉成 row-major。因為 core strides 已經改變，
-executor 以 packed arrays 重建 plan，之後才進入同一個 BLAS route：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span><span class="w"> </span><span class="p">}</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
+<p>因此 pack once 值得做的必要比較是：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a>B * (T_generic - T_blas) &gt; T_pack + H_route + B * H_call
 </span></code></pre></div>
-<p>這個 route 有明確、而且有限的勝利範圍。PR #1256 測量 negative 與 step-two
-inner strides、lhs / rhs / cross-broadcast、<code>float32</code> / <code>float64</code>。<code>S &gt;= 16</code>
-的 72 個 affected points 全部加速：相較 parent 為 <code>3.30–549.52×</code>，相較
-NumPy 為 <code>1.11–2.97×</code>。<code>S = 8</code> 與 <code>S = 12</code> 保留 generic，作為小矩陣
-controls。這 72 點才是 #1256 能宣稱「比 NumPy 快」的實驗範圍，不是對所有
-Matmul workload 的泛稱。</p>
-<h2 id="vectors">Vectors</h2>
-<p>batched <code>GEVM</code> / <code>GEMV</code> 把同一個 vector 用在多個 matrices，reuse pattern 和
-matrix packing 相似，結果卻提醒我們不能把 #1256 外推成普遍結論。</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 對 compatible matrix
-加上兩條路徑：positive vector stride 且 matrix work 夠大時 direct BLAS；
-negative vector stride 則在 reuse 足以攤提 copy 時 pack once。112 個 route
-changed points 全部比 parent 快，median speedup 是 <code>5.03×</code>，range 是
-<code>1.15–31.54×</code>。</p>
-<p>但與 NumPy 比較時，兩條路徑的故事不同：</p>
-<table>
-<thead>
-<tr>
-<th>route</th>
-<th style="text-align: right;">points</th>
-<th>result against NumPy</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>negative-stride vector, pack once</td>
-<td style="text-align: right;">32</td>
-<td>全部更快，median speedup <code>6.24×</code></td>
-</tr>
-<tr>
-<td>positive-stride vector, direct BLAS</td>
-<td style="text-align: right;">80</td>
-<td>只有 16 點更快，median runtime <code>1.06× NumPy</code></td>
-</tr>
-</tbody>
-</table>
-<p>direct BLAS 消除了 generic traversal 的主要成本，卻不保證贏過使用相同 Accelerate
-backend 的 NumPy。pack once 多了一個 NumPy 未必能跨 batch coordinates 利用的
-reuse opportunity，反而形成更大的差距。dispatch 的貢獻因此不是「凡 BLAS
-皆快」，而是辨認何時可以少付一次重複成本。</p>
-<h2 id="selection">Selection</h2>
-<p>route 必須在 batch traversal 之前固定，否則 decision tree 本身會進入 hot loop。
-merged code 先產生 <code>MatmulSelection</code>，完成 optional packing，再以 template
-argument 固定 kernel：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">MatmulSelection</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">selection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">select_execution</span><span class="p">();</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos=" 2 "></span></a>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">)</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">{</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">pack</span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">);</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">}</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos=" 7 "></span></a>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">kernel</span><span class="p">)</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9"></a><a href="#__codelineno-5-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">{</span>
-</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10"></a><a href="#__codelineno-5-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">Generic</span><span class="p">:</span>
-</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11"></a><a href="#__codelineno-5-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">Generic</span><span class="o">&gt;</span><span class="p">();</span>
-</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12"></a><a href="#__codelineno-5-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
-</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13"></a><a href="#__codelineno-5-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">BlasGemm</span><span class="p">:</span>
-</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14"></a><a href="#__codelineno-5-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">BlasGemm</span><span class="o">&gt;</span><span class="p">();</span>
-</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15"></a><a href="#__codelineno-5-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
-</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16"></a><a href="#__codelineno-5-16"><span class="linenos" data-linenos="16 "></span></a><span class="c1">// BlasDot, BlasGevm, and BlasGemv use the same shape.</span>
-</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17"></a><a href="#__codelineno-5-17"><span class="linenos" data-linenos="17 "></span></a><span class="p">}</span>
+<p>Direct BLAS 是同一個比較拿掉 <code>T_pack</code> 與 <code>H_route</code>。若兩條 route 都執行 <code>B</code>
+次，問題就縮成 <code>T_generic &gt; T_blas + H_call</code>；這也是小 contraction 不應只因
+layout 相容就進 BLAS 的原因。</p>
+<p>這不是 selector 在 runtime 計算的公式，而是解讀 threshold 的方式。它也說明每個
+fact 的角色：</p>
+<ul>
+<li><code>M*N*K</code> 決定每次 contraction 約有多少 arithmetic；</li>
+<li>pack LHS 約搬動 <code>M*K</code> 個 elements，pack RHS 約搬動 <code>K*N</code> 個 elements；</li>
+<li>irregular strides 會改變 <code>T_generic</code> 與 <code>T_pack</code>，也可能直接排除 BLAS view；</li>
+<li><code>B</code> 只放大重複 contraction 的節省，packing cost 仍只付一次；</li>
+<li>小 workload 中 <code>H_call</code> 不可忽略，所以「BLAS 可表示」不等於「BLAS 較快」。</li>
+</ul>
+<p>Output allocation、<code>B*M*N</code> stores 與 Python wrapper 等共同成本沒有寫進這個
+簡化式，但正式 profiling 量的是完整 call。實際 boundary 由 measurements 決定，
+而不是由 FLOP count 單獨推出。</p>
+<p>目前 selector 不會在 runtime 估計這些時間。GEMM 用 layout eligibility、
+shape-broadcast reuse 與 minimum dimension 近似這個比較；batched vector routes
+則另外使用 matrix elements、batch size 與 output size。下一節示範這些 facts
+如何真的走過一次 selector。</p>
+<h2 id="trace">Trace</h2>
+<p>以下 workload 讓一個 reversed LHS 在十個 GEMM 中重用：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a>lhs  shape (1,32,32), element strides (1024,32,-1)
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a>rhs  shape (10,32,32), C-contiguous
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a>out  shape (10,32,32)
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a>dtype float64, BLAS available
 </span></code></pre></div>
-<p>selector 依序讀取 operand role、dtype / backend support、<code>M, N, K</code>、core
-strides、batch reuse，再回傳一個 kernel 和 packing state。沒有 BLAS、dtype
-不受支援、workload 太小、或 layout 無法 direct / pack 時，default selection
-就是 <code>Generic</code>。</p>
+<p>沿著 merged selector 逐步判斷：</p>
+<ol>
+<li>兩邊都是 matrix，所以 role 是 GEMM；<code>M=N=K=32</code>，batch size 是 <code>10</code>。</li>
+<li>RHS core strides 是 <code>(32,1)</code>，通過第一個 matrix-view predicate。</li>
+<li>LHS core strides 是 <code>(32,-1)</code>。<code>column_stride != 1</code> 且
+   <code>row_stride != 1</code>，所以不能 direct BLAS。</li>
+<li>Direct GEMM 需要兩側都能建立 matrix view，因此 direct route 到此失敗。</li>
+<li>目前 matrix-packing policy 的 minimum dimension boundary 是 <code>16</code>；此例的
+   <code>min(M,N,K)=32</code>，會繼續檢查 packing。</li>
+<li>只有 LHS 不相容，所以 <code>required={lhs:true,rhs:false}</code>。LHS 的 batch extent
+   <code>1</code> 被 broadcast 到 <code>10</code>。<code>lhs_has_zero_batch_stride()</code> 只標記 operand extent
+   大於 <code>1</code> 且 physical stride 為 <code>0</code> 的 batch axis；此例沒有這種 axis，因此
+   packing predicate 通過。</li>
+<li>Selection 成為 <code>{BlasGemm, pack lhs}</code>。<code>to_row_major()</code> 只執行一次，重建
+   plan 後 LHS core strides 變成 <code>(32,1)</code>。</li>
+<li><code>execute_contractions&lt;BlasGemm&gt;()</code> 再走過十個 batch coordinates。每次只有
+   offsets 不同，kernel selection 與 LHS packing 都不會重做。</li>
+</ol>
+<p>這個 trace 也指出 Generic 仍會被選中的鄰近 cases：<code>min(M,N,K)&lt;16</code>、reversed
+matrix 沒有 shape-broadcast reuse、原始 batch view 使用 physical zero stride，
+或 build / dtype 沒有 BLAS support。哪條 route 較快是 policy 問題；哪條 route
+算得對仍由共同的 plan 保證。</p>
+<h2 id="policy">Policy</h2>
+<p>下面是 snapshot <code>95a68122</code> 的 compile-time boundaries。它們由
+<a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a>、
+<a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 與
+<a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 的 Accelerate profiling
+形成。目前程式尚未依 backend 或 dtype 選擇不同 tuning table，所以這些數字描述
+的是當前 implementation policy，不是 portable cost model，也不是 matmul semantics。</p>
 <details>
-<summary>目前 merged snapshot 的 thresholds</summary>
-
-這些值屬於 commit `95a68122` 的共用 compile-time tuning table，不是
-mathematical semantics，也還沒有依 backend 或 dtype 分表。下表的數值都假設
-role、BLAS backend / dtype 與前述 layout eligibility 已經通過；它們不是單獨就能啟用
-route 的充分條件。
+<summary>查看完整 boundary table</summary>
 
 | route | boundary |
 | --- | --- |
-| DOT direct BLAS | `K >= 128`，兩個 strides 同為 `+1` 或同為 `-1` |
-| compact unbatched GEVM | BLAS-compatible matrix、positive vector stride；`K × N >= 729` |
-| other unbatched GEVM / GEMV | 相同 layout 條件；relevant minimum dimension `>= 32` |
-| GEMM direct BLAS | 兩個 matrix views 都相容；`min(M, N, K) >= 8` |
-| GEMM pack once | 不相容 operand 為 shape-broadcast reuse、無 explicit zero batch stride；minimum dimension `>= 16` |
-| batched-vector direct BLAS | compatible matrix、positive vector stride；matrix elements `>= 512` |
-| reused non-positive-stride vector: always pack | compatible matrix；matrix elements `>= 4096` |
-| reused non-positive-stride vector: conditional | matrix elements `>= 1024` 且 batch `>= 4` |
-| reused non-positive-stride vector: reuse floor | matrix elements `>= 576` 且 total output `>= 128` |
-
-PR #1209 不是憑感覺挑 direct boundaries。forced generic 與 CBLAS 使用相同
-inputs，執行順序為 generic、CBLAS、CBLAS、generic；calibrated timing chunks
-涵蓋 1,632 組 vector-matrix / matrix-vector layouts 與 shapes，再選出 crossover。
-matrix 與 vector packing boundaries 則分別由 #1256、#1259 的 targeted profiles
-驗證。
+| DOT direct BLAS | `K >= 128`，兩個 vector strides 同為 `+1` 或同為 `-1` |
+| compact unbatched GEVM | BLAS-compatible matrix、positive vector stride；`K*N >= 729` |
+| other unbatched GEVM | 相同 layout 條件；`min(K,N) >= 32` |
+| unbatched GEMV | BLAS-compatible matrix、positive vector stride；`min(M,K) >= 32` |
+| GEMM direct BLAS | 兩個 matrix views 都相容；`min(M,N,K) >= 8` |
+| GEMM pack once | 每個不相容 matrix 都符合 shape-broadcast reuse 且無 physical zero batch stride；`min(M,N,K) >= 16` |
+| batched GEVM / GEMV direct BLAS | matrix view 相容、positive vector stride；matrix elements `>= 512` |
+| reused non-positive-stride vector: always pack | matrix view 相容；matrix elements `>= 4096` |
+| reused non-positive-stride vector: conditional | matrix elements `>= 1024` 且 batch size `>= 4` |
+| reused non-positive-stride vector: reuse floor | matrix elements `>= 576` 且 total output elements `>= 128` |
 
 </details>
 
-<h2 id="evidence">Evidence</h2>
-<p>上面的數字都來自 PR 中公開的 full-call measurements，不是只截取 BLAS kernel。
-input construction、correctness check 與 warmup 不計時；wrapper dispatch、result
-allocation 與 return 都留在 timed call 裡。</p>
-<ul>
-<li><a href="https://github.com/user-attachments/files/30590397/pr1208-profile-matrix-ops-4e42c825.txt">#1208 raw profile</a>
-  與 <a href="https://github.com/user-attachments/files/30631476/pr1209-profile-matrix-ops-2f5f055b.txt">#1209 raw profile</a>
-  使用 Apple M1、NumPy 2.5.1 與單一 Accelerate thread。每點取五個 rounds，
-  每 round 兩次 warmup、15 次 individually timed calls 的 untrimmed median。</li>
-<li><a href="https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt">#1256 的 1,728-record JSONL</a>
-  包含六個 balanced rounds；每點共 90 個 per-call estimates。96 個 comparison
-  points 全部通過 correctness 與 sampling audits。</li>
-<li><a href="https://github.com/user-attachments/files/30860020/pr1259-formal-profiling.jsonl.txt">#1259 的 6,912-record formal data</a>
-  使用約 15 ms 的 calibrated timed batches、12 rounds，並把六種 execution
-  orders 各跑兩次；另有
-  <a href="https://github.com/user-attachments/files/30860041/pr1259-targeted-confirmation.jsonl.txt">targeted confirmation data</a>
-  檢查接近 crossover 的 cases。</li>
-</ul>
+<p>量測流程、raw data 與 crossover evidence 集中在
+<a href="../../profiling/">Benchmarks</a>。這一頁保留 boundaries，是為了讓讀者能把
+上面的 trace 與 merged code 對上，而不是把 constants 當成跨機器的建議值。</p>
 <h2 id="source">Source</h2>
-<p>本文描述的是 merged commit
-<a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>
-的 selector。精確實作可從以下位置交叉檢查：</p>
+<p>本文對應 solvcon upstream commit
+<a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>：</p>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L594-L755"><code>execute()</code> and route selection</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L594-L755"><code>execute()</code> and role selection</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L758-L824"><code>select_matrix_packing()</code> and <code>pack()</code></a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L826-L927"><code>execute_contractions()</code> and BLAS calls</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L929-L973"><code>make_matrix_view()</code></a></li>
 </ul>
-<p>Strassen engine 已經 merge，但在這個 snapshot 尚未接入 selector，因此不納入
-上述 dispatch 結果。</p>
 
 
 
