@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="matmul operation planning、operand roles、batch broadcasting、signed strides 與 generic kernel。">
+        <meta name="description" content="用一條 signed-stride contraction 完整實作 DOT、GEVM、GEMV 與 GEMM。">
       
       
         <meta name="author" content="張君實">
@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/implementation/generic/">
       
       
-        <link rel="prev" href="../../project/development/">
+        <link rel="prev" href="../../">
       
       
         <link rel="next" href="../dispatch/">
@@ -1173,109 +1173,6 @@
               
   
   
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
-          Project
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_2_2">
-          <span class="md-nav__icon md-icon"></span>
-          Project
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../project/introduction/" class="md-nav__link">
-        Introduction
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../project/development/" class="md-nav__link">
-        Development History
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-    
-  
-  
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_3" checked>
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
-          Implementation
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_2_3">
-          <span class="md-nav__icon md-icon"></span>
-          Implementation
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
     
   
   
@@ -1288,12 +1185,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Generic Matmul
+          Generic
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Generic Matmul
+        Generic
       </a>
       
         
@@ -1319,56 +1216,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#roles" class="md-nav__link">
-    Roles
+  <a href="#broadcast" class="md-nav__link">
+    Broadcast
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#plan" class="md-nav__link">
-    Plan
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batch" class="md-nav__link">
-    Batch
-  </a>
-  
-    <nav class="md-nav" aria-label="Batch">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#right-alignment" class="md-nav__link">
-    Right Alignment
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-stride-mapping" class="md-nav__link">
-    Zero-Stride Mapping
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#offset-cursor" class="md-nav__link">
-    Offset Cursor
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    Layout
+  <a href="#addressing" class="md-nav__link">
+    Addressing
   </a>
   
 </li>
@@ -1378,18 +1234,12 @@
     Kernel
   </a>
   
-    <nav class="md-nav" aria-label="Kernel">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#empty-dimensions" class="md-nav__link">
-    Empty Dimensions
-  </a>
-  
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
   
 </li>
       
@@ -1423,13 +1273,6 @@
 
             
           
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
             
               
   
@@ -1437,7 +1280,7 @@
   
     <li class="md-nav__item">
       <a href="../../profiling/" class="md-nav__link">
-        Profiling
+        Benchmarks
       </a>
     </li>
   
@@ -1491,56 +1334,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#roles" class="md-nav__link">
-    Roles
+  <a href="#broadcast" class="md-nav__link">
+    Broadcast
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#plan" class="md-nav__link">
-    Plan
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batch" class="md-nav__link">
-    Batch
-  </a>
-  
-    <nav class="md-nav" aria-label="Batch">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#right-alignment" class="md-nav__link">
-    Right Alignment
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#zero-stride-mapping" class="md-nav__link">
-    Zero-Stride Mapping
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#offset-cursor" class="md-nav__link">
-    Offset Cursor
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    Layout
+  <a href="#addressing" class="md-nav__link">
+    Addressing
   </a>
   
 </li>
@@ -1550,18 +1352,12 @@
     Kernel
   </a>
   
-    <nav class="md-nav" aria-label="Kernel">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#empty-dimensions" class="md-nav__link">
-    Empty Dimensions
-  </a>
-  
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#tests" class="md-nav__link">
+    Tests
+  </a>
   
 </li>
       
@@ -1591,286 +1387,214 @@
 
 
 <h1 id="generic-matmul">Generic Matmul</h1>
-<p>Generic 是 matmul 的 semantic baseline。planner 將每個合法 input 轉成同一份
-contraction description；signed-stride kernel 只負責走訪位址。後續加入的
-optimized routes 因而共用相同的 rank、broadcasting 與 layout contract。</p>
+<p>快速路徑需要一個可靠的基準。Generic matmul 把四種矩陣乘法、batch
+broadcasting 與任意合法 view 收進同一條 contraction loop；當最佳化路徑
+不適用時，它也是最後的 fallback。</p>
+<p>這條路線追求的是語意完整，而不是大型 GEMM 的最高速度。它沒有
+blocking、packing 或 BLAS。大型連續矩陣接近 NumPy 靠的是
+<a href="../dispatch/">dispatch</a>；本文明確勝過 NumPy 的證據，則來自重用 unsupported
+layout 的 pack-once route。</p>
 <h2 id="contract">Contract</h2>
-<p>public operands 有四種 roles。synthetic <code>M=1</code> 或 <code>N=1</code> 只存在於 normalized
-core，不會出現在 public output：</p>
+<p>這個 NumPy-style contract 的兩個輸入只有 vector 或 matrix 兩種身分，
+組合後形成四個 roles。本文的 opt-in 入口是 <code>lhs.matmul_planned(rhs)</code>；
+<code>@</code> 在這個 snapshot 仍綁定舊實作。
+executor 內部一律看見 <code>M x K @ K x N</code>；缺少的 <code>M</code> 或 <code>N</code> 暫時補成 <code>1</code>，
+建立 output shape 時再拿掉。</p>
 <table>
 <thead>
 <tr>
 <th>role</th>
-<th>public operands</th>
-<th>normalized core</th>
-<th>public output</th>
+<th>public contract</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>DOT</td>
-<td><code>(K,) @ (K,)</code></td>
-<td><code>(1,K) @ (K,1)</code></td>
-<td><code>(1,)</code></td>
+<td><code>(K,) @ (K,) -&gt; (1,)</code></td>
 </tr>
 <tr>
 <td>GEVM</td>
-<td><code>(K,) @ (...,K,N)</code></td>
-<td><code>(1,K) @ (K,N)</code></td>
-<td><code>(...,N)</code></td>
+<td><code>(K,) @ (...,K,N) -&gt; (...,N)</code></td>
 </tr>
 <tr>
 <td>GEMV</td>
-<td><code>(...,M,K) @ (K,)</code></td>
-<td><code>(M,K) @ (K,1)</code></td>
-<td><code>(...,M)</code></td>
+<td><code>(...,M,K) @ (K,) -&gt; (...,M)</code></td>
 </tr>
 <tr>
 <td>GEMM</td>
-<td><code>(...,M,K) @ (...,K,N)</code></td>
-<td><code>(M,K) @ (K,N)</code></td>
-<td><code>(...,M,N)</code></td>
+<td><code>(...,M,K) @ (...,K,N) -&gt; (...,M,N)</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="roles">Roles</h2>
-<p><code>make_contraction()</code> 先由 rank 判斷 vector role，再決定 contraction axes。
-不存在的 <code>M</code> 或 <code>N</code> 使用 synthetic <code>1</code>：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="n">rhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">rhs_vector</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="o">--</span><span class="n">rhs_inner_axis</span><span class="p">;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">inner_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs_inner_axis</span><span class="p">);</span>
-</span></code></pre></div>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg">
-    <img src="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg"
-         alt="DOT、GEVM、GEMV、GEMM 轉換成同一個 M 乘 K 與 K 乘 N contraction"
-         loading="lazy">
-  </a>
-  <figcaption>
-    Synthetic <code>1</code> 只補齊 executor 的 core axes。
-  </figcaption>
-</figure>
+<p>補上的 <code>1</code> 只決定 loop bound，不會配置一列或一欄。DOT 保留
+<code>SimpleArray</code> 的 <code>(1,)</code> 慣例，這一點與 NumPy 的 scalar result
+不同。除此之外，四個 roles 共用同一套 <code>K</code> validation、batch broadcasting
+與位址計算。</p>
+<h2 id="broadcast">Broadcast</h2>
+<p>用一個會同時 broadcast 兩邊的 GEMM 當 running example：</p>
+<pre class="matmul-data"><code>lhs       (2, 1, 3, 4)
+rhs       (1, 5, 4, 6)
 
-<p>所有 roles 進入 executor 時都滿足：</p>
-<pre class="matmul-data"><code>lhs core     [M, K]
-rhs core     [K, N]
-output core  [M, N]</code></pre>
+batch     (2, 1) x (1, 5)  ->  (2, 5)
+core          (3, 4) x (4, 6)  ->  (3, 6)
+output                            (2, 5, 3, 6)</code></pre>
 
-<p><code>DOT</code> 沿用 <code>SimpleArray</code> 的 <code>(1,)</code> convention，而不是 NumPy 的 scalar
-output。</p>
-<h2 id="plan">Plan</h2>
-<p>roles 定義後，<code>MatmulPlan::make()</code> 將兩個 array views 轉成 execution
-contract。planning 負責 validation 與 normalization；execution 只消費固定後的
-operation：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">Contraction</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">contraction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_contraction</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">ContractionStrides</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">strides</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">make_contraction_strides</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">);</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">BatchMappings</span><span class="w"> </span><span class="n">batch</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">make_batch_mappings</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">.</span><span class="n">m_rows</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">contraction</span><span class="p">.</span><span class="n">m_columns</span><span class="p">);</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">output_shape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_output_shape</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span><span class="w"> </span><span class="n">contraction</span><span class="p">);</span>
-</span></code></pre></div>
-<p>以兩個 C-contiguous operands 為例：</p>
-<pre class="matmul-data"><code>lhs
-  shape             (2, 1, 3, 4)
-  physical strides  (12, 12, 4, 1)
+<p>Batch axes 從右側對齊。相同 extent 可以直接走訪，extent <code>1</code> 則沿該軸
+重用同一個 matrix；兩邊都不需要 expand 成 <code>(2,5,...)</code> 的暫存 array。</p>
+<p>這兩個 C-contiguous inputs 的 element strides 分別是 <code>(12,12,4,1)</code> 與
+<code>(120,24,6,1)</code>。對齊 <code>(2,5)</code> 的 batch domain 後，只需記住三組 mapping：</p>
+<table>
+<thead>
+<tr>
+<th>buffer</th>
+<th>batch strides</th>
+<th>base offset at <code>(b0,b1)</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>output</td>
+<td><code>(90,18)</code></td>
+<td><code>90*b0 + 18*b1</code></td>
+</tr>
+<tr>
+<td>lhs</td>
+<td><code>(12,0)</code></td>
+<td><code>12*b0</code></td>
+</tr>
+<tr>
+<td>rhs</td>
+<td><code>(0,24)</code></td>
+<td><code>24*b1</code></td>
+</tr>
+</tbody>
+</table>
+<p>因此 batch coordinate <code>(1,3)</code> 對應 output/lhs/rhs base offsets
+<code>144/12/72</code>。LHS 的第二個 mapping stride 是 <code>0</code>，所以五個 <code>b1</code> values
+都回到同一個 LHS matrix；RHS 的第一個 stride 同理。這些 zero strides
+是 broadcasting 規則，不會改寫 operands 原本的 physical strides。</p>
+<h2 id="addressing">Addressing</h2>
+<p>Batch mapping 先找到一對 matrices，四個 signed core strides 再找到其中的
+元素。若 <code>A0</code>、<code>B0</code> 是兩個 views 的 logical origins，generic kernel 使用：</p>
+<pre class="matmul-data"><code>A(i,k) -> A0 + lhs_base + i*lhs_row_stride + k*lhs_inner_stride
+B(k,j) -> B0 + rhs_base + k*rhs_inner_stride + j*rhs_column_stride</code></pre>
 
-rhs
-  shape             (1, 5, 4, 6)
-  physical strides  (120, 24, 6, 1)
-
-normalized operation
-  role              GEMM
-  M, N, K           3, 6, 4
-  batch shape       (2, 5)
-  output mapping    (90, 18)
-  lhs mapping       (12, 0)
-  rhs mapping       (0, 24)
-  lhs core strides  row +4, K +1
-  rhs core strides  K +6, column +1
-  output shape      (2, 5, 3, 6)</code></pre>
-
-<p>這份 record 是 executor 的穩定輸入。plan 建立後，kernel 可以假設：</p>
-<ul>
-<li>scalar 已拒絕，lhs/rhs 的 <code>K</code> 已驗證相等；</li>
-<li>public operands 已表示成 <code>M×K @ K×N</code>；</li>
-<li>batch domain 與 output/lhs/rhs mappings rank 相同；</li>
-<li>core addressing 已化成四個 signed strides；</li>
-<li>output shape 已完整決定。</li>
-</ul>
-<h2 id="batch">Batch</h2>
-<p>考慮：</p>
-<pre class="matmul-data"><code>lhs     (2, 1, 3, 4)
-rhs     (1, 5, 4, 6)
-batch   (2, 1) × (1, 5) → (2, 5)
-core        (3, 4) × (4, 6) → (3, 6)
-output                        (2, 5, 3, 6)</code></pre>
-
-<h3 id="right-alignment">Right Alignment</h3>
-<p><code>make_batch_shape()</code> 從 trailing batch axis 往左比較 extent。兩邊相等，
-或其中一邊為 <code>1</code> 才能合併：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">lhs_batch_axis_count</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">                               </span><span class="o">?</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs_batch_axis_count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">                               </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">rhs_batch_axis_count</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">                               </span><span class="o">?</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rhs_batch_axis_count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">                               </span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">lhs_extent</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">rhs_extent</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">lhs_extent</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">rhs_extent</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">{</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">invalid_argument</span><span class="p">(</span><span class="s">&quot;batch shape mismatch&quot;</span><span class="p">);</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">batch_shape</span><span class="p">[</span><span class="n">batch_axis_count</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="n">lhs_extent</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">rhs_extent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">lhs_extent</span><span class="p">;</span>
-</span></code></pre></div>
-<h3 id="zero-stride-mapping">Zero-Stride Mapping</h3>
-<p>operand mapping 一開始以 zero 填滿。只有 operand extent 與 domain extent
-相等時才抄入 physical stride；需要 broadcast 的 axis 保持 zero：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">batch_stride_type</span><span class="w"> </span><span class="nf">strides</span><span class="p">(</span><span class="n">domain</span><span class="p">.</span><span class="n">rank</span><span class="p">(),</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">operand_extent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operand</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">operand_axis</span><span class="p">);</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">operand_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operand</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">operand_axis</span><span class="p">);</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">operand_extent</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">domain</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="n">domain_axis</span><span class="p">))</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">strides</span><span class="p">[</span><span class="n">domain_axis</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">operand_stride</span><span class="p">;</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">domain</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="n">domain_axis</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">{</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">is_broadcast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><a href="#__codelineno-3-12"><span class="linenos" data-linenos="12 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/generic/batch-offset-mapping.svg">
-    <img src="/assets/images/solvcon/matmul/generic/batch-offset-mapping.svg"
-         alt="二乘五 batch domain 中 lhs 沿欄重用、rhs 沿列重用"
-         loading="lazy">
-  </a>
-  <figcaption>
-    <code>(b0,b1)=(1,3)</code> 對應 output/lhs/rhs offsets
-    <code>144/12/72</code>。
-  </figcaption>
-</figure>
-
-<p>C-contiguous inputs 對應：</p>
-<pre class="matmul-data"><code>output  (90, 18)   offset = 90*b0 + 18*b1
-lhs     (12,  0)   offset = 12*b0
-rhs     ( 0, 24)   offset =         24*b1</code></pre>
-
-<p>mapped zero stride 是 plan 合成的 reuse rule，不是 operand 的 physical
-stride，也不需要配置 expanded tensor。</p>
-<h3 id="offset-cursor">Offset Cursor</h3>
-<p>batch traversal 只維護一個 coordinate counter，並同步更新三個 offsets：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">MappedOffsetCursor</span><span class="w"> </span><span class="n">cursor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">batch_cursor</span><span class="p">();</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">     </span><span class="n">cursor</span><span class="p">;</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">     </span><span class="n">cursor</span><span class="p">.</span><span class="n">advance</span><span class="p">())</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">{</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">execute_at</span><span class="o">&lt;</span><span class="n">Kernel</span><span class="o">&gt;</span><span class="p">(</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">        </span><span class="n">cursor</span><span class="p">.</span><span class="n">offset</span><span class="p">(</span><span class="n">MappingSlot</span><span class="o">::</span><span class="n">Output</span><span class="p">),</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">        </span><span class="n">cursor</span><span class="p">.</span><span class="n">offset</span><span class="p">(</span><span class="n">MappingSlot</span><span class="o">::</span><span class="n">Lhs</span><span class="p">),</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><a href="#__codelineno-4-8"><span class="linenos" data-linenos="8 "></span></a><span class="w">        </span><span class="n">cursor</span><span class="p">.</span><span class="n">offset</span><span class="p">(</span><span class="n">MappingSlot</span><span class="o">::</span><span class="n">Rhs</span><span class="p">));</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><a href="#__codelineno-4-9"><span class="linenos" data-linenos="9 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-<p>negative 或 non-unit batch strides 仍由相同 cursor 處理。</p>
-<h2 id="layout">Layout</h2>
-<p><a href="../../../array/">Array</a> 已將 transpose、slice 與 reverse view 表示成 logical origin
-與 signed physical strides。Matmul planning 不重新判斷 view 的來源，只取出
-executor 需要的四個 core strides：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">ContractionStrides</span><span class="p">{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_lhs_row_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_stride</span><span class="p">,</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_lhs_inner_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_rhs_inner_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">rhs_inner_axis</span><span class="p">),</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="p">.</span><span class="n">m_rhs_column_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_column_stride</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">};</span>
-</span></code></pre></div>
 <table>
 <thead>
 <tr>
 <th>stride</th>
-<th>address step</th>
+<th>one step means</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>lhs_row_stride</code></td>
-<td>A 的下一列</td>
+<td>LHS 的下一列</td>
 </tr>
 <tr>
 <td><code>lhs_inner_stride</code></td>
-<td>A 沿 contraction axis 的下一個值</td>
+<td>LHS 沿 <code>K</code> 的下一個值</td>
 </tr>
 <tr>
 <td><code>rhs_inner_stride</code></td>
-<td>B 沿 contraction axis 的下一個值</td>
+<td>RHS 沿 <code>K</code> 的下一個值</td>
 </tr>
 <tr>
 <td><code>rhs_column_stride</code></td>
-<td>B 的下一欄</td>
+<td>RHS 的下一欄</td>
 </tr>
 </tbody>
 </table>
-<p>generic executor 從 <code>logical_data()</code> 開始，而不是 allocation 的 physical
-起點。reverse view 因此可以把 logical origin 放在較高位址，再用 negative
-stride 往回走。</p>
-<h2 id="kernel">Kernel</h2>
-<p>batch cursor 先提供 output、lhs、rhs 的 base offsets。row loop 外提 lhs
-row base 與 output row base；column loop 只補上 rhs column offset。</p>
+<p>在 running example 中，<code>C[1,3,2,4]</code> 的 output offset 是 <code>160</code>。沿 <code>K=4</code>
+實際讀取的 element offsets 是：</p>
+<pre class="matmul-data"><code>C[160] = A[20]*B[76]
+       + A[21]*B[82]
+       + A[22]*B[88]
+       + A[23]*B[94]</code></pre>
+
 <figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/generic/generic-contraction-addressing.svg">
-    <img src="/assets/images/solvcon/matmul/generic/generic-contraction-addressing.svg"
-         alt="A 的一列與 B 的一欄沿 K axis 產生一個 C element"
-         loading="lazy">
+  <a href="/assets/images/solvcon/matmul/generic/exact-address-trace.svg">
+    <picture>
+      <source media="(max-width: 700px)"
+              srcset="/assets/images/solvcon/matmul/generic/exact-address-trace-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/generic/exact-address-trace.svg"
+           alt="從 batch coordinate 與四個 signed strides 推導 C[1,3,2,4] 的完整位址"
+           loading="lazy">
+    </picture>
   </a>
   <figcaption>
-    每個 <code>C[i,j]</code> 只沿 A row 與 B column 的 signed strides 前進。
+    一個 output element 的位址追蹤：先套用 batch mapping，再沿四個 core
+    strides 走完 contraction。
   </figcaption>
 </figure>
 
-<p>完整 generic executor 是固定的 row-column-inner address walk：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rows</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">lhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_row_stride</span><span class="p">();</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">output_row_base</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">output_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos=" 7 "></span></a>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">column</span><span class="p">)</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">value_type</span><span class="w"> </span><span class="n">total</span><span class="p">{};</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><a href="#__codelineno-6-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="p">;</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12"></a><a href="#__codelineno-6-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13"></a><a href="#__codelineno-6-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="n">rhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_column_stride</span><span class="p">();</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14"></a><a href="#__codelineno-6-14"><span class="linenos" data-linenos="14 "></span></a>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15"></a><a href="#__codelineno-6-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">inner_size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">inner</span><span class="p">)</span>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16"></a><a href="#__codelineno-6-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="p">{</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17"></a><a href="#__codelineno-6-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_lhs_data</span><span class="p">[</span><span class="n">lhs_offset</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_rhs_data</span><span class="p">[</span><span class="n">rhs_offset</span><span class="p">];</span>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18"></a><a href="#__codelineno-6-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">            </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_inner_stride</span><span class="p">();</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19"></a><a href="#__codelineno-6-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">            </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_inner_stride</span><span class="p">();</span>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20"></a><a href="#__codelineno-6-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="p">}</span>
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21"></a><a href="#__codelineno-6-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="n">m_output_data</span><span class="p">[</span><span class="n">output_row_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="p">;</span>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22"></a><a href="#__codelineno-6-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23"></a><a href="#__codelineno-6-23"><span class="linenos" data-linenos="23 "></span></a><span class="p">}</span>
+<p><a href="../../../array/">Array</a> 讓 transpose、slice 與 reverse view 共用相同的
+buffer。<code>logical_data()</code> 指向 view 的第一個 logical element，stride 則可以是
+正數、負數或大於 <code>1</code>。所以 reversed matrix 只會改變上面的起點與步長，
+不需要在 matmul 裡追查它原本經過哪些 slicing operations。</p>
+<h2 id="kernel">Kernel</h2>
+<p>每個 batch coordinate 都會提供 <code>output_base</code>、<code>lhs_base</code> 與 <code>rhs_base</code>。
+Generic core 接著只做 row、column、inner 三層走訪：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="n">MatmulExecutor</span><span class="o">&lt;</span><span class="n">Array</span><span class="o">&gt;::</span><span class="n">execute_generic</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">output_base</span><span class="p">,</span><span class="w"> </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">lhs_base</span><span class="p">,</span><span class="w"> </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">rhs_base</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="p">{</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rows</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">row</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">            </span><span class="n">lhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_row_stride</span><span class="p">();</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">output_row_base</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">            </span><span class="n">output_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">column</span><span class="p">)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="n">value_type</span><span class="w"> </span><span class="n">total</span><span class="p">{};</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">            </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_row_base</span><span class="p">;</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">            </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">                </span><span class="n">rhs_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_column_stride</span><span class="p">();</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">                 </span><span class="n">inner</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">inner_size</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">inner</span><span class="p">)</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">            </span><span class="p">{</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">                </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_lhs_data</span><span class="p">[</span><span class="n">lhs_offset</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_rhs_data</span><span class="p">[</span><span class="n">rhs_offset</span><span class="p">];</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">                </span><span class="n">lhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_inner_stride</span><span class="p">();</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">                </span><span class="n">rhs_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_inner_stride</span><span class="p">();</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a><a href="#__codelineno-0-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><a href="#__codelineno-0-25"><span class="linenos" data-linenos="25 "></span></a><span class="w">            </span><span class="n">m_output_data</span><span class="p">[</span><span class="n">output_row_base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">column</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">total</span><span class="p">;</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><a href="#__codelineno-0-26"><span class="linenos" data-linenos="26 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><a href="#__codelineno-0-27"><span class="linenos" data-linenos="27 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><a href="#__codelineno-0-28"><span class="linenos" data-linenos="28 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p>K-loop 裡沒有 rank、broadcast、transpose 或 route 判斷，也沒有
-multi-dimensional index multiplication。這條 generic route 沒有 tiling 或
-packing；它用低額外成本提供完整 semantics。</p>
-<h3 id="empty-dimensions">Empty Dimensions</h3>
-<p><code>total{}</code> 先 value-initialize。當 <code>K=0</code>，inner loop 不執行，zero accumulator
-仍會寫入每個非空 output cell。<code>M=0</code>、<code>N=0</code> 或 empty batch 則不執行對應
-traversal。</p>
+<p>Inner loop 裡沒有 rank、broadcast、transpose 或 dispatch 判斷。<code>total{}</code>
+也讓 <code>K=0</code> 自然產生 zero；<code>M=0</code>、<code>N=0</code> 或 empty batch 則由外層 domain
+直接跳過。這份短 loop 因而適合當 correctness oracle 與通用 fallback，但它
+不會自行解決 cache blocking 或 SIMD utilization。</p>
+<h2 id="tests">Tests</h2>
+<p><a href="https://github.com/solvcon/solvcon/pull/1208">#1208</a> 是 generic contract
+完整落地的證據。它用 NumPy 逐例比對 right-aligned broadcasting、
+四個 roles、empty dimensions，以及 C-contiguous、Fortran、negative stride
+與 step-two views；合併時 <code>tests/test_matrix.py</code> 通過 58 tests、498 subtests。</p>
+<p>同一份 PR 的 profiling 也畫出了這條路線的邊界。在 Apple M1、Accelerate
+與 NumPy 2.5.1 的測試中，<code>S=1024</code> 的 C-contiguous batch GEVM/GEMV
+分別耗時 NumPy 的 <code>14.044/7.102</code> 倍（float32）與 <code>6.412/3.929</code> 倍
+（float64）；大型 C-contiguous inputs 與邊長 <code>256</code> 的 broadcast batches 也仍由
+NumPy 領先。
+這個結果直接指出下一個工程問題：保留同一份 contract，另外替適合的
+workload 選擇 optimized kernel。</p>
 <h2 id="source">Source</h2>
+<p>Generic matmul 經過三個可獨立檢查的 PR 才補齊：</p>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L349-L565"><code>MatmulPlan::make()</code> and role normalization</a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/loop.hpp#L23-L180"><code>LoopDomain</code> and <code>MappedOffsetCursor</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L975-L996"><code>execute_generic()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1174">#1174: Introduce planned matrix-matrix execution</a>
+  建立 rank-2 plan 與 signed-stride contraction。</li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1181">#1181: Traverse equal matmul batches</a>
+  加入不建立 temporary views 的 batch traversal。</li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1208">#1208: Complete generic planned matmul operation</a>
+  完成 right-aligned broadcasting、DOT、GEVM、GEMV、GEMM 與完整 layout tests。</li>
 </ul>
+<p>目前的實作可直接對照
+<a href="https://github.com/solvcon/solvcon/blob/2405ac2b2b78387defa582ec49d65c98e1c971c4/cpp/solvcon/buffer/matmul.hpp#L58-L127"><code>MatmulPlan</code></a>、
+<a href="https://github.com/solvcon/solvcon/blob/2405ac2b2b78387defa582ec49d65c98e1c971c4/cpp/solvcon/buffer/matmul.hpp#L279-L383"><code>batch mappings</code></a>
+與
+<a href="https://github.com/solvcon/solvcon/blob/2405ac2b2b78387defa582ec49d65c98e1c971c4/cpp/solvcon/buffer/matmul.hpp#L428-L449"><code>execute_generic()</code></a>。</p>
 
 
 

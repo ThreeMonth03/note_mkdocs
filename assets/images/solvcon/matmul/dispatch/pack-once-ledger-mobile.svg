@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 900" role="img" aria-labelledby="title desc">
+  <title id="title">Pack-once cost ledger for a reused reversed matrix</title>
+  <desc id="desc">For the float64 size 32 benchmark in pull request 1256, the parent runs ten generic contractions directly from one reversed matrix. Pack once copies its 8 KiB payload to row-major storage once, then runs ten BLAS contractions. Runtime falls from 0.215773 to 0.010001 milliseconds, 2.44 times faster than NumPy.</desc>
+  <defs>
+    <marker id="arrow-mobile" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <style>
+    .title { font-family: Arial, sans-serif; font-size: 29px; font-weight: 700; fill: #172033; }
+    .subtitle { font-family: Consolas, monospace; font-size: 22px; font-weight: 500; fill: #475569; }
+    .heading { font-family: Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #172033; }
+    .row-label { font-family: Arial, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 0; fill: #64748b; }
+    .label { font-family: Arial, sans-serif; font-size: 22px; font-weight: 600; fill: #334155; }
+    .small { font-family: Arial, sans-serif; font-size: 22px; font-weight: 500; fill: #64748b; }
+    .mono { font-family: Consolas, monospace; font-size: 22px; font-weight: 600; fill: #334155; }
+    .metric { font-family: Arial, sans-serif; font-size: 28px; font-weight: 700; }
+    .ratio { font-family: Arial, sans-serif; font-size: 22px; font-weight: 700; }
+    .rule { stroke: #dbe3ee; stroke-width: 1.5; }
+    .divider { stroke: #94a3b8; stroke-width: 2; }
+    .arrow { fill: none; stroke: #64748b; stroke-width: 2; marker-end: url(#arrow-mobile); }
+    .generic { fill: #fee2e2; stroke: #dc2626; stroke-width: 1.5; }
+    .blas { fill: #dcfce7; stroke: #16a34a; stroke-width: 1.5; }
+    .packed { fill: #fff7ed; stroke: #ea580c; stroke-width: 1.5; }
+  </style>
+
+  <rect width="640" height="900" fill="#ffffff"/>
+  <text x="24" y="39" class="title">One reversed matrix, ten products</text>
+  <text x="24" y="68" class="subtitle">float64 · S=32 · lhs (1,32,32)</text>
+  <text x="24" y="92" class="subtitle">strides (1024,32,-1) · PR #1256</text>
+
+  <line x1="24" y1="116" x2="616" y2="116" class="divider"/>
+  <text x="24" y="148" class="row-label">SHARED INPUT</text>
+  <rect x="205" y="130" width="91" height="52" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <path d="M218 130V182 M231 130V182 M244 130V182 M257 130V182 M270 130V182 M283 130V182 M205 143H296 M205 156H296 M205 169H296" fill="none" stroke="#93c5fd" stroke-width="1"/>
+  <path d="M281 171 H218" class="arrow"/>
+  <path d="M218 171 L226 166 V176 Z" fill="#64748b"/>
+  <text x="315" y="151" class="label">strided LHS</text>
+  <text x="315" y="178" class="mono">stride -1 · reuse 10</text>
+
+  <line x1="24" y1="202" x2="616" y2="202" class="divider"/>
+  <text x="24" y="236" class="heading">Parent: generic from original strides</text>
+  <text x="24" y="270" class="row-label">SETUP</text>
+  <text x="154" y="270" class="label">No materialization</text>
+  <text x="154" y="296" class="small">reads the negative stride directly</text>
+  <line x1="24" y1="313" x2="616" y2="313" class="rule"/>
+  <text x="24" y="346" class="row-label">BATCH LOOP</text>
+  <g transform="translate(175 326)">
+    <rect x="0" y="0" width="34" height="47" rx="3" class="generic"/>
+    <rect x="41" y="0" width="34" height="47" rx="3" class="generic"/>
+    <rect x="82" y="0" width="34" height="47" rx="3" class="generic"/>
+    <rect x="123" y="0" width="34" height="47" rx="3" class="generic"/>
+    <rect x="164" y="0" width="34" height="47" rx="3" class="generic"/>
+    <text x="218" y="32" class="heading" fill="#dc2626">… x10 generic</text>
+  </g>
+  <line x1="24" y1="393" x2="616" y2="393" class="rule"/>
+  <text x="24" y="429" class="row-label">RUNTIME</text>
+  <text x="154" y="432" class="metric" fill="#dc2626">0.215773 ms</text>
+
+  <line x1="24" y1="461" x2="616" y2="461" class="divider"/>
+  <text x="24" y="495" class="heading">After: one copy, then BLAS</text>
+  <text x="24" y="533" class="row-label">SETUP</text>
+  <rect x="154" y="505" width="166" height="58" rx="4" class="packed"/>
+  <text x="237" y="542" class="label" text-anchor="middle">one 8 KiB copy</text>
+  <path d="M326 534 H331" class="arrow"/>
+  <rect x="338" y="501" width="248" height="66" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+  <text x="462" y="529" class="label" text-anchor="middle">row-major LHS</text>
+  <text x="462" y="557" class="mono" text-anchor="middle">stride (1024,32,1)</text>
+  <line x1="24" y1="578" x2="616" y2="578" class="rule"/>
+  <text x="24" y="612" class="row-label">BATCH LOOP</text>
+  <g transform="translate(175 592)">
+    <rect x="0" y="0" width="34" height="47" rx="3" class="blas"/>
+    <rect x="41" y="0" width="34" height="47" rx="3" class="blas"/>
+    <rect x="82" y="0" width="34" height="47" rx="3" class="blas"/>
+    <rect x="123" y="0" width="34" height="47" rx="3" class="blas"/>
+    <rect x="164" y="0" width="34" height="47" rx="3" class="blas"/>
+    <text x="218" y="32" class="heading" fill="#16a34a">… x10 BLAS</text>
+  </g>
+  <line x1="24" y1="659" x2="616" y2="659" class="rule"/>
+  <text x="24" y="695" class="row-label">RUNTIME</text>
+  <text x="154" y="698" class="metric" fill="#16a34a">0.010001 ms</text>
+  <text x="557" y="697" class="ratio" fill="#16a34a" text-anchor="end">21.6x</text>
+
+  <line x1="24" y1="727" x2="616" y2="727" class="divider"/>
+  <text x="24" y="762" class="row-label">NUMPY</text>
+  <text x="154" y="765" class="metric" fill="#2563eb">0.024410 ms</text>
+  <text x="154" y="800" class="ratio" fill="#16a34a">pack-once is 2.44x faster</text>
+
+  <text x="24" y="842" class="label">Pay once; reuse ten times.</text>
+  <text x="616" y="865" class="small" text-anchor="end">macOS arm64 · NumPy 2.5.1</text>
+  <text x="616" y="890" class="small" text-anchor="end">Accelerate · 1 thread</text>
+</svg>

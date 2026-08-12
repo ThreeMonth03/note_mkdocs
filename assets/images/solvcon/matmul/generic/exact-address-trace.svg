@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" role="img" aria-labelledby="title desc">
+  <title id="title">Exact address trace for one batched matrix-multiplication output</title>
+  <desc id="desc">For A shape 2 by 1 by 3 by 4 and B shape 1 by 5 by 4 by 6, the output coordinate 1, 3, 2, 4 reads A offsets 20 through 23 and B offsets 76, 82, 88, and 94, then accumulates into C offset 160.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#15803d"/>
+    </marker>
+  </defs>
+  <style>
+    .heading { font-family: Arial, sans-serif; font-size: 27px; font-weight: 700; fill: #172033; }
+    .shape { font-family: Consolas, monospace; font-size: 20px; font-weight: 600; fill: #334155; }
+    .section { font-family: Arial, sans-serif; font-size: 20px; font-weight: 700; fill: #172033; }
+    .label { font-family: Arial, sans-serif; font-size: 18px; font-weight: 600; fill: #475569; }
+    .mono { font-family: Consolas, monospace; font-size: 18px; font-weight: 600; fill: #334155; }
+    .mono-a { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; fill: #1d4ed8; }
+    .mono-b { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; fill: #c2410c; }
+    .mono-c { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; fill: #15803d; }
+    .table-head { font-family: Consolas, monospace; font-size: 18px; font-weight: 700; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
+    .table-a { font-family: Consolas, monospace; font-size: 20px; font-weight: 700; fill: #1d4ed8; text-anchor: middle; dominant-baseline: middle; }
+    .table-b { font-family: Consolas, monospace; font-size: 20px; font-weight: 700; fill: #c2410c; text-anchor: middle; dominant-baseline: middle; }
+    .rule { stroke: #cbd5e1; stroke-width: 1.5; }
+    .guide { fill: none; stroke: #64748b; stroke-width: 2; marker-end: url(#arrow); }
+    .sum { fill: none; stroke: #15803d; stroke-width: 3; marker-end: url(#arrow-green); }
+    .a-fill { fill: #eff6ff; }
+    .b-fill { fill: #fff7ed; }
+    .c-fill { fill: #f0fdf4; stroke: #16a34a; stroke-width: 2; }
+  </style>
+
+  <rect width="960" height="560" fill="#ffffff"/>
+  <text x="28" y="38" class="heading">one output element, traced to exact buffer offsets</text>
+  <text x="28" y="72" class="shape" fill="#1d4ed8">A(2,1,3,4)</text>
+  <text x="188" y="72" class="shape" fill="#64748b">@</text>
+  <text x="220" y="72" class="shape" fill="#c2410c">B(1,5,4,6)</text>
+  <text x="380" y="72" class="shape" fill="#64748b">-&gt;</text>
+  <text x="428" y="72" class="shape" fill="#15803d">C(2,5,3,6)</text>
+  <line x1="28" y1="88" x2="932" y2="88" class="rule"/>
+
+  <text x="28" y="122" class="section">1  Batch coordinate  b=(1,3)</text>
+  <text x="28" y="157" class="mono-a">A: 1*12 + 3*0 = 12</text>
+  <text x="330" y="157" class="mono-b">B: 1*0 + 3*24 = 72</text>
+  <text x="654" y="157" class="mono-c">C: 1*90 + 3*18 = 144</text>
+  <text x="28" y="182" class="label">second axis broadcasts</text>
+  <text x="330" y="182" class="label">first axis broadcasts</text>
+  <text x="654" y="182" class="label">start of output matrix</text>
+
+  <path d="M130 194 V218 H233" class="guide"/>
+  <path d="M452 194 V218 H479" class="guide"/>
+  <path d="M779 194 V218 H727" class="guide"/>
+
+  <text x="28" y="244" class="section">2  Core coordinate  (i,j)=(2,4)</text>
+  <rect x="28" y="264" width="276" height="49" class="a-fill"/>
+  <rect x="330" y="264" width="276" height="49" class="b-fill"/>
+  <rect x="632" y="264" width="300" height="49" class="c-fill"/>
+  <text x="45" y="295" class="mono-a">A base: 12 + 2*4 = 20</text>
+  <text x="347" y="295" class="mono-b">B base: 72 + 4 = 76</text>
+  <text x="649" y="295" class="mono-c">C: 144 + 2*6 + 4 = 160</text>
+
+  <path d="M166 313 V340" class="guide"/>
+  <path d="M468 313 V340" class="guide"/>
+
+  <text x="28" y="364" class="section">3  Contract k=0..3</text>
+  <line x1="28" y1="380" x2="714" y2="380" class="rule"/>
+  <line x1="28" y1="424" x2="714" y2="424" class="rule"/>
+  <line x1="28" y1="476" x2="714" y2="476" class="rule"/>
+  <line x1="28" y1="528" x2="714" y2="528" class="rule"/>
+  <line x1="150" y1="380" x2="150" y2="528" class="rule"/>
+  <line x1="291" y1="380" x2="291" y2="528" class="rule"/>
+  <line x1="432" y1="380" x2="432" y2="528" class="rule"/>
+  <line x1="573" y1="380" x2="573" y2="528" class="rule"/>
+  <line x1="714" y1="380" x2="714" y2="528" class="rule"/>
+
+  <text x="89" y="402" class="table-head">k</text>
+  <text x="220" y="402" class="table-head">0</text>
+  <text x="361" y="402" class="table-head">1</text>
+  <text x="502" y="402" class="table-head">2</text>
+  <text x="643" y="402" class="table-head">3</text>
+  <rect x="28" y="424" width="686" height="52" class="a-fill"/>
+  <rect x="28" y="476" width="686" height="52" class="b-fill"/>
+  <text x="89" y="450" class="table-a">A offset</text>
+  <text x="220" y="450" class="table-a">20</text>
+  <text x="361" y="450" class="table-a">21</text>
+  <text x="502" y="450" class="table-a">22</text>
+  <text x="643" y="450" class="table-a">23</text>
+  <text x="89" y="502" class="table-b">B offset</text>
+  <text x="220" y="502" class="table-b">76</text>
+  <text x="361" y="502" class="table-b">82</text>
+  <text x="502" y="502" class="table-b">88</text>
+  <text x="643" y="502" class="table-b">94</text>
+
+  <path d="M738 402 H758 V490 H787" class="sum"/>
+  <text x="790" y="431" class="label">multiply</text>
+  <text x="790" y="456" class="label">and sum</text>
+  <rect x="786" y="476" width="146" height="52" rx="5" class="c-fill"/>
+  <text x="859" y="502" class="table-head" fill="#15803d">C[160]</text>
+</svg>

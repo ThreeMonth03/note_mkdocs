@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="matmul 從 rank-2 prototype 到 generic semantics 與 dispatch 的開發過程。">
+        <meta name="description" content="我整理的演算法、硬體描述語言練習與系統建置筆記。">
       
       
         <meta name="author" content="張君實">
@@ -15,17 +15,13 @@
         <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/project/development/">
       
       
-        <link rel="prev" href="../introduction/">
-      
-      
-        <link rel="next" href="../../implementation/generic/">
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Development History - 君實的技術筆記</title>
+        <title>Matmul development story moved - 君實的技術筆記</title>
       
     
     
@@ -120,7 +116,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development-history" class="md-skip">
+        <a href="#matmul-development-story-moved" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +151,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Development History
+              Matmul development story moved
             
           </span>
         </div>
@@ -301,8 +297,6 @@
         
   
   
-    
-  
 
 
   
@@ -314,7 +308,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../array/" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../array/" class="md-tabs__link">
         solvcon
       </a>
     </li>
@@ -1043,16 +1037,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
       
       
         
@@ -1067,7 +1059,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           solvcon
@@ -1122,16 +1114,14 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
       
       
         
@@ -1160,7 +1150,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_2">
           <span class="md-nav__icon md-icon"></span>
           Matmul
@@ -1173,203 +1163,10 @@
               
   
   
-    
-  
-  
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" checked>
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
-          Project
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_2_2">
-          <span class="md-nav__icon md-icon"></span>
-          Project
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../introduction/" class="md-nav__link">
-        Introduction
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Development History
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Development History
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目錄">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#array-groundwork" class="md-nav__link">
-    Array Groundwork
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rank-2-prototype" class="md-nav__link">
-    Rank-2 Prototype
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batch-traversal" class="md-nav__link">
-    Batch Traversal
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complete-generic-roles" class="md-nav__link">
-    Complete Generic Roles
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#direct-blas" class="md-nav__link">
-    Direct BLAS
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pack-reused-matrices" class="md-nav__link">
-    Pack Reused Matrices
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batched-vectors" class="md-nav__link">
-    Batched Vectors
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#implementation-trail" class="md-nav__link">
-    Implementation Trail
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_3" >
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
-          Implementation
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_2_3">
-          <span class="md-nav__icon md-icon"></span>
-          Implementation
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
   
     <li class="md-nav__item">
       <a href="../../implementation/generic/" class="md-nav__link">
-        Generic Matmul
+        Generic
       </a>
     </li>
   
@@ -1390,13 +1187,6 @@
 
             
           
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
             
               
   
@@ -1404,7 +1194,7 @@
   
     <li class="md-nav__item">
       <a href="../../profiling/" class="md-nav__link">
-        Profiling
+        Benchmarks
       </a>
     </li>
   
@@ -1444,70 +1234,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#array-groundwork" class="md-nav__link">
-    Array Groundwork
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#rank-2-prototype" class="md-nav__link">
-    Rank-2 Prototype
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batch-traversal" class="md-nav__link">
-    Batch Traversal
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#complete-generic-roles" class="md-nav__link">
-    Complete Generic Roles
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#direct-blas" class="md-nav__link">
-    Direct BLAS
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pack-reused-matrices" class="md-nav__link">
-    Pack Reused Matrices
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#batched-vectors" class="md-nav__link">
-    Batched Vectors
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#implementation-trail" class="md-nav__link">
-    Implementation Trail
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1524,67 +1250,10 @@
 
 
 
-<h1 id="development-history">Development History</h1>
-<p>這條 matmul path 從 execution contract 開始。rank-2 prototype 先驗證
-planning 與 execution 可以分離；equal batches、broadcasting 和 vector roles 再逐步
-擴充 generic semantics。等 address contract 穩定後，direct BLAS、pack once 與
-batched-vector policy 才依序接上同一條 executor。</p>
-<h2 id="array-groundwork">Array Groundwork</h2>
-<p>matmul prototype 之所以能直接接受 reverse 與 non-unit views，是因為
-<code>SimpleArray</code> 已把 NumPy layout 保存成 buffer、shape、signed strides 與
-logical origin。<a href="../../../array/">Array</a> 詳細拆解這個 descriptor；
-後面的 planning 與 kernel 都建立在同一個 address model 上。</p>
-<h2 id="rank-2-prototype">Rank-2 Prototype</h2>
-<p>最小的問題是任意 signed-stride <code>A(M,K) @ B(K,N)</code>。第一版只接受 rank-2
-<code>GEMM</code>，但已經建立兩個長期保留的責任邊界：planning
-負責 validation、output shape 與 strides；executor 負責 signed-stride
-contraction。prototype 也從一開始支援 negative matrix strides，以及 empty
-<code>M</code>、<code>N</code>、<code>K</code>。</p>
-<p>這一步刻意縮小 public semantics，先驗證「operation description 與 execution
-分離」是否能讓 hot loop 不再理解 array rank 和 layout。</p>
-<h2 id="batch-traversal">Batch Traversal</h2>
-<p>rank-2 plan 只能產生一組 base offsets，無法表達 <code>(B,M,K) @ (B,K,N)</code>。
-第二步因此加入 equal-shaped batches。<code>LoopDomain</code> 描述 batch coordinate space，
-output、lhs、rhs 各自提供 <code>OperandMapping</code>；<code>MappedOffsetCursor</code> 同步推進三組
-offsets。contraction kernel 因此只收到三個 base offsets，不需要知道目前位於
-哪一個 batch coordinate。</p>
-<h2 id="complete-generic-roles">Complete Generic Roles</h2>
-<p>equal-shaped traversal 仍無法處理 <code>(2,1,3,4) @ (1,5,4,6)</code>，也無法處理
-rank-1 operands。下一步加入 right-aligned broadcasting；vector role 使用
-synthetic core axis：lhs vector 令 <code>M=1</code>，rhs vector 令 <code>N=1</code>，四種 public
-operations 因而共用一個 contraction executor。</p>
-<p>broadcast axis 在 aligned mapping 中保留 zero stride。cursor 在該 axis 前進時，
-operand offset 不變，所以不需要配置 expanded batch tensor。</p>
-<h2 id="direct-blas">Direct BLAS</h2>
-<p>generic semantics 完整後，executor 才加入第一條 specialized path。這一版在
-每個 contraction 開始時檢查 dtype、size、stride 與 matrix view；符合條件就
-呼叫 BLAS，否則回到 generic。可以表示成 BLAS matrix view 的 operands 只傳
-pointer、leading dimension 與 transpose state，不先 copy matrix。</p>
-<p>不符合 dtype、size、stride 或 layout policy 的 workload 繼續使用 generic
-kernel。BLAS 是一條 route，不是新的 public semantics。</p>
-<h2 id="pack-reused-matrices">Pack Reused Matrices</h2>
-<p>direct BLAS 仍會拒絕 reverse、step-two 等 incompatible core layouts。全部先
-copy 會浪費 memory traffic，但有些 shape-broadcast matrix 會跨多個 batch
-coordinates 重用。這種 operand 可以在 traversal 前 pack 成 row-major
-一次，再以 packed storage 重建 plan；之後的 contractions 共用同一份資料。</p>
-<p>目前 matrix packing 只處理 eligible shape-broadcast operands。core layout
-不相容的 equal-batch matrix 與 explicit-zero-stride batch view 保留 generic；
-compatible layouts 仍可走 direct BLAS。</p>
-<h2 id="batched-vectors">Batched Vectors</h2>
-<p>GEMM 的 minimum-dimension rule 不能直接描述 <code>GEVM</code>、<code>GEMV</code>，因為其中一個
-core dimension 是 synthetic <code>1</code>。最後一階段改用 matrix elements、batch size、
-output size 和 vector reuse 共同決定 direct BLAS 或 pack-once 是否能回收
-preparation cost。這一步也加入 <code>MatmulSelection</code>，將 kernel 與 packing decision
-固定在 traversal 前，整個 batch 不再重跑 dispatch tree。</p>
-<h2 id="implementation-trail">Implementation Trail</h2>
-<ol>
-<li><a href="https://github.com/solvcon/solvcon/commit/5dbc1fc6"><code>Introduce planned matrix-matrix execution</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/2e40eb87"><code>Traverse equal matmul batches</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/4aa0ecb5"><code>Complete generic planned matmul roles</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/3fcc46d1"><code>Dispatch planned matmul operations through BLAS</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/f6d18c46"><code>Pack reused matmul matrices once</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/commit/2bf7db34"><code>Tune batched vector matmul routes</code></a></li>
-</ol>
+<p><meta http-equiv="refresh" content="0; url=/solvcon/matmul/"></p>
+<h1 id="matmul-development-story-moved">Matmul development story moved</h1>
+<p>The pull-request history now appears inside the main technical story:
+<a href="../../">open Matmul</a>.</p>
 
 
 

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="用 warm-up、重複取樣與 median 比較 NumPy 和 solvcon matmul。">
+        <meta name="description" content="用可稽核的 benchmark 證據說明 matmul 的 route selection、pack-once reuse 與 NumPy crossover。">
       
       
         <meta name="author" content="張君實">
@@ -23,7 +23,7 @@
     
     
       
-        <title>Profiling - 君實的技術筆記</title>
+        <title>Benchmark Evidence - 君實的技術筆記</title>
       
     
     
@@ -118,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#profiling-matmul" class="md-skip">
+        <a href="#benchmark-evidence" class="md-skip">
           跳轉到
         </a>
       
@@ -153,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Profiling
+              Benchmark Evidence
             
           </span>
         </div>
@@ -1172,110 +1172,9 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
-          Project
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_2_2">
-          <span class="md-nav__icon md-icon"></span>
-          Project
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../project/introduction/" class="md-nav__link">
-        Introduction
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../project/development/" class="md-nav__link">
-        Development History
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_3" >
-      
-      
-        
-          
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
-          Implementation
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_2_3">
-          <span class="md-nav__icon md-icon"></span>
-          Implementation
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
     <li class="md-nav__item">
       <a href="../implementation/generic/" class="md-nav__link">
-        Generic Matmul
+        Generic
       </a>
     </li>
   
@@ -1291,13 +1190,6 @@
       <a href="../implementation/dispatch/" class="md-nav__link">
         Dispatch
       </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -1319,12 +1211,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Profiling
+          Benchmarks
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Profiling
+        Benchmarks
       </a>
       
         
@@ -1343,57 +1235,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#timer" class="md-nav__link">
-    Timer
+  <a href="#results" class="md-nav__link">
+    Results
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#warm-up" class="md-nav__link">
-    Warm-up
+  <a href="#method" class="md-nav__link">
+    Method
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#samples" class="md-nav__link">
-    Samples
+  <a href="#thresholds" class="md-nav__link">
+    Thresholds
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#median" class="md-nav__link">
-    Median
+  <a href="#limits" class="md-nav__link">
+    Limits
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cases" class="md-nav__link">
-    Cases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    Protocol
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#to-be-continued" class="md-nav__link">
-    To be continued
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
-    Source
+  <a href="#reproduce" class="md-nav__link">
+    Reproduce
   </a>
   
 </li>
@@ -1447,57 +1318,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#timer" class="md-nav__link">
-    Timer
+  <a href="#results" class="md-nav__link">
+    Results
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#warm-up" class="md-nav__link">
-    Warm-up
+  <a href="#method" class="md-nav__link">
+    Method
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#samples" class="md-nav__link">
-    Samples
+  <a href="#thresholds" class="md-nav__link">
+    Thresholds
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#median" class="md-nav__link">
-    Median
+  <a href="#limits" class="md-nav__link">
+    Limits
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cases" class="md-nav__link">
-    Cases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    Protocol
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#to-be-continued" class="md-nav__link">
-    To be continued
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
-    Source
+  <a href="#reproduce" class="md-nav__link">
+    Reproduce
   </a>
   
 </li>
@@ -1520,167 +1370,187 @@
 
 
 
-<h1 id="profiling-matmul">Profiling Matmul</h1>
-<p>矩陣乘法只量一次，得到的是那一次執行，不是這個 workload 的典型
-成本。第一次 call 可能還在支付 lazy initialization；後面的 calls 仍會受到
-OS scheduling 與背景活動影響。一個特別快或特別慢的數字，都不適合直接
-當成結論。</p>
-<p>以下聚焦於比較 <code>np.matmul()</code> 與 <code>matmul_planned()</code> 的
-<code>profile_planned_case()</code> measurement path。它把每個 case 拆成四段：setup 不計時，
-每輪先丟掉 warm-up，再記錄 NumPy 與 solvcon 的 single-call samples，最後
-比較兩組時間的 median。</p>
+<h1 id="benchmark-evidence">Benchmark Evidence</h1>
+<p>copy 當然有成本。真正的問題是：這份成本要付一次，還是讓每一次矩陣乘法
+都繼續繞過 BLAS？</p>
+<p>當一個 strided matrix 被 broadcasting 到多個 batch coordinates，舊 route 會在
+每個 coordinate 重跑 generic scalar loop。<a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a>
+改成先把無法直接交給 CBLAS、但會被重用的 operand pack 一次，再讓後面的
+contractions 共用同一份 contiguous data。兩條 route 的成本可以寫成：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>generic   ≈ B × strided contraction
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>pack once ≈ one copy + B × BLAS
+</span></code></pre></div>
+<p>其中 <code>B</code> 是重用同一個 operand 的 contractions 數量。這不是「copy 免費」，
+而是用一次 copy 換掉 <span class="arithmatex">\(B\)</span> 次昂貴的 strided traversal。以下數據檢查的正是
+這筆帳。</p>
+<h2 id="results">Results</h2>
+<p>主 benchmark 使用 <code>float32</code> 與 <code>float64</code> square GEMM，矩陣邊長
+<code>S = 8, 12, 16, 24, 32, 64, 128, 256</code>。它分別讓 LHS、RHS，或兩邊同時
+broadcast，並為被重用的矩陣建立 negative-inner-stride 與 step-two-inner-stride
+layouts。</p>
 <figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/profiling/measurement-loop.svg">
+  <a href="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg">
     <picture>
       <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/matmul/profiling/measurement-loop-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/profiling/measurement-loop.svg"
-           alt="每輪先 warm-up，再量 NumPy 與 solvcon，將多輪 samples 各自取 median"
+              srcset="/assets/images/solvcon/matmul/story/benchmark-pack-once-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg"
+           alt="PR 1256 中 reversed broadcast matrix 的 NumPy、pack-once 前後執行時間曲線"
            loading="lazy">
     </picture>
   </a>
   <figcaption>
-    這是量測流程示意，不是 benchmark 結果。空心 calls 被丟棄，
-    實心 calls 才進入 median。
+    圖中是 float64、lhs-broadcast、negative-inner-stride workload。PR #1256
+    另外測了 float32、rhs/cross broadcasting 與 step-two layouts。
   </figcaption>
 </figure>
 
-<h2 id="timer">Timer</h2>
-<p>case 開始前已經建好 NumPy operands 與對應的 <code>SimpleArray</code> views。資料生成、
-dtype conversion 和 NumPy-to-solvcon wrapping 都不在 timer 裡。兩條 route 因此
-取得同一份 values、shape、dtype 與 layout。</p>
-<p>每筆 sample 只包住一次 public API call：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">profile_one_call</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">solvcon</span><span class="o">.</span><span class="n">call_profiler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>    <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">call_profiler</span><span class="o">.</span><span class="n">result</span><span class="p">()[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Expected exactly one profiled call&quot;</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;total_time&quot;</span><span class="p">]</span>
-</span></code></pre></div>
-<p>decorator 內的 <code>CallProfilerProbe</code> 緊貼 <code>np.matmul()</code> 或
-<code>matmul_planned()</code>。profiler reset 與 result extraction 在 probe 之外。對 solvcon
-而言，timed call 包含 Python/C++ entry、planning、dispatch、output allocation、
-optional packing 與 computation。這量到的是一次 API call 的 end-to-end 成本，
-不是單獨 kernel 的時間。</p>
-<p>C++ profiler 使用 <code>std::chrono::high_resolution_clock</code>，先以 nanoseconds 累計，
-Python result 再以 milliseconds 輸出。</p>
-<h2 id="warm-up">Warm-up</h2>
-<p>每個 round 都先執行 <code>W</code> 組未記錄的 calls，順序與正式取樣一樣：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rounds</span><span class="p">):</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmups</span><span class="p">):</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>        <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a>        <span class="n">lhs_sa</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs_sa</span><span class="p">)</span>
-</span></code></pre></div>
-<p>warm-up 的用途是把 first-call effects 留在記錄區外。例如 dynamic loader、
-backend initialization 或第一次摸到的 code/data pages，都可能使第一筆比後續
-calls 明顯慢。每輪都重做相同數量與順序的 warm-up，但不假設每輪的
-cache 或 machine state 相同。</p>
-<p>warm-up 不等於完全控制 cache、CPU frequency 或溫度。它只清楚地排除一類
-可重現的首次成本。</p>
-<h2 id="samples">Samples</h2>
-<p>warm-up 之後，每輪記錄 <code>S</code> 對 calls：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">timings</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile_one_call</span><span class="p">(</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a>        <span class="n">profile_matmul_np</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">))</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="n">timings</span><span class="p">[</span><span class="s2">&quot;planned_sa&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile_one_call</span><span class="p">(</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a>        <span class="n">profile_matmul_planned_sa</span><span class="p">,</span> <span class="n">lhs_sa</span><span class="p">,</span> <span class="n">rhs_sa</span><span class="p">))</span>
-</span></code></pre></div>
-<p><code>R</code> 個 rounds 會讓每個 method 得到 <code>R × S</code> 筆 raw timings。反覆取樣的目標
-不是讓雜訊「消失」，而是讓雜訊顯現為 distribution。context switch 或背景
-I/O 可能把一個點推到時間軸右邊；其餘 calls 仍保留這個 workload 的主要
-時間尺度。</p>
-<p>目前 runner 將每組 sample 固定排成 NumPy 後接 solvcon。這使每對數據
-使用同一份 inputs，並在相近時間收集；但它仍保留 order effect。當兩者
-差距接近時，應再以反向或交錯順序重跑，確認結論不依賴 AB 次序。</p>
-<h2 id="median">Median</h2>
-<p>NumPy 與 solvcon 的 pooled samples 各自取 median：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">timings</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">method</span><span class="p">:</span> <span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">timings</span><span class="p">[</span><span class="n">method</span><span class="p">])</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a>    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;np&quot;</span><span class="p">,</span> <span class="s2">&quot;planned_sa&quot;</span><span class="p">)</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-<p>median 將 timings 排序後取中間位置。偶發的長延遲會把 mean 往右拉，卻不會
-同樣幅度地改變 median。這對 wall-time microbenchmark 很實用，但 median 不是
-uncertainty estimate，也不會消除固定順序或 BLAS thread settings 造成的系統性
-差異。</p>
-<p>最後輸出的比值是：</p>
-<div class="arithmatex">\[
-\text{ratio} =
-\frac{\operatorname{median}(T_{\text{solvcon}})}
-     {\operatorname{median}(T_{\text{NumPy}})}.
-\]</div>
-<p><code>ratio &lt; 1</code> 表示在這份 dtype、shape、layout 與 backend 組合下，solvcon 的
-典型 call 比 NumPy 快。程式是「兩組 samples 各取 median 後相除」，不是每對
-calls 先算 ratio 再取 median。</p>
-<h2 id="cases">Cases</h2>
-<p>一個 matmul 數字無法代表所有 workloads。profiler 因此保留影響 dispatch 的
-axes：</p>
+<p>96 個 workload points 中，<code>S = 8</code> 與 <code>S = 12</code> 的 24 點保留 generic route，
+作為未受新 policy 影響的 controls。其餘 <code>S &gt;= 16</code> 的 72 點會走新的
+pack-once route，結果是：</p>
 <table>
 <thead>
 <tr>
-<th>axis</th>
-<th>cases</th>
+<th>comparison</th>
+<th>72 個 affected points</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>dtype</td>
-<td><code>float32</code>, <code>float64</code></td>
+<td>相對 PR parent</td>
+<td>全部較快，speedup <code>3.30x</code> 到 <code>549.52x</code></td>
 </tr>
 <tr>
-<td>role</td>
-<td><code>DOT</code>, <code>GEVM</code>, <code>GEMV</code>, equal-batch <code>GEMM</code>, cross-broadcast <code>GEMM</code></td>
-</tr>
-<tr>
-<td>size</td>
-<td>小型 core、vector workloads、較大 DOT/GEMM，以及 batched-vector policy 邊界</td>
-</tr>
-<tr>
-<td>layout</td>
-<td>lhs/rhs C-contiguous 與 negative-inner-stride 的 Cartesian product</td>
+<td>相對 NumPy 2.5.1</td>
+<td>全部較快，speedup <code>1.11x</code> 到 <code>2.97x</code></td>
 </tr>
 </tbody>
 </table>
-<p>將這些結果和 <a href="../implementation/dispatch/#workload-policy">Dispatch policy</a>
-對照，才能檢查 route boundary 與 performance crossover 是否落在合理位置，
-而不是只把一個大型 contiguous GEMM 當成整個 matmul API。</p>
-<h2 id="protocol">Protocol</h2>
-<p>CLI 預設是 <code>warmups=1</code>、<code>samples=1</code>、<code>rounds=3</code>。這個設定適合跑完
-廣泛 case matrix；argument help 明確建議，本機要解讀穩定差異時使用至少
-5 rounds。這是跑完大量 cases 的 baseline，不是用來宣告微小差距的最終
-benchmark protocol。特別是小型 matrices，single-call sample 容易讓 timer、probe
-和 Python call overhead 占太大比例。</p>
-<p>結果發布前，會再用一層 block-based protocol 檢查：</p>
-<ol>
-<li><strong>Calibrate</strong>：先試跑一個 call，再選擇 inner repetition count，使每個
-   timed block 累積到足夠長的 wall time，例如 <code>100–500 ms</code>。以一個
-   timer 包住整個 inner loop，再將 block time 除以 call count，可降低 clock
-   與 probe overhead 在小型 workload 中的比例。</li>
-<li><strong>Blocks</strong>：收集多個分開計時的 blocks，例如 <code>9–21</code> 個，而不是只把同一
-   tight loop 總時間除以 call count。每個 block 前重做 warm-up。</li>
-<li><strong>Order</strong>：在 blocks 間交錯 <code>NumPy → solvcon</code> 與 <code>solvcon → NumPy</code>，
-   減少固定次序、溫度與 frequency drift 持續偏向同一邊。</li>
-<li><strong>Spread</strong>：保留 raw block timings，報告 paired ratios 的 median 與 IQR，
-   並列出 sample count。median 告訴讀者典型值，IQR 則顯示中央區間的
-   散布程度。</li>
-<li><strong>Environment</strong>：固定並記錄 CPU、build flags、BLAS backend、thread count
-   與 power mode。當 ratio 靠近 <code>1</code>，換順序或重開 process 後仍要得到相同
-   方向，才值得解讀。</li>
-</ol>
-<p>這些控制不會讓誤差消失。它們的作用是把「典型成本」和「量測散布」同時
-放到報告裡，並把可控制的系統性差異固定下來。</p>
-<h2 id="to-be-continued">To be continued</h2>
-<p>目前頁面先固定 measurement contract。等 profiling runs 收尾後，會以同一套
-protocol 報告 small/large matrices、vector roles、batch reuse 和 signed layouts 相對
-NumPy 的結果。</p>
-<h2 id="source">Source</h2>
+<p>這 96 個 comparison points 全部通過 correctness 與 sampling audit；最大 relative
+Frobenius error 是 <code>1.32e-16</code>。因此這份證據支持的是一個明確而有限的結論：
+在這台機器、這些 broadcast reuse 與 unsupported layouts 上，<code>S &gt;= 16</code> 的
+pack-once route 比 PR parent 和 NumPy 都快。它不把這個結論外推成「所有
+matmul 都比 NumPy 快」。</p>
+<h2 id="method">Method</h2>
+<p>這組數字來自 native macOS 26.5.1 arm64、Python 3.14.6、
+NumPy 2.5.1 與 Apple Accelerate。所有 BLAS-related thread limits 都設為一，
+NumPy 與 solvcon 因此在相同 thread setting 下使用 Accelerate。</p>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/matmul/profiling/benchmark-method.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/matmul/profiling/benchmark-method-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/profiling/benchmark-method.svg"
+           alt="三個 implementations 以六種平衡順序執行，每輪 warm up 後收集十五個 calibrated timing batches"
+           loading="lazy">
+    </picture>
+  </a>
+  <figcaption>
+    六個 rounds 各使用一種 method permutation。每個 method、每個 workload
+    最後有 90 筆 per-call estimates，再取未裁切的 median。
+  </figcaption>
+</figure>
+
+<p>每個 workload 比較三個 implementations：NumPy、PR parent，以及 PR #1256。
+正式量測前，每個 method 各先做一次丟棄的 preconditioning run。接著六個 balanced rounds
+恰好走過三個 methods 的六種 permutations，避免某個 implementation 永遠先跑
+或永遠最後跑。</p>
+<p>每一輪中，每個 method 先執行兩個 untimed warm-up batches，再執行 15 個
+timed batches。這裡的 timed batch 是一段量測區塊，與 matmul 的 batch axis
+無關。區塊內的 inner-loop count 先校準到足夠長的量測時間，再用 elapsed time
+除以 call count，得到一筆 per-call estimate。如此不會讓極短 calls 被 timer
+overhead 主導。</p>
+<p>所以每個圖上的 method point 有
+<code>6 rounds × 15 timed batches = 90 per-call estimates</code>。</p>
+<p>報告值是這 90 筆數據的 untrimmed median，不先刪除最快或最慢的 samples。
+inputs、conversion、correctness checks 與 warm-up 都不計時；timed region 比較
+完整的 <code>np.matmul()</code> 與 <code>matmul_planned()</code> calls，而不是只抽出 GEMM kernel。</p>
+<p>完整輸出有 1,728 筆 JSONL records：
+<code>96 workloads × 3 methods × 6 rounds = 1,728</code>。</p>
+<p>每筆 record 保留 dtype、case、size、strides、method order、inner-loop count、
+15 筆 estimates 與 numerical error，因此圖上的 aggregate 可以從 raw data
+重新計算，而不必相信一張截圖。</p>
+<h2 id="thresholds">Thresholds</h2>
+<p>dispatch threshold 不能只是一個寫進 header 的 magic number。它必須回答：
+從哪個 workload 開始，BLAS 節省的計算成本足以償還 dispatch 或 packing？</p>
+<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 先建立 direct BLAS
+baseline。forced-generic 與 forced-CBLAS 使用相同 inputs，按
+generic、CBLAS、CBLAS、generic 的順序執行 calibrated timing chunks；vector
+routes 另外掃過 1,632 組 shape 與 layout combinations。量到的 routing
+boundaries 是：</p>
+<table>
+<thead>
+<tr>
+<th>operation</th>
+<th>direct-BLAS boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DOT</td>
+<td><code>K &gt;= 128</code></td>
+</tr>
+<tr>
+<td>compact C-layout GEVM</td>
+<td><code>K * N &gt;= 729</code></td>
+</tr>
+<tr>
+<td>other unbatched GEVM/GEMV</td>
+<td>matrix 的最小 dimension 至少 <code>32</code></td>
+</tr>
+<tr>
+<td>GEMM</td>
+<td><code>M</code>、<code>N</code>、<code>K</code> 的最小值至少 <code>8</code></td>
+</tr>
+</tbody>
+</table>
+<p>direct BLAS 的大型 controls 也提供一個重要基準：四個 C-contiguous、<code>S = 256</code>
+batch GEMM cases 各自獨立重跑五次，solvcon/NumPy runtime ratio 的完整範圍是
+<code>0.951</code> 到 <code>1.031</code>，各 case median 落在 <code>0.995</code> 到 <code>1.008</code>。也就是說，
+compatible layout 直接進入同一個 BLAS backend 時，合理期待首先是 parity，
+而不是憑空大幅勝過 NumPy。</p>
+<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 提供了更有用的反例。
+32 個 negative-stride vector points 先 pack 被 batch reuse 的 vector，全部快過
+NumPy，median speedup 是 <code>6.24x</code>。但 80 個 positive-stride points 可以直接
+進 BLAS，雖然全部快過 PR parent，只有 16 點快過 NumPy；整組 median runtime
+反而是 NumPy 的 <code>1.06x</code>。</p>
+<p>因此「direct BLAS」不是勝過 NumPy 的充分條件。真正能改變 crossover 的，是
+layout、problem size、copy cost 與 reuse count 的組合。PR #1256 的 <code>S = 8, 12</code>
+controls 留在 generic route、<code>S &gt;= 16</code> 才 pack，也是同一原則：先量 crossover，
+再讓 policy 選 route。</p>
+<h2 id="limits">Limits</h2>
+<p>這份 benchmark 不是所有 matmul、所有 layout 或所有機器的排行榜。</p>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L88-L94"><code>profile_one_call()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L148-L183"><code>profile_planned_case()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L186-L271">case generation and CLI controls</a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/profiling/RadixTree.hpp#L217-L244"><code>CallerProfile</code> timer and accumulated duration</a></li>
+<li>它只涵蓋一個 native macOS arm64 環境、一個 Accelerate backend、單一 BLAS thread setting，
+  以及列出的 <code>float32</code>/<code>float64</code> square GEMM cases。</li>
+<li><code>1.11x</code> 到 <code>2.97x</code> 是 PR #1256 affected workloads 的結果，不代表 non-square
+  GEMM、DOT、GEVM、GEMV、其他 batch shapes、其他 CPUs 或多執行緒也有同樣
+  speedup。</li>
+<li><code>549.52x</code> 的 parent speedup 主要描述從重複 generic strided traversal 切換到
+  pack-once BLAS route，不能解讀成 solvcon 發明了快 549 倍的 GEMM kernel。</li>
+<li>NumPy 與 solvcon 的 BLAS routes 都使用 Accelerate。這裡證明的是 planning、
+  layout handling、data movement 與 reuse policy 的 end-to-end 效果，不是
+  solvcon 的底層 BLAS kernel 比 NumPy 的底層 BLAS kernel 更快。</li>
+<li>公開 API 目前仍是 opt-in 的 <code>matmul_planned()</code>；一般 array API 不會因為這份
+  benchmark 就自動取得相同 route。</li>
 </ul>
+<p>這些限制不削弱結果，反而界定了它可以回答的問題：當 unsupported strided
+operand 會被 batch broadcasting 重用時，一次 materialization 是否能回本？
+在 PR #1256 測到的 72 個 affected points 中，答案是可以。</p>
+<h2 id="reproduce">Reproduce</h2>
+<p>原始資料不是摘要表的附錄，而是這一頁的依據：</p>
+<ul>
+<li><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256：pack reused matrices once</a></li>
+<li><a href="https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt">PR #1256：1,728-record JSONL raw data</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209：direct BLAS thresholds 與 plots</a></li>
+<li><a href="https://github.com/user-attachments/files/30631476/pr1209-profile-matrix-ops-2f5f055b.txt">PR #1209：after-PR raw profile output</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259：batched vector routing evidence</a></li>
+<li><a href="https://github.com/user-attachments/files/30860020/pr1259-formal-profiling.jsonl.txt">PR #1259：6,912-record formal JSONL</a></li>
+<li><a href="https://github.com/user-attachments/files/30860041/pr1259-targeted-confirmation.jsonl.txt">PR #1259：144-record targeted confirmation JSONL</a></li>
+</ul>
+<p>要重算 PR #1256 的一個 plotted value，以 <code>(dtype, case, size, method)</code> 分組，
+依序展開六個 rounds 中的 <code>samples_ms</code>，確認得到 90 筆 estimates，再取未裁切
+median。<code>method_order</code> 用來稽核六種 execution orders；shape、element strides
+與 error fields 則用來確認比較的是同一個 workload 與有效結果。</p>
 
 
 
