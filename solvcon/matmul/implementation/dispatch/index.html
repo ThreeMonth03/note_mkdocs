@@ -1533,75 +1533,74 @@ Packing 不會複製已經相容的一側。完成後必須重建 plan，因為 
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><a href="#__codelineno-3-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
 </span></code></pre></div>
+<p>Packing 本身不是新的矩陣乘法技巧。這裡的設計重點是 plan 能在 batch traversal
+以前，從 broadcasting mapping 算出哪些 supplied operands 會被重用；packing
+因此按 supplied operand 執行，而不是按 output coordinate 重做。</p>
 <h2 id="cost">Cost</h2>
-<p>能 pack 不代表應該 pack。先看一個 logical matrix 被重用 <code>B</code> 次的簡化模型。
-令：</p>
+<p>Selector 無法從 shape 精確預測時間，但 plan 能先列出一張不含未知常數的工作帳。
+對一個 batched GEMM，定義：</p>
 <ul>
-<li><code>T_generic(M,N,K,L)</code> 是 layout <code>L</code> 上一次 signed-stride contraction 的時間；</li>
-<li><code>T_blas(M,N,K)</code> 是 BLAS kernel 做相同 arithmetic 的時間；</li>
-<li><code>T_pack(P,L)</code> 是把 <code>P</code> 個 strided elements 寫成 contiguous storage 的時間；</li>
-<li><code>H_call</code> 是一次 BLAS call 的固定成本；</li>
-<li><code>H_route</code> 是建立 packed storage、重建 plan 等相對於 Generic 多出的一次性
-  bookkeeping cost。</li>
+<li><code>C</code>：output batch domain 中的 contraction 數量；</li>
+<li><code>U_lhs</code>：supplied LHS 中會被走訪的 matrices 數量；</li>
+<li><code>U_rhs</code>：supplied RHS 中會被走訪的 matrices 數量；</li>
+<li><code>R_lhs = C/U_lhs</code>、<code>R_rhs = C/U_rhs</code>：每份 supplied matrix 的平均 reuse。</li>
 </ul>
-<p>三條 route 的主要差異可以寫成：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a>Generic:          B * T_generic
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a>direct BLAS:      B * (H_call + T_blas)
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>pack-once BLAS:   T_pack + H_route + B * (H_call + T_blas)
-</span></code></pre></div>
-<p>因此 pack once 值得做的必要比較是：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a>B * (T_generic - T_blas) &gt; T_pack + H_route + B * H_call
-</span></code></pre></div>
-<p>Direct BLAS 是同一個比較拿掉 <code>T_pack</code> 與 <code>H_route</code>。若兩條 route 都執行 <code>B</code>
-次，問題就縮成 <code>T_generic &gt; T_blas + H_call</code>；這也是小 contraction 不應只因
-layout 相容就進 BLAS 的原因。</p>
-<p>這不是 selector 在 runtime 計算的公式，而是解讀 threshold 的方式。它也說明每個
-fact 的角色：</p>
+<p>若 element size 是 <code>s</code> bytes，三條 route 的可數成本是：</p>
 <ul>
-<li><code>M*N*K</code> 決定每次 contraction 約有多少 arithmetic；</li>
-<li>pack LHS 約搬動 <code>M*K</code> 個 elements，pack RHS 約搬動 <code>K*N</code> 個 elements；</li>
-<li>irregular strides 會改變 <code>T_generic</code> 與 <code>T_pack</code>，也可能直接排除 BLAS view；</li>
-<li><code>B</code> 只放大重複 contraction 的節省，packing cost 仍只付一次；</li>
-<li>小 workload 中 <code>H_call</code> 不可忽略，所以「BLAS 可表示」不等於「BLAS 較快」。</li>
+<li><strong>Generic</strong>：執行 <code>C</code> 次 scalar contractions，不配置 packed payload。</li>
+<li><strong>Direct BLAS</strong>：呼叫 BLAS <code>C</code> 次，不配置 packed payload。</li>
+<li><strong>Pack-once BLAS</strong>：先整理不相容的 supplied matrices，再呼叫 BLAS <code>C</code> 次。
+  LHS payload 是 <code>s*U_lhs*M*K</code>，RHS payload 是 <code>s*U_rhs*K*N</code>。</li>
 </ul>
-<p>Output allocation、<code>B*M*N</code> stores 與 Python wrapper 等共同成本沒有寫進這個
-簡化式，但正式 profiling 量的是完整 call。實際 boundary 由 measurements 決定，
-而不是由 FLOP count 單獨推出。</p>
-<p>目前 selector 不會在 runtime 估計這些時間。GEMM 用 layout eligibility、
-shape-broadcast reuse 與 minimum dimension 近似這個比較；batched vector routes
-則另外使用 matrix elements、batch size 與 output size。下一節示範這些 facts
-如何真的走過一次 selector。</p>
+<p>Payload 是 packed storage 的大小。Copy 至少還要讀一次 source、寫一次 destination，
+所以實際 memory traffic 至少是 payload 的兩倍，另有 allocation、cache 與 BLAS
+call overhead。對 real-valued operands，<code>C</code> 個 GEMM 約做 <code>2*C*M*N*K</code> FLOPs。
+這兩組可數資料不會直接給出秒數，但能先排除顯然不合理的 route，再用 profiling
+決定 crossover。</p>
+<p>Cross broadcasting 說明為什麼不能只用一個模糊的 batch size。對：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a>lhs batch (2,1) x rhs batch (1,5) -&gt; output batch (2,5)
+</span></code></pre></div>
+<p>工作帳是 <code>C=10</code>、<code>U_lhs=2</code>、<code>U_rhs=5</code>，所以每個 LHS reuse <code>5</code> 次，每個 RHS
+reuse <code>2</code> 次。若兩邊都不相容，pack-once route 建立 <code>2+5=7</code> 份 packed matrices，
+payload 是 <code>s*(2*M*K + 5*K*N)</code>，然後做十次 BLAS。它不是把 output batch size
+<code>10</code> 誤當成兩邊各自的 reuse，也不會為十個 coordinates 各 pack 一對 operands。</p>
+<p>本文的 <code>S=32</code> LHS-broadcast case 則有 <code>C=10</code>、<code>U_lhs=1</code>、<code>U_rhs=10</code>，只有
+LHS 不相容。Float64 LHS 的 packed payload 是 <code>1*32*32*8 = 8192</code> bytes；copy
+至少產生約 <code>16 KiB</code> read-plus-write traffic，後面接十個 GEMM，約 <code>655,360</code>
+FLOPs。也就是每個 payload byte 後面約有 <code>80</code> FLOPs（以最低 copy traffic 算則
+約 <code>40</code> FLOPs/byte）。這張 ledger 解釋 reuse 如何攤提 representation cost；
+它仍不能取代實測，因為 scalar traversal、BLAS call、cache 與 allocator 的時間
+不由 shape 單獨決定。</p>
+<p>操作上可以先做三個判斷：layout 已相容時，packing 沒有價值；layout 不相容但
+<code>R=1</code> 時，copy 沒有跨 contractions 攤提；layout 不相容且 <code>R&gt;1</code> 時，再比較
+packed bytes、後續 arithmetic 與實測 boundary。Generic 始終保留，因為小型
+workload 或無法安全重用的 view 可能不值得 materialize。</p>
 <h2 id="trace">Trace</h2>
 <p>以下 workload 讓一個 reversed LHS 在十個 GEMM 中重用：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a>lhs  shape (1,32,32), element strides (1024,32,-1)
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a>rhs  shape (10,32,32), C-contiguous
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a>out  shape (10,32,32)
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a>dtype float64, BLAS available
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a>lhs  shape (1,32,32), element strides (1024,32,-1)
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a>rhs  shape (10,32,32), C-contiguous
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a>out  shape (10,32,32)
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a>dtype float64, BLAS available
 </span></code></pre></div>
 <p>沿著 merged selector 逐步判斷：</p>
 <ol>
-<li>兩邊都是 matrix，所以 role 是 GEMM；<code>M=N=K=32</code>，batch size 是 <code>10</code>。</li>
-<li>RHS core strides 是 <code>(32,1)</code>，通過第一個 matrix-view predicate。</li>
-<li>LHS core strides 是 <code>(32,-1)</code>。<code>column_stride != 1</code> 且
-   <code>row_stride != 1</code>，所以不能 direct BLAS。</li>
-<li>Direct GEMM 需要兩側都能建立 matrix view，因此 direct route 到此失敗。</li>
-<li>目前 matrix-packing policy 的 minimum dimension boundary 是 <code>16</code>；此例的
-   <code>min(M,N,K)=32</code>，會繼續檢查 packing。</li>
-<li>只有 LHS 不相容，所以 <code>required={lhs:true,rhs:false}</code>。LHS 的 batch extent
-   <code>1</code> 被 broadcast 到 <code>10</code>。<code>lhs_has_zero_batch_stride()</code> 只標記 operand extent
-   大於 <code>1</code> 且 physical stride 為 <code>0</code> 的 batch axis；此例沒有這種 axis，因此
-   packing predicate 通過。</li>
-<li>Selection 成為 <code>{BlasGemm, pack lhs}</code>。<code>to_row_major()</code> 只執行一次，重建
-   plan 後 LHS core strides 變成 <code>(32,1)</code>。</li>
-<li><code>execute_contractions&lt;BlasGemm&gt;()</code> 再走過十個 batch coordinates。每次只有
-   offsets 不同，kernel selection 與 LHS packing 都不會重做。</li>
+<li>Role 是 GEMM，<code>M=N=K=32</code>；工作帳是 <code>C=10</code>、<code>U_lhs=1</code>、
+   <code>R_lhs=10</code>。</li>
+<li>RHS core strides <code>(32,1)</code> 可以 direct BLAS；LHS <code>(32,-1)</code> 無法通過
+   matrix-view predicate，所以 direct GEMM 不成立。</li>
+<li><code>min(M,N,K)=32</code> 跨過目前 packing boundary <code>16</code>。LHS 又是 shape
+   broadcasting reuse，且沒有 physical zero batch stride，因此 selection 是
+   <code>{BlasGemm, pack lhs}</code>。</li>
+<li><code>to_row_major()</code> 建立一份 LHS，重建 plan 後 core strides 成為 <code>(32,1)</code>；
+   十個 batch coordinates 隨後共用這份 storage 與固定的 <code>BlasGemm</code> kernel。</li>
 </ol>
 <p>這個 trace 也指出 Generic 仍會被選中的鄰近 cases：<code>min(M,N,K)&lt;16</code>、reversed
 matrix 沒有 shape-broadcast reuse、原始 batch view 使用 physical zero stride，
 或 build / dtype 沒有 BLAS support。哪條 route 較快是 policy 問題；哪條 route
 算得對仍由共同的 plan 保證。</p>
 <h2 id="policy">Policy</h2>
-<p>下面是 snapshot <code>95a68122</code> 的 compile-time boundaries。它們由
+<p>下面的 table 只能用來預測 snapshot <code>95a68122</code> 目前會選哪條 code route，不能
+預測另一台機器的 portable optimum。這些 compile-time boundaries 由
 <a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a>、
 <a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 與
 <a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 的 Accelerate profiling

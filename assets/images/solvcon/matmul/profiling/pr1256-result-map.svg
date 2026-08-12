@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 950" role="img" aria-labelledby="title desc">
+  <title id="title">All 72 targeted pack-once cases compared with NumPy</title>
+  <desc id="desc">A heatmap of NumPy time divided by solvcon time for two dtypes, three broadcast positions, two unsupported inner layouts, and six affected matrix sizes. Every ratio is above one. The weakest is 1.11, the median is 1.64, and the strongest is 2.97.</desc>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #172033; }
+    .title { font-size: 29px; font-weight: 700; }
+    .subtitle { font-size: 18px; fill: #475569; }
+    .meta { font-size: 16px; fill: #64748b; }
+    .summary { font-size: 19px; font-weight: 700; }
+    .panel { font-size: 22px; font-weight: 700; }
+    .axis { font-size: 16px; font-weight: 700; fill: #475569; }
+    .row { font-size: 17px; font-weight: 600; fill: #334155; }
+    .value { font-family: Consolas, monospace; font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+    .hot .value { fill: #ffffff; }
+    .c1 { fill: #ecfdf5; }
+    .c2 { fill: #bbf7d0; }
+    .c3 { fill: #86efac; }
+    .c4 { fill: #4ade80; }
+    .c5 { fill: #15803d; }
+    .cell { stroke: #ffffff; stroke-width: 4; }
+    .weak { stroke: #ea580c; stroke-width: 4; }
+    .rule { stroke: #cbd5e1; stroke-width: 1.5; }
+    .footer { font-size: 16px; fill: #475569; }
+  </style>
+
+  <rect width="960" height="950" fill="#ffffff"/>
+  <text class="title" font-family="Arial, sans-serif" font-size="29" font-weight="700" fill="#172033" x="36" y="48">All 72 targeted pack-once cases beat NumPy</text>
+  <text class="subtitle" font-family="Arial, sans-serif" font-size="18" font-weight="400" fill="#475569" x="36" y="80">Each cell is NumPy time / solvcon time. Above 1.00 means solvcon is faster.</text>
+  <text class="meta" font-family="Arial, sans-serif" font-size="16" font-weight="400" fill="#64748b" x="36" y="108">PR #1256 · native macOS arm64 · NumPy 2.5.1 · Accelerate · 1 BLAS thread</text>
+  <line class="rule" stroke="#cbd5e1" stroke-width="1.5" x1="36" y1="130" x2="924" y2="130"/>
+
+  <text class="summary" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="#172033" x="36" y="168">72 / 72 above 1.00x</text>
+  <text class="summary" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="#172033" x="300" y="168">median 1.64x</text>
+  <text class="summary" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="#172033" x="510" y="168">range 1.11x–2.97x</text>
+  <rect class="c1" fill="#ecfdf5" stroke="none" x="746" y="146" width="28" height="24"/>
+  <rect class="c3" fill="#86efac" stroke="none" x="774" y="146" width="28" height="24"/>
+  <rect class="c5" fill="#15803d" stroke="none" x="802" y="146" width="28" height="24"/>
+  <text class="meta" font-family="Arial, sans-serif" font-size="16" font-weight="400" fill="#64748b" x="842" y="165">1.0 → 3.0x</text>
+
+  <text class="panel" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#172033" x="36" y="220">float32</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="36" y="254">reused operand · inner layout</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="344" y="254" text-anchor="middle">16</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="440" y="254" text-anchor="middle">24</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="536" y="254" text-anchor="middle">32</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="632" y="254" text-anchor="middle">64</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="728" y="254" text-anchor="middle">128</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="824" y="254" text-anchor="middle">256</text>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="294">cross · reverse</text>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="300" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="291">1.14</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="396" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="291">1.28</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="291">1.65</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="291">1.98</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="684" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="291">1.84</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="272" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="291">1.62</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="336">cross · step 2</text>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="300" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="333">1.12</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="396" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="333">1.31</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="333">1.64</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="333">1.84</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="684" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="333">1.84</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="314" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="333">1.60</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="378">LHS · reverse</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="375">1.33</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="375">1.51</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="375">1.72</text></g>
+  <g class="hot"><rect class="cell c5" fill="#15803d" stroke="#ffffff" stroke-width="4" x="588" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" x="632" y="375">2.97</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="684" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="375">2.05</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="356" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="375">1.64</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="420">LHS · step 2</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="417">1.32</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="417">1.52</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="417">1.71</text></g>
+  <g class="hot"><rect class="cell c5" fill="#15803d" stroke="#ffffff" stroke-width="4" x="588" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" x="632" y="417">2.86</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="684" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="417">2.00</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="398" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="417">1.64</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="462">RHS · reverse</text>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="300" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="459">1.23</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="396" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="459">1.50</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="459">1.68</text></g>
+  <g class="hot"><rect class="cell c5" fill="#15803d" stroke="#ffffff" stroke-width="4" x="588" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" x="632" y="459">2.94</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="684" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="459">2.06</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="440" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="459">1.63</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="504">RHS · step 2</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="501">1.26</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="501">1.51</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="501">1.69</text></g>
+  <g class="hot"><rect class="cell c5" fill="#15803d" stroke="#ffffff" stroke-width="4" x="588" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle" x="632" y="501">2.82</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="684" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="501">1.98</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="780" y="482" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="501">1.64</text></g>
+
+  <text class="panel" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#172033" x="36" y="566">float64</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="36" y="600">reused operand · inner layout</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="344" y="600" text-anchor="middle">16</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="440" y="600" text-anchor="middle">24</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="536" y="600" text-anchor="middle">32</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="632" y="600" text-anchor="middle">64</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="728" y="600" text-anchor="middle">128</text>
+  <text class="axis" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#475569" x="824" y="600" text-anchor="middle">256</text>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="640">cross · reverse</text>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="300" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="637">1.14</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="637">1.76</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="492" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="637">2.20</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="637">1.61</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="637">1.42</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="618" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="637">1.22</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="682">cross · step 2</text>
+  <g><rect class="cell c1 weak" fill="#ecfdf5" stroke="#ea580c" stroke-width="4" x="300" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="679">1.11</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="679">1.82</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="492" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="679">1.91</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="679">1.58</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="679">1.41</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="660" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="679">1.15</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="724">LHS · reverse</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="721">1.46</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="721">1.79</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="492" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="721">2.44</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="588" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="721">2.05</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="721">1.40</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="702" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="721">1.15</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="766">LHS · step 2</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="763">1.47</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="763">1.80</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="492" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="763">2.34</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="763">1.81</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="763">1.40</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="744" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="763">1.20</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="808">RHS · reverse</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="805">1.41</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="805">1.83</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="492" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="805">2.45</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="588" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="805">2.22</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="805">1.39</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="786" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="805">1.20</text></g>
+
+  <text class="row" font-family="Arial, sans-serif" font-size="17" font-weight="600" fill="#334155" x="36" y="850">RHS · step 2</text>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="300" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="344" y="847">1.36</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="396" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="440" y="847">1.83</text></g>
+  <g><rect class="cell c4" fill="#4ade80" stroke="#ffffff" stroke-width="4" x="492" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="536" y="847">2.43</text></g>
+  <g><rect class="cell c3" fill="#86efac" stroke="#ffffff" stroke-width="4" x="588" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="632" y="847">1.88</text></g>
+  <g><rect class="cell c2" fill="#bbf7d0" stroke="#ffffff" stroke-width="4" x="684" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="728" y="847">1.39</text></g>
+  <g><rect class="cell c1" fill="#ecfdf5" stroke="#ffffff" stroke-width="4" x="780" y="828" width="88" height="38"/><text class="value" font-family="Consolas, monospace" font-size="17" font-weight="700" fill="#172033" text-anchor="middle" dominant-baseline="middle" x="824" y="847">1.18</text></g>
+
+  <line class="rule" stroke="#cbd5e1" stroke-width="1.5" x1="36" y1="886" x2="924" y2="886"/>
+  <text class="footer" font-family="Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" x="36" y="914">2 dtypes × 3 broadcast positions × 2 inner layouts × 6 affected sizes = 72 Cartesian cases</text>
+  <text class="footer" font-family="Arial, sans-serif" font-size="16" font-weight="400" fill="#475569" x="36" y="940">Targeted family on one machine; this is not a cross-platform matmul ranking. Orange outline marks the weakest result.</text>
+</svg>

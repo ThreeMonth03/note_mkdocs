@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Matmul 在哪些 workload 勝過、持平或輸給 NumPy，以及如何重算公開的 profiling data。">
+        <meta name="description" content="從公開 raw data 檢查 Matmul 在哪些 workload 勝過、持平或輸給 NumPy。">
       
       
         <meta name="author" content="張君實">
@@ -1235,63 +1235,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    Results
-  </a>
-  
-    <nav class="md-nav" aria-label="Results">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#win" class="md-nav__link">
-    Win
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parity" class="md-nav__link">
-    Parity
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#lose" class="md-nav__link">
-    Lose
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#calibration" class="md-nav__link">
-    Calibration
+  <a href="#result-map" class="md-nav__link">
+    Result Map
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#method" class="md-nav__link">
-    Method
+  <a href="#other-routes" class="md-nav__link">
+    Other Routes
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limits" class="md-nav__link">
-    Limits
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reproduce" class="md-nav__link">
-    Reproduce
+  <a href="#measurement" class="md-nav__link">
+    Measurement
   </a>
   
 </li>
@@ -1345,63 +1304,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    Results
-  </a>
-  
-    <nav class="md-nav" aria-label="Results">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#win" class="md-nav__link">
-    Win
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parity" class="md-nav__link">
-    Parity
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#lose" class="md-nav__link">
-    Lose
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#calibration" class="md-nav__link">
-    Calibration
+  <a href="#result-map" class="md-nav__link">
+    Result Map
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#method" class="md-nav__link">
-    Method
+  <a href="#other-routes" class="md-nav__link">
+    Other Routes
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#limits" class="md-nav__link">
-    Limits
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reproduce" class="md-nav__link">
-    Reproduce
+  <a href="#measurement" class="md-nav__link">
+    Measurement
   </a>
   
 </li>
@@ -1425,166 +1343,181 @@
 
 
 <h1 id="benchmarks">Benchmarks</h1>
-<p><code>matmul_planned()</code> 並不是在每一種矩陣乘法都比 NumPy 快。結果有三個區域：
-重用不相容 layout 時明顯勝出；兩邊都直接呼叫 Accelerate 時大致持平；小矩陣
-與部分 vector route 仍由 NumPy 領先。這一頁只處理這張結果地圖，以及產生它的
-量測證據。</p>
-<h2 id="results">Results</h2>
-<h3 id="win">Win</h3>
-<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 測量同一個 strided
-matrix 被 batch broadcasting 重用的 square GEMM。測試涵蓋 <code>float32</code>、
-<code>float64</code>，LHS、RHS、cross broadcasting，以及 negative-inner-stride、
-step-two-inner-stride layouts。<code>S &gt;= 16</code> 時會選 pack-once route：</p>
+<p>這一頁把 <a href="../">Story</a> 的 pack-once 設計放回完整 measurements，界定
+它在哪些 workload 勝出、持平或仍然落後。</p>
+<h2 id="result-map">Result Map</h2>
+<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 量測一個 targeted
+Cartesian family：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>2 dtypes
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>x 3 broadcast positions: LHS, RHS, cross
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>x 2 BLAS-incompatible inner layouts: reverse, step 2
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>x 6 affected sizes: 16, 24, 32, 64, 128, 256
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>= 72 cases
+</span></code></pre></div>
+<p>這 72 點都會走 PR 新增的 pack-once route。下圖逐格顯示公開 JSONL 重算出的
+<code>NumPy median / solvcon median</code>；<code>1.00x</code> 是同速，大於 <code>1.00x</code> 才是 solvcon
+較快。</p>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/matmul/profiling/pr1256-result-map.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/matmul/profiling/pr1256-result-map-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/profiling/pr1256-result-map.svg"
+           alt="PR 1256 全部 72 個 targeted Cartesian cases 相對 NumPy 的 speedup heatmap"
+           loading="eager">
+    </picture>
+  </a>
+  <figcaption>
+    72 點全部高於 `1.00x`；最弱 `1.11x`、中位 `1.64x`、最強 `2.97x`。
+    橘框標出最弱點。這是單一機器上的 targeted family，不是跨平台排行榜。
+  </figcaption>
+</figure>
+
+<p>圖裡也能看出結果不是「矩陣越大，優勢越大」。float32 的高點集中在 <code>S=64</code>，
+float64 多數在 <code>S=32</code>；到了 <code>S=256</code>，float64 的優勢只剩 <code>1.15x–1.22x</code>。
+最低的 <code>1.11x</code> 出現在 float64、cross broadcast、step-two、<code>S=16</code>。該點的
+90 筆 estimates 中，NumPy median 是 <code>0.008119 ms</code>，IQR 為
+<code>0.008051–0.008239 ms</code>；solvcon median 是 <code>0.007331 ms</code>，IQR 為
+<code>0.007116–0.007600 ms</code>。IQR 描述 raw samples 的分布，不是 confidence
+interval。最靠近 crossover 與最大尺寸的 margin 並不寬。</p>
+<p>同一次實驗另有 <code>S=8</code>、<code>S=12</code> 的 24 個 controls。它們沒有改變 route，不在
+上圖的 72 格中；24 點仍全部由 NumPy 領先，solvcon runtime 是 NumPy 的
+<code>1.37x–2.33x</code>。這正好保留了 policy boundary 兩側的結果。</p>
+<h2 id="other-routes">Other Routes</h2>
+<p>其他 PR 補上「持平」與「仍然輸」的區域：</p>
 <ul>
-<li>72 個受影響的 points 全部快過 PR parent，speedup 為 <code>3.30x</code> 到 <code>549.52x</code>。</li>
-<li>同一批 72 points 全部快過 NumPy 2.5.1，speedup 為 <code>1.11x</code> 到 <code>2.97x</code>。</li>
-<li>其中 float64、LHS broadcast、negative stride、<code>S=32</code> 的中位時間是
-  solvcon <code>0.010001 ms</code>、NumPy <code>0.024410 ms</code>，即 <code>2.44x</code>。</li>
+<li><strong>#1256 reused incompatible matrix, pack once</strong>：72/72 勝出，範圍
+  <code>1.11x–2.97x</code>。這就是本頁 heatmap 的 targeted family。</li>
+<li><strong>#1209 C-contiguous <code>S=256</code> batched GEMM</strong>：ratio 為 <code>0.951–1.031</code>。
+  兩邊使用同一 Accelerate backend，大致持平。</li>
+<li><strong>#1259 reused negative-stride vector, pack once</strong>：32/32 勝出，median
+  <code>6.24x</code>。vector reuse 也能攤提 packing。</li>
+<li><strong>#1259 positive-stride vector, direct BLAS</strong>：16/80 勝出，median runtime
+  是 <code>1.06x NumPy</code>。direct BLAS 消除舊 generic 成本，但不保證贏 NumPy。</li>
 </ul>
-<p><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259</a> 再測 batched
-GEVM/GEMV。32 個會重用 negative-stride vector 的 pack-once points 全部快過
-NumPy，中位 speedup 為 <code>6.24x</code>。</p>
-<p>這兩組勝利有相同前提：layout 不能直接交給 BLAS，但 planner 看得見跨
-contractions 的 reuse，因此一次 packing 可以被重複使用。</p>
-<h3 id="parity">Parity</h3>
-<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 的四個
-C-contiguous、<code>S=256</code> batched GEMM controls 不需要 packing。solvcon 與 NumPy
-都使用單執行緒 Apple Accelerate；獨立重跑的 <code>solvcon / NumPy</code> runtime ratio
-範圍為 <code>0.951</code> 到 <code>1.031</code>，各 case median 為 <code>0.995</code> 到 <code>1.008</code>。</p>
-<p>這裡沒有新的 data-reuse advantage。兩邊把相同的大型 GEMM 送進相同 backend，
-合理結果就是 parity，而不是大幅超越 NumPy。</p>
-<h3 id="lose">Lose</h3>
-<p>負面結果決定 selector 不能只有一句「可用 BLAS 就用 BLAS」。</p>
-<ul>
-<li>PR #1256 的 <code>S=8</code>、<code>S=12</code> 共 24 個 control points 不啟用 packing，24 點
-  全部由 NumPy 領先。solvcon runtime 是 NumPy 的 <code>1.37x</code> 到 <code>2.33x</code>；packing
-  policy 在這些尺寸保留 Generic。</li>
-<li>PR #1259 的 80 個 positive-stride vector points 可以 direct BLAS，而且
-  全部快過 PR parent；但只有 16 點快過 NumPy。整組 median runtime 是 NumPy
-  的 <code>1.06x</code>。</li>
-</ul>
-<h2 id="calibration">Calibration</h2>
-<p>Calibration 用來選 policy boundary，不用來宣稱最終 API 的 speedup。</p>
-<p>PR #1209 讓 forced-generic 與 forced-CBLAS 使用相同 inputs，並以
-<code>generic, CBLAS, CBLAS, generic</code> 的順序量 crossover。vector routes 共掃過
-1,632 組 shapes 與 layouts。這批資料產生當時 merged selector 的幾個主要
-boundaries：DOT <code>K &gt;= 128</code>、compact GEVM <code>K*N &gt;= 729</code>、其他 unbatched
-GEVM/GEMV 的 relevant minimum dimension <code>&gt;= 32</code>，以及 GEMM
-<code>min(M,N,K) &gt;= 8</code>。</p>
-<p>這些數字回答「同一輸入在哪裡值得切 route」。它們不是 correctness contract，
-也不是跨 CPU、dtype 或 BLAS backend 都成立的常數。完整 selector 還要先通過
-role、dtype、backend 與 layout eligibility；細節見 <a href="../implementation/dispatch/">Dispatch</a>。</p>
-<h2 id="method">Method</h2>
-<p>三組實驗都量完整 call。input construction、warm-up 與 correctness check
-不在 timer 內；wrapper dispatch、output allocation、kernel execution 與 return
-都在 timer 內。因此結果描述使用者呼叫的成本，不只是 BLAS kernel。</p>
-<p>PR #1256 的正式資料來自 native macOS 26.5.1 arm64、Python 3.14.6、
-NumPy 2.5.1 與單執行緒 Apple Accelerate。每個 workload 比較 NumPy、parent、
-after 三個 methods：</p>
-<ol>
-<li>每個 method 先做一次不記錄的 preconditioning。</li>
-<li>六個 rounds 走遍三個 methods 的六種 execution orders。</li>
-<li>每個 method、每個 round 先跑兩個 untimed warm-up batches。</li>
-<li>inner-loop count 先校準，使一個 timed batch 約為 <code>30 ms</code>；再收集 15 個
-   elapsed-time samples，除以 call count 得到 per-call estimates。</li>
-<li>每個 method 最後得到 <code>6 x 15 = 90</code> 筆 estimates，報告 untrimmed median。</li>
-</ol>
+<p>這張表的分界比「用了 BLAS」更具解釋力。兩邊直接進入同一個 backend 時，首先
+應期待 parity；能跨 contractions 少付重複 layout 成本時，才出現穩定勝出的
+targeted family。</p>
+<h2 id="measurement">Measurement</h2>
+<h1 id="1256-native-macos-2651-arm64python-3146numpy-251">1256 的正式資料來自 native macOS 26.5.1 arm64、Python 3.14.6、NumPy 2.5.1</h1>
+<p>與單執行緒 Apple Accelerate。每個 workload 比較 NumPy、PR parent、PR head，
+並量完整的 <code>np.matmul()</code> 或 <code>matmul_planned()</code> call，不只抽出 BLAS kernel。</p>
+<p>每個 method 先執行一次 discarded preconditioning。接著六個 rounds 走遍三種
+methods 的六種 execution orders。每個 method 在每輪先跑兩個 untimed warm-up
+batches，再收集 15 個 calibrated timed batches；每個 timed batch 約 <code>30 ms</code>，
+elapsed time 除以 inner-loop count 得到 per-call estimate。每個 method 因此有
+<code>6 x 15 = 90</code> 筆 estimates，圖中每格使用 untrimmed median。</p>
 <p>完整 artifact 有 <code>96 workloads x 3 methods x 6 rounds = 1,728</code> 筆 JSONL
-records。每筆保留 execution order、shape、element strides、loop count、15 筆
-samples 與 numerical error。96 個 workloads 全部通過 correctness audit，最大
-relative Frobenius error 為 <code>1.32e-16</code>。</p>
-<p>PR #1209 使用五個 rounds，每 round 兩次 warm-up 與 15 次 individually timed
-calls，再取 75 筆的 untrimmed median。PR #1259 則保留 persistent processes、
-約 <code>15 ms</code> 的 calibrated timed batches 與 12 個 rounds；六種 method orders
-各出現兩次。不同 PR 的數字各自使用自己的 protocol，不把 samples 混成一個
-跨實驗 aggregate。</p>
-<h2 id="limits">Limits</h2>
-<p>這份結果只界定一台 native macOS arm64 機器、NumPy 2.5.1、Apple Accelerate、
-單一 BLAS thread，以及各 PR 列出的 <code>float32</code> / <code>float64</code> workloads。</p>
-<p>它沒有證明 non-square GEMM、其他 batch shapes、其他 CPUs、其他 BLAS backend
-或多執行緒會得到同一組 crossover。<code>549.52x</code> 是相對 PR parent；相對 NumPy
-的範圍是 <code>1.11x</code> 到 <code>2.97x</code>。</p>
-<p>目前一般 <code>matmul()</code> 與 <code>@</code> 也尚未切到這個 selector。上述數據對應 opt-in 的
-<code>matmul_planned()</code> 與各 PR 記錄的 commit，不能當成現行所有 array operation
-的結果。</p>
-<h2 id="reproduce">Reproduce</h2>
-<p>PR #1256 的 raw data 可以只用 Python standard library 重算。以下命令下載
-1,728-record artifact，聚合每個 <code>(dtype, case, size, method)</code> 在六個 rounds 的
-<code>samples_ms</code>，並重現本頁的 affected range 與 <code>S=32</code> 例子：</p>
-<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a>curl<span class="w"> </span>-L<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">  </span>https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">  </span>-o<span class="w"> </span>pr1256.jsonl
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a>python3<span class="w"> </span>-<span class="w"> </span>pr1256.jsonl<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="s">import collections</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="s">import json</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="s">import statistics</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="s">import sys</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="s">samples = collections.defaultdict(list)</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="s">with open(sys.argv[1], encoding=&quot;utf-8&quot;) as stream:</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="s">    for line in stream:</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="s">        row = json.loads(line)</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="s">        key = (row[&quot;dtype&quot;], row[&quot;case&quot;], row[&quot;size&quot;], row[&quot;method&quot;])</span>
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="s">        samples[key].extend(row[&quot;samples_ms&quot;])</span>
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a>
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="s">medians = {</span>
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="s">    key: statistics.median(values)</span>
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="s">    for key, values in samples.items()</span>
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="s">}</span>
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="s">workloads = sorted({key[:3] for key in samples})</span>
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="s">affected = [key for key in workloads if key[2] &gt;= 16]</span>
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a><a href="#__codelineno-0-24"><span class="linenos" data-linenos="24 "></span></a><span class="s">controls = [key for key in workloads if key[2] &lt; 16]</span>
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><a href="#__codelineno-0-25"><span class="linenos" data-linenos="25 "></span></a>
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><a href="#__codelineno-0-26"><span class="linenos" data-linenos="26 "></span></a><span class="s">numpy_speedups = [</span>
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><a href="#__codelineno-0-27"><span class="linenos" data-linenos="27 "></span></a><span class="s">    medians[key + (&quot;numpy&quot;,)] / medians[key + (&quot;after&quot;,)]</span>
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><a href="#__codelineno-0-28"><span class="linenos" data-linenos="28 "></span></a><span class="s">    for key in affected</span>
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><a href="#__codelineno-0-29"><span class="linenos" data-linenos="29 "></span></a><span class="s">]</span>
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30"></a><a href="#__codelineno-0-30"><span class="linenos" data-linenos="30 "></span></a><span class="s">parent_speedups = [</span>
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31"></a><a href="#__codelineno-0-31"><span class="linenos" data-linenos="31 "></span></a><span class="s">    medians[key + (&quot;before&quot;,)] / medians[key + (&quot;after&quot;,)]</span>
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32"></a><a href="#__codelineno-0-32"><span class="linenos" data-linenos="32 "></span></a><span class="s">    for key in affected</span>
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33"></a><a href="#__codelineno-0-33"><span class="linenos" data-linenos="33 "></span></a><span class="s">]</span>
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34"></a><a href="#__codelineno-0-34"><span class="linenos" data-linenos="34 "></span></a><span class="s">control_slowdowns = [</span>
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35"></a><a href="#__codelineno-0-35"><span class="linenos" data-linenos="35 "></span></a><span class="s">    medians[key + (&quot;after&quot;,)] / medians[key + (&quot;numpy&quot;,)]</span>
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36"></a><a href="#__codelineno-0-36"><span class="linenos" data-linenos="36 "></span></a><span class="s">    for key in controls</span>
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37"></a><a href="#__codelineno-0-37"><span class="linenos" data-linenos="37 "></span></a><span class="s">]</span>
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38"></a><a href="#__codelineno-0-38"><span class="linenos" data-linenos="38 "></span></a>
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39"></a><a href="#__codelineno-0-39"><span class="linenos" data-linenos="39 "></span></a><span class="s">print(f&quot;workloads: {len(workloads)}; affected: {len(affected)}&quot;)</span>
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40"></a><a href="#__codelineno-0-40"><span class="linenos" data-linenos="40 "></span></a><span class="s">print(</span>
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41"></a><a href="#__codelineno-0-41"><span class="linenos" data-linenos="41 "></span></a><span class="s">    &quot;NumPy/after: &quot;</span>
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42"></a><a href="#__codelineno-0-42"><span class="linenos" data-linenos="42 "></span></a><span class="s">    f&quot;{min(numpy_speedups):.2f}x..{max(numpy_speedups):.2f}x&quot;</span>
-</span><span id="__span-0-43"><a id="__codelineno-0-43" name="__codelineno-0-43"></a><a href="#__codelineno-0-43"><span class="linenos" data-linenos="43 "></span></a><span class="s">)</span>
-</span><span id="__span-0-44"><a id="__codelineno-0-44" name="__codelineno-0-44"></a><a href="#__codelineno-0-44"><span class="linenos" data-linenos="44 "></span></a><span class="s">print(</span>
-</span><span id="__span-0-45"><a id="__codelineno-0-45" name="__codelineno-0-45"></a><a href="#__codelineno-0-45"><span class="linenos" data-linenos="45 "></span></a><span class="s">    &quot;before/after: &quot;</span>
-</span><span id="__span-0-46"><a id="__codelineno-0-46" name="__codelineno-0-46"></a><a href="#__codelineno-0-46"><span class="linenos" data-linenos="46 "></span></a><span class="s">    f&quot;{min(parent_speedups):.2f}x..{max(parent_speedups):.2f}x&quot;</span>
-</span><span id="__span-0-47"><a id="__codelineno-0-47" name="__codelineno-0-47"></a><a href="#__codelineno-0-47"><span class="linenos" data-linenos="47 "></span></a><span class="s">)</span>
-</span><span id="__span-0-48"><a id="__codelineno-0-48" name="__codelineno-0-48"></a><a href="#__codelineno-0-48"><span class="linenos" data-linenos="48 "></span></a><span class="s">print(</span>
-</span><span id="__span-0-49"><a id="__codelineno-0-49" name="__codelineno-0-49"></a><a href="#__codelineno-0-49"><span class="linenos" data-linenos="49 "></span></a><span class="s">    &quot;control after/NumPy: &quot;</span>
-</span><span id="__span-0-50"><a id="__codelineno-0-50" name="__codelineno-0-50"></a><a href="#__codelineno-0-50"><span class="linenos" data-linenos="50 "></span></a><span class="s">    f&quot;{min(control_slowdowns):.2f}x..{max(control_slowdowns):.2f}x&quot;</span>
-</span><span id="__span-0-51"><a id="__codelineno-0-51" name="__codelineno-0-51"></a><a href="#__codelineno-0-51"><span class="linenos" data-linenos="51 "></span></a><span class="s">)</span>
-</span><span id="__span-0-52"><a id="__codelineno-0-52" name="__codelineno-0-52"></a><a href="#__codelineno-0-52"><span class="linenos" data-linenos="52 "></span></a>
-</span><span id="__span-0-53"><a id="__codelineno-0-53" name="__codelineno-0-53"></a><a href="#__codelineno-0-53"><span class="linenos" data-linenos="53 "></span></a><span class="s">example = (&quot;float64&quot;, &quot;lhs_broadcast_negative&quot;, 32)</span>
-</span><span id="__span-0-54"><a id="__codelineno-0-54" name="__codelineno-0-54"></a><a href="#__codelineno-0-54"><span class="linenos" data-linenos="54 "></span></a><span class="s">for method in (&quot;numpy&quot;, &quot;before&quot;, &quot;after&quot;):</span>
-</span><span id="__span-0-55"><a id="__codelineno-0-55" name="__codelineno-0-55"></a><a href="#__codelineno-0-55"><span class="linenos" data-linenos="55 "></span></a><span class="s">    values = samples[example + (method,)]</span>
-</span><span id="__span-0-56"><a id="__codelineno-0-56" name="__codelineno-0-56"></a><a href="#__codelineno-0-56"><span class="linenos" data-linenos="56 "></span></a><span class="s">    print(method, len(values), f&quot;{statistics.median(values):.6f} ms&quot;)</span>
-</span><span id="__span-0-57"><a id="__codelineno-0-57" name="__codelineno-0-57"></a><a href="#__codelineno-0-57"><span class="linenos" data-linenos="57 "></span></a><span class="s">PY</span>
+records。inputs、conversion、warm-up 與 correctness checks 不計時；dispatch、
+output allocation、kernel execution 與 return 都在 timer 內。96 個 workloads
+全部通過 numerical check，最大 relative Frobenius error 是 <code>1.32e-16</code>。</p>
+<h2 id="calibration">Calibration</h2>
+<p>Result map 是 merged selector 在 targeted family 上的 measurements；threshold
+calibration 是另一件事。
+<a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 以相同 inputs 強制執行
+generic 與 CBLAS，量出不同 role 的 crossover。這些 measurements 形成當時
+merged policy，例如 DOT <code>K &gt;= 128</code> 與 GEMM <code>min(M,N,K) &gt;= 8</code>。</p>
+<p>完整 boundaries 與 selector 條件放在 <a href="../implementation/dispatch/">Dispatch</a>。
+它們是該機器與 backend 的實測 policy，不是 Matmul semantics，也不是 portable
+performance constants。</p>
+<h2 id="audit">Audit</h2>
+<p>公開 artifact 保留了重算上圖所需的資料。下載 raw data 後，以下腳本會
+檢查 record 數量、每格的 90 筆 samples、72 格的 Cartesian coverage，並輸出
+heatmap 使用的全部 ratios 與 summary。</p>
+<p><a href="https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt">下載 #1256 的 1,728-record JSONL</a></p>
+<details class="example">
+<summary>顯示 artifact audit 指令</summary>
+<div class="language-bash highlight"><span class="filename">Bash</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a>curl<span class="w"> </span>-L<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">  </span>https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">  </span>-o<span class="w"> </span>pr1256.jsonl
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a>python3<span class="w"> </span>-<span class="w"> </span>pr1256.jsonl<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="s">import collections</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="s">import json</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="s">import statistics</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="s">import sys</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="s">samples = collections.defaultdict(list)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="s">records = 0</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a><span class="s">with open(sys.argv[1], encoding=&quot;utf-8&quot;) as stream:</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a><span class="s">    for line in stream:</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a><span class="s">        row = json.loads(line)</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a><span class="s">        key = (row[&quot;dtype&quot;], row[&quot;case&quot;], row[&quot;size&quot;], row[&quot;method&quot;])</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a><span class="s">        samples[key].extend(row[&quot;samples_ms&quot;])</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a><span class="s">        records += 1</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a><span class="s">assert records == 1728</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a><span class="s">assert all(len(values) == 90 for values in samples.values())</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a><span class="s">medians = {</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a><span class="s">    key: statistics.median(values)</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25"></a><a href="#__codelineno-1-25"><span class="linenos" data-linenos="25 "></span></a><span class="s">    for key, values in samples.items()</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26"></a><a href="#__codelineno-1-26"><span class="linenos" data-linenos="26 "></span></a><span class="s">}</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27"></a><a href="#__codelineno-1-27"><span class="linenos" data-linenos="27 "></span></a><span class="s">dtypes = (&quot;float32&quot;, &quot;float64&quot;)</span>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28"></a><a href="#__codelineno-1-28"><span class="linenos" data-linenos="28 "></span></a><span class="s">cases = (</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29"></a><a href="#__codelineno-1-29"><span class="linenos" data-linenos="29 "></span></a><span class="s">    &quot;cross_broadcast_negative&quot;,</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30"></a><a href="#__codelineno-1-30"><span class="linenos" data-linenos="30 "></span></a><span class="s">    &quot;cross_broadcast_step2&quot;,</span>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31"></a><a href="#__codelineno-1-31"><span class="linenos" data-linenos="31 "></span></a><span class="s">    &quot;lhs_broadcast_negative&quot;,</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32"></a><a href="#__codelineno-1-32"><span class="linenos" data-linenos="32 "></span></a><span class="s">    &quot;lhs_broadcast_step2&quot;,</span>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33"></a><a href="#__codelineno-1-33"><span class="linenos" data-linenos="33 "></span></a><span class="s">    &quot;rhs_broadcast_negative&quot;,</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34"></a><a href="#__codelineno-1-34"><span class="linenos" data-linenos="34 "></span></a><span class="s">    &quot;rhs_broadcast_step2&quot;,</span>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35"></a><a href="#__codelineno-1-35"><span class="linenos" data-linenos="35 "></span></a><span class="s">)</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36"></a><a href="#__codelineno-1-36"><span class="linenos" data-linenos="36 "></span></a><span class="s">sizes = (16, 24, 32, 64, 128, 256)</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37"></a><a href="#__codelineno-1-37"><span class="linenos" data-linenos="37 "></span></a>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38"></a><a href="#__codelineno-1-38"><span class="linenos" data-linenos="38 "></span></a><span class="s">ratios = {}</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39"></a><a href="#__codelineno-1-39"><span class="linenos" data-linenos="39 "></span></a><span class="s">for dtype in dtypes:</span>
+</span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40"></a><a href="#__codelineno-1-40"><span class="linenos" data-linenos="40 "></span></a><span class="s">    for case in cases:</span>
+</span><span id="__span-1-41"><a id="__codelineno-1-41" name="__codelineno-1-41"></a><a href="#__codelineno-1-41"><span class="linenos" data-linenos="41 "></span></a><span class="s">        row = []</span>
+</span><span id="__span-1-42"><a id="__codelineno-1-42" name="__codelineno-1-42"></a><a href="#__codelineno-1-42"><span class="linenos" data-linenos="42 "></span></a><span class="s">        for size in sizes:</span>
+</span><span id="__span-1-43"><a id="__codelineno-1-43" name="__codelineno-1-43"></a><a href="#__codelineno-1-43"><span class="linenos" data-linenos="43 "></span></a><span class="s">            key = (dtype, case, size)</span>
+</span><span id="__span-1-44"><a id="__codelineno-1-44" name="__codelineno-1-44"></a><a href="#__codelineno-1-44"><span class="linenos" data-linenos="44 "></span></a><span class="s">            ratio = (</span>
+</span><span id="__span-1-45"><a id="__codelineno-1-45" name="__codelineno-1-45"></a><a href="#__codelineno-1-45"><span class="linenos" data-linenos="45 "></span></a><span class="s">                medians[key + (&quot;numpy&quot;,)] /</span>
+</span><span id="__span-1-46"><a id="__codelineno-1-46" name="__codelineno-1-46"></a><a href="#__codelineno-1-46"><span class="linenos" data-linenos="46 "></span></a><span class="s">                medians[key + (&quot;after&quot;,)]</span>
+</span><span id="__span-1-47"><a id="__codelineno-1-47" name="__codelineno-1-47"></a><a href="#__codelineno-1-47"><span class="linenos" data-linenos="47 "></span></a><span class="s">            )</span>
+</span><span id="__span-1-48"><a id="__codelineno-1-48" name="__codelineno-1-48"></a><a href="#__codelineno-1-48"><span class="linenos" data-linenos="48 "></span></a><span class="s">            ratios[key] = ratio</span>
+</span><span id="__span-1-49"><a id="__codelineno-1-49" name="__codelineno-1-49"></a><a href="#__codelineno-1-49"><span class="linenos" data-linenos="49 "></span></a><span class="s">            row.append(ratio)</span>
+</span><span id="__span-1-50"><a id="__codelineno-1-50" name="__codelineno-1-50"></a><a href="#__codelineno-1-50"><span class="linenos" data-linenos="50 "></span></a><span class="s">        print(dtype, case, *(f&quot;{value:.2f}&quot; for value in row))</span>
+</span><span id="__span-1-51"><a id="__codelineno-1-51" name="__codelineno-1-51"></a><a href="#__codelineno-1-51"><span class="linenos" data-linenos="51 "></span></a>
+</span><span id="__span-1-52"><a id="__codelineno-1-52" name="__codelineno-1-52"></a><a href="#__codelineno-1-52"><span class="linenos" data-linenos="52 "></span></a><span class="s">assert len(ratios) == 72</span>
+</span><span id="__span-1-53"><a id="__codelineno-1-53" name="__codelineno-1-53"></a><a href="#__codelineno-1-53"><span class="linenos" data-linenos="53 "></span></a><span class="s">values = list(ratios.values())</span>
+</span><span id="__span-1-54"><a id="__codelineno-1-54" name="__codelineno-1-54"></a><a href="#__codelineno-1-54"><span class="linenos" data-linenos="54 "></span></a><span class="s">print(&quot;all above 1:&quot;, all(value &gt; 1 for value in values))</span>
+</span><span id="__span-1-55"><a id="__codelineno-1-55" name="__codelineno-1-55"></a><a href="#__codelineno-1-55"><span class="linenos" data-linenos="55 "></span></a><span class="s">print(&quot;minimum:&quot;, f&quot;{min(values):.2f}x&quot;)</span>
+</span><span id="__span-1-56"><a id="__codelineno-1-56" name="__codelineno-1-56"></a><a href="#__codelineno-1-56"><span class="linenos" data-linenos="56 "></span></a><span class="s">print(&quot;median:&quot;, f&quot;{statistics.median(values):.2f}x&quot;)</span>
+</span><span id="__span-1-57"><a id="__codelineno-1-57" name="__codelineno-1-57"></a><a href="#__codelineno-1-57"><span class="linenos" data-linenos="57 "></span></a><span class="s">print(&quot;maximum:&quot;, f&quot;{max(values):.2f}x&quot;)</span>
+</span><span id="__span-1-58"><a id="__codelineno-1-58" name="__codelineno-1-58"></a><a href="#__codelineno-1-58"><span class="linenos" data-linenos="58 "></span></a><span class="s">PY</span>
 </span></code></pre></div>
-<p>預期輸出：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>workloads: 96; affected: 72
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>NumPy/after: 1.11x..2.97x
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>before/after: 3.30x..549.52x
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a>control after/NumPy: 1.37x..2.33x
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a>numpy 90 0.024410 ms
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>before 90 0.215773 ms
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a>after 90 0.010001 ms
+</details>
+<p>預期 summary 是：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>all above 1: True
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>minimum: 1.11x
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a>median: 1.64x
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a>maximum: 2.97x
 </span></code></pre></div>
-<p>artifact 內也記錄 benchmarked revisions：<code>before</code> 是 <code>d3464749</code>，<code>after</code> 是
-<code>d4c1c98e</code>，NumPy record 是 <code>numpy-2.5.1</code>。其他實驗的公開資料在：</p>
+<p>artifact 也記錄 benchmarked revisions：parent <code>d3464749</code>、PR head <code>d4c1c98e</code>、
+NumPy <code>2.5.1</code>。這是重算既有 measurements，不是重新執行 benchmark。</p>
+<h2 id="re-run">Re-run</h2>
+<h1 id="1256-raw-jsonl-1728-records-exact-harness">1256 公開了完整 raw JSONL，但產生這 1,728 records 的 exact harness 沒有納入</h1>
+<p>版本控制。目前能精確重算 artifact，尚不能用 repository checkout clean re-run
+同一組 cases、process ordering 與 timing protocol。完整 rerun 需要補上當時的
+harness source、環境建置與 thread-control command。</p>
+<h2 id="sources">Sources</h2>
 <ul>
+<li><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256: pack reused matrices once</a></li>
+<li><a href="https://github.com/user-attachments/files/30812808/pr1256-exact-head-profiling.jsonl.txt">PR #1256 raw JSONL</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209: direct BLAS calibration and controls</a></li>
 <li><a href="https://github.com/user-attachments/files/30631476/pr1209-profile-matrix-ops-2f5f055b.txt">PR #1209 raw profile</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1259">PR #1259: batched vector routing</a></li>
 <li><a href="https://github.com/user-attachments/files/30860020/pr1259-formal-profiling.jsonl.txt">PR #1259 formal JSONL</a></li>
 <li><a href="https://github.com/user-attachments/files/30860041/pr1259-targeted-confirmation.jsonl.txt">PR #1259 targeted confirmation JSONL</a></li>
 </ul>
+<details class="info">
+<summary>#1209 與 #1259 的 measurement protocols</summary>
+<h1 id="1209-rounds-round-warm-up-15-individually-timed">1209 使用五個 rounds，每 round 兩次 warm-up 與 15 次 individually timed</h1>
+<p>calls，再取 75 筆的 untrimmed median。</p>
+<h1 id="1259-persistent-processes-15-ms-calibrated-timed-batches">1259 使用 persistent processes、約 <code>15 ms</code> 的 calibrated timed batches</h1>
+<p>與 12 個 rounds；六種 method orders 各出現兩次。不同 PR 的 samples 沒有
+混成跨實驗 aggregate。</p>
+</details>
 
 
 
