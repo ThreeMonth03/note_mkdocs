@@ -6,26 +6,24 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="將跨 batch 重用的 incompatible operand pack 成 row-major 一次。">
+        <meta name="description" content="以 NumPy differential tests 驗證 matmul roles、layouts 與 route boundaries。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/dispatch/packing/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/verification/correctness/">
       
       
-        <link rel="prev" href="../direct-blas/">
+        <link rel="prev" href="../../implementation/dispatch/">
       
-      
-        <link rel="next" href="../batched-vectors/">
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Packing - 君實的技術筆記</title>
+        <title>Correctness - 君實的技術筆記</title>
       
     
     
@@ -120,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pack-once" class="md-skip">
+        <a href="#correctness" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Packing
+              Correctness
             
           </span>
         </div>
@@ -1098,8 +1096,6 @@
           
         
           
-            
-          
         
       
       
@@ -1139,47 +1135,31 @@
       
         
           
-            
-          
-        
-          
-        
-          
-        
-          
         
           
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../generic/">Generic</a>
-          
-            <label for="__nav_5_1_2">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
+        <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          Project
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic
+          Project
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
             
-          
-            
               
   
   
   
     <li class="md-nav__item">
-      <a href="../../generic/roles/" class="md-nav__link">
-        Four roles, one kernel
+      <a href="../../project/introduction/" class="md-nav__link">
+        Introduction
       </a>
     </li>
   
@@ -1192,8 +1172,64 @@
   
   
     <li class="md-nav__item">
-      <a href="../../generic/batch-mapping/" class="md-nav__link">
-        Broadcast by zero
+      <a href="../../project/development/" class="md-nav__link">
+        Development History
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          Implementation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          Implementation
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../implementation/array/" class="md-nav__link">
+        Array
       </a>
     </li>
   
@@ -1206,8 +1242,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../generic/signed-strides/" class="md-nav__link">
-        Walk backwards
+      <a href="../../implementation/generic/" class="md-nav__link">
+        Generic Matmul
       </a>
     </li>
   
@@ -1220,8 +1256,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../generic/contraction-loop/" class="md-nav__link">
-        Hot loop
+      <a href="../../implementation/dispatch/" class="md-nav__link">
+        Dispatch
       </a>
     </li>
   
@@ -1248,55 +1284,25 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_4" checked>
       
       
-        
-          
-            
-          
-        
-          
-        
-          
         
           
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Dispatch</a>
-          
-            <label for="__nav_5_1_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_1_3">
+        <label class="md-nav__link" for="__nav_5_1_4" id="__nav_5_1_4_label" tabindex="0">
+          Verification
           <span class="md-nav__icon md-icon"></span>
-          Dispatch
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_4_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          Verification
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../direct-blas/" class="md-nav__link">
-        No-copy BLAS
-      </a>
-    </li>
-  
-
-            
           
             
               
@@ -1314,12 +1320,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          When copy pays
+          Correctness
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        When copy pays
+        Correctness
       </a>
       
         
@@ -1338,22 +1344,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eligibility" class="md-nav__link">
-    Eligibility
+  <a href="#coverage" class="md-nav__link">
+    Coverage
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#replan" class="md-nav__link">
-    Replan
+  <a href="#numpy-reference" class="md-nav__link">
+    NumPy Reference
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#boundary" class="md-nav__link">
-    Boundary
+  <a href="#layout-combinations" class="md-nav__link">
+    Layout Combinations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#empty-dimensions" class="md-nav__link">
+    Empty Dimensions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#route-independence" class="md-nav__link">
+    Route Independence
   </a>
   
 </li>
@@ -1374,36 +1394,8 @@
 
             
           
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../batched-vectors/" class="md-nav__link">
-        Reuse pays
-      </a>
-    </li>
-  
-
-            
-          
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../validation/" class="md-nav__link">
-        Same answer
-      </a>
     </li>
   
 
@@ -1449,22 +1441,36 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#eligibility" class="md-nav__link">
-    Eligibility
+  <a href="#coverage" class="md-nav__link">
+    Coverage
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#replan" class="md-nav__link">
-    Replan
+  <a href="#numpy-reference" class="md-nav__link">
+    NumPy Reference
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#boundary" class="md-nav__link">
-    Boundary
+  <a href="#layout-combinations" class="md-nav__link">
+    Layout Combinations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#empty-dimensions" class="md-nav__link">
+    Empty Dimensions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#route-independence" class="md-nav__link">
+    Route Independence
   </a>
   
 </li>
@@ -1494,43 +1500,114 @@
 
 
 
-<h1 id="pack-once">Pack once</h1>
-<h2 id="eligibility">Eligibility</h2>
-<p>對 BLAS-incompatible core layout，matrix packing 只處理 shape-broadcast 且
-沒有 explicit zero batch stride 的 reused operand：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
+<h1 id="correctness">Correctness</h1>
+<p>dispatch 只能改變 execution route，不能改變合法 inputs 或 output semantics。
+matmul 因此以 <code>numpy.matmul</code> 當 reference，而不是替每個 kernel
+維護一套 expected values。</p>
+<h2 id="coverage">Coverage</h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Cases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Value type</td>
+<td><code>float32</code>, <code>float64</code>, <code>complex64</code>, <code>complex128</code></td>
+</tr>
+<tr>
+<td>Operation</td>
+<td><code>DOT</code>, <code>GEVM</code>, <code>GEMV</code>, <code>GEMM</code></td>
+</tr>
+<tr>
+<td>Core layout</td>
+<td>C/F-contiguous, padded, negative stride, step-two</td>
+</tr>
+<tr>
+<td>Batch</td>
+<td>equal shape, signed stride, right-aligned broadcasting</td>
+</tr>
+<tr>
+<td>Degenerate shape</td>
+<td><code>M=0</code>, <code>N=0</code>, <code>K=0</code>, empty batch</td>
+</tr>
+<tr>
+<td>Diagnostics</td>
+<td>contraction mismatch, batch mismatch</td>
+</tr>
+</tbody>
+</table>
+<h2 id="numpy-reference">NumPy Reference</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">assert_matmul_planned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">expected</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="n">tol</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>        <span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos="8 "></span></a>    <span class="k">return</span> <span class="n">result</span>
 </span></code></pre></div>
-<p>copy cost 只付一次；packed storage 由後續所有 batch coordinates 共用。</p>
-<h2 id="replan">Replan</h2>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a><span class="n">m_lhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a><span class="n">m_rhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+<p>shape contract 與 numerical values 分開檢查。相同 test base 套用到
+<code>float32</code>、<code>float64</code>、<code>complex64</code>、<code>complex128</code>。</p>
+<h2 id="layout-combinations">Layout Combinations</h2>
+<p>最容易漏掉的 case 不是單一 negative stride，而是 matrix core layout、
+batch layout 與 broadcasting 同時存在：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">)):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a>        <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a>        <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a>    <span class="p">),)</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a>    <span class="n">rhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a>    <span class="p">),)</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a>    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_lhs</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a>            <span class="n">lhs_cases</span><span class="p">,</span> <span class="n">rhs_cases</span><span class="p">):</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a>        <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">case_lhs</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_lhs</span><span class="p">),</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_rhs</span><span class="p">),</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a>            <span class="n">expected</span><span class="p">)</span>
 </span></code></pre></div>
-<p>新的 row-major storage 會改變 core strides，因此 executor 在 traversal 前
-重建 operation description。route selection 與 replan 都不進入 batch loop。</p>
-<h2 id="boundary">Boundary</h2>
-<p>不相容的 equal-batch matrix 與 explicit-zero-stride batch view 不會被這條
-policy pack；它們由 signed-stride generic kernel 執行。如果 core layout
-本來 compatible，仍可直接進 BLAS。</p>
+<p>stride cases 包含 C/F-contiguous、padded、negative 與 step-two。這組 shapes、
+layouts 與 sizes 會跨過 selector 的多個 policy boundaries；測試只觀察它們是否
+得到同一個 public result。</p>
+<h2 id="empty-dimensions">Empty Dimensions</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">)</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">for</span> <span class="n">lhs_shape</span><span class="p">,</span> <span class="n">rhs_shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="n">rhs_data</span><span class="p">))</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">lhs_data</span><span class="p">),</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">rhs_data</span><span class="p">),</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><a href="#__codelineno-2-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="n">expected</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>(3,0) @ (0,2)</code> 專門驗證 <code>K=0</code> 的 empty sum；其他 cases 分別驗證
+zero-size output core 與 empty batch domain。</p>
+<h2 id="route-independence">Route Independence</h2>
+<p>這些 tests 檢查 public output shape 與 numerical values，不直接斷言內部選到
+哪個 kernel。在啟用 BLAS 的 build 中，小型或不相容 layouts 會留在 generic，
+較大的相容 views 可以直接進 BLAS，符合 reuse policy 的 operands 則可能先
+packing。三者最後都必須通過同一個 NumPy reference。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L758-L824"><code>select_matrix_packing()</code> and <code>pack()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L60-L141"><code>MatmulTestBase</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L378-L620"><code>matmul_planned()</code> layout and empty-axis tests</a></li>
 </ul>
 
 

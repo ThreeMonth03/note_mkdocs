@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1060" role="img" aria-labelledby="title desc">
+  <title id="title">A signed-stride view from physical buffer to logical grid</title>
+  <desc id="desc">A vertical mobile diagram maps a four by six physical buffer through origin 18, shape 4 by 3, and strides negative 6 and positive 2 into a four by three logical view.</desc>
+  <defs>
+    <marker id="arrow-blue-mobile" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-orange-mobile" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#ea580c"/>
+    </marker>
+    <pattern id="outside-mobile" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#f8fafc"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#cbd5e1" stroke-width="3"/>
+    </pattern>
+  </defs>
+  <style>
+    .heading { font: 700 31px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
+    .section { font: 700 26px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
+    .label { font: 600 22px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #475569; }
+    .mono { font: 600 23px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
+    .cell { font: 700 23px Consolas, "Noto Sans Mono", monospace; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font: 600 20px Consolas, "Noto Sans Mono", monospace; fill: #64748b; text-anchor: middle; }
+    .base { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 1.6; }
+    .selected { fill: #ffedd5; stroke: #ea580c; stroke-width: 2.3; }
+    .origin { fill: #dbeafe; stroke: #2563eb; stroke-width: 3.3; }
+    .view { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
+    .panel { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.6; }
+  </style>
+
+  <rect width="720" height="1060" fill="#ffffff"/>
+  <text x="36" y="46" class="heading">buffer + descriptor = view</text>
+  <text x="36" y="80" class="label">base[::-1, ::2] keeps addresses, not a copy</text>
+
+  <text x="36" y="124" class="section">physical buffer</text>
+  <text x="684" y="124" class="label" text-anchor="end">retained offsets 0 ... 22</text>
+
+  <text x="84" y="151" class="axis">0</text><text x="192" y="151" class="axis">1</text>
+  <text x="300" y="151" class="axis">2</text><text x="408" y="151" class="axis">3</text>
+  <text x="516" y="151" class="axis">4</text><text x="624" y="151" class="axis">5</text>
+
+  <rect x="30" y="162" width="108" height="56" class="selected"/><rect x="138" y="162" width="108" height="56" class="base"/>
+  <rect x="246" y="162" width="108" height="56" class="selected"/><rect x="354" y="162" width="108" height="56" class="base"/>
+  <rect x="462" y="162" width="108" height="56" class="selected"/><rect x="570" y="162" width="108" height="56" class="base"/>
+  <text x="84" y="190" class="cell">0</text><text x="192" y="190" class="cell">1</text>
+  <text x="300" y="190" class="cell">2</text><text x="408" y="190" class="cell">3</text>
+  <text x="516" y="190" class="cell">4</text><text x="624" y="190" class="cell">5</text>
+
+  <rect x="30" y="218" width="108" height="56" class="selected"/><rect x="138" y="218" width="108" height="56" class="base"/>
+  <rect x="246" y="218" width="108" height="56" class="selected"/><rect x="354" y="218" width="108" height="56" class="base"/>
+  <rect x="462" y="218" width="108" height="56" class="selected"/><rect x="570" y="218" width="108" height="56" class="base"/>
+  <text x="84" y="246" class="cell">6</text><text x="192" y="246" class="cell">7</text>
+  <text x="300" y="246" class="cell">8</text><text x="408" y="246" class="cell">9</text>
+  <text x="516" y="246" class="cell">10</text><text x="624" y="246" class="cell">11</text>
+
+  <rect x="30" y="274" width="108" height="56" class="selected"/><rect x="138" y="274" width="108" height="56" class="base"/>
+  <rect x="246" y="274" width="108" height="56" class="selected"/><rect x="354" y="274" width="108" height="56" class="base"/>
+  <rect x="462" y="274" width="108" height="56" class="selected"/><rect x="570" y="274" width="108" height="56" class="base"/>
+  <text x="84" y="302" class="cell">12</text><text x="192" y="302" class="cell">13</text>
+  <text x="300" y="302" class="cell">14</text><text x="408" y="302" class="cell">15</text>
+  <text x="516" y="302" class="cell">16</text><text x="624" y="302" class="cell">17</text>
+
+  <rect x="30" y="330" width="108" height="56" class="origin"/><rect x="138" y="330" width="108" height="56" class="base"/>
+  <rect x="246" y="330" width="108" height="56" class="selected"/><rect x="354" y="330" width="108" height="56" class="base"/>
+  <rect x="462" y="330" width="108" height="56" class="selected"/><rect x="570" y="330" width="108" height="56" fill="url(#outside-mobile)" stroke="#94a3b8" stroke-width="1.6"/>
+  <text x="84" y="358" class="cell">18</text><text x="192" y="358" class="cell">19</text>
+  <text x="300" y="358" class="cell">20</text><text x="408" y="358" class="cell">21</text>
+  <text x="516" y="358" class="cell">22</text><text x="624" y="358" class="cell">23</text>
+
+  <circle cx="48" cy="415" r="10" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/>
+  <text x="70" y="423" class="label">origin 18</text>
+  <rect x="226" y="403" width="22" height="22" fill="url(#outside-mobile)" stroke="#94a3b8"/>
+  <text x="262" y="423" class="label">23 is outside the span</text>
+
+  <rect x="30" y="456" width="660" height="238" rx="10" class="panel"/>
+  <text x="54" y="494" class="section">SimpleArray&lt;double&gt; descriptor</text>
+  <text x="54" y="535" class="mono">buffer span</text><text x="285" y="535" class="mono">[0, 22] · 184 bytes</text>
+  <text x="54" y="574" class="mono">logical origin</text><text x="285" y="574" class="mono">buffer + 18</text>
+  <text x="54" y="613" class="mono">shape</text><text x="285" y="613" class="mono">(4, 3)</text>
+  <text x="54" y="652" class="mono">stride</text><text x="285" y="652" class="mono">(-6, +2) elements</text>
+  <text x="36" y="752" class="section">logical view</text>
+  <text x="684" y="752" class="label" text-anchor="end">address(i,j) = 18 - 6i + 2j</text>
+
+  <text x="188" y="796" class="axis">j=0</text><text x="328" y="796" class="axis">j=1</text><text x="468" y="796" class="axis">j=2</text>
+  <text x="106" y="833" class="axis">i=0</text><text x="106" y="889" class="axis">i=1</text>
+  <text x="106" y="945" class="axis">i=2</text><text x="106" y="1001" class="axis">i=3</text>
+
+  <rect x="118" y="806" width="140" height="56" class="origin"/><rect x="258" y="806" width="140" height="56" class="view"/><rect x="398" y="806" width="140" height="56" class="view"/>
+  <rect x="118" y="862" width="140" height="56" class="view"/><rect x="258" y="862" width="140" height="56" class="view"/><rect x="398" y="862" width="140" height="56" class="view"/>
+  <rect x="118" y="918" width="140" height="56" class="view"/><rect x="258" y="918" width="140" height="56" class="view"/><rect x="398" y="918" width="140" height="56" class="view"/>
+  <rect x="118" y="974" width="140" height="56" class="view"/><rect x="258" y="974" width="140" height="56" class="view"/><rect x="398" y="974" width="140" height="56" class="view"/>
+  <text x="188" y="834" class="cell">18</text><text x="328" y="834" class="cell">20</text><text x="468" y="834" class="cell">22</text>
+  <text x="188" y="890" class="cell">12</text><text x="328" y="890" class="cell">14</text><text x="468" y="890" class="cell">16</text>
+  <text x="188" y="946" class="cell">6</text><text x="328" y="946" class="cell">8</text><text x="468" y="946" class="cell">10</text>
+  <text x="188" y="1002" class="cell">0</text><text x="328" y="1002" class="cell">2</text><text x="468" y="1002" class="cell">4</text>
+
+  <path d="M188 773 H328" fill="none" stroke="#ea580c" stroke-width="3" marker-end="url(#arrow-orange-mobile)"/>
+  <text x="258" y="763" class="label" text-anchor="middle">+2</text>
+  <path d="M574 834 V890" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrow-blue-mobile)"/>
+  <text x="604" y="868" class="label">-6</text>
+</svg>

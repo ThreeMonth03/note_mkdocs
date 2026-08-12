@@ -6,26 +6,26 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="用 synthetic M/N axes 將 DOT、GEVM、GEMV、GEMM 正規化成同一個 contraction。">
+        <meta name="description" content="matmul kernel selection、direct BLAS、packing 與 batched-vector workload policy。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/generic/roles/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/implementation/dispatch/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../generic/">
       
       
-        <link rel="next" href="../batch-mapping/">
+        <link rel="next" href="../../verification/correctness/">
       
       <link rel="icon" href="../../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Operand roles - 君實的技術筆記</title>
+        <title>Dispatch - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#synthetic-axes-operand-roles" class="md-skip">
+        <a href="#dispatch" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Operand roles
+              Dispatch
             
           </span>
         </div>
@@ -1098,8 +1098,6 @@
           
         
           
-            
-          
         
       
       
@@ -1127,6 +1125,74 @@
               
   
   
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
+      
+      
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          Project
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_2">
+          <span class="md-nav__icon md-icon"></span>
+          Project
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../project/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../project/development/" class="md-nav__link">
+        Development History
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -1136,15 +1202,9 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" checked>
       
       
-        
-          
-            
-          
-        
-          
         
           
         
@@ -1154,24 +1214,44 @@
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../">Generic</a>
-          
-            <label for="__nav_5_1_2">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_1_2">
+        <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          Implementation
           <span class="md-nav__icon md-icon"></span>
-          Generic
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_1_3">
+          <span class="md-nav__icon md-icon"></span>
+          Implementation
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../array/" class="md-nav__link">
+        Array
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../generic/" class="md-nav__link">
+        Generic Matmul
+      </a>
+    </li>
+  
+
             
           
             
@@ -1190,12 +1270,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Four roles, one kernel
+          Dispatch
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Four roles, one kernel
+        Dispatch
       </a>
       
         
@@ -1214,22 +1294,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#normalization" class="md-nav__link">
-    Normalization
+  <a href="#inputs" class="md-nav__link">
+    Inputs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#invariant" class="md-nav__link">
-    Invariant
+  <a href="#workloads" class="md-nav__link">
+    Workloads
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-shape" class="md-nav__link">
-    Output shape
+  <a href="#selection" class="md-nav__link">
+    Selection
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blas" class="md-nav__link">
+    BLAS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packing" class="md-nav__link">
+    Packing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batched-vectors" class="md-nav__link">
+    Batched Vectors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workload-policy" class="md-nav__link">
+    Workload Policy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundaries" class="md-nav__link">
+    Boundaries
   </a>
   
 </li>
@@ -1245,48 +1360,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../batch-mapping/" class="md-nav__link">
-        Broadcast by zero
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../signed-strides/" class="md-nav__link">
-        Walk backwards
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../contraction-loop/" class="md-nav__link">
-        Hot loop
-      </a>
     </li>
   
 
@@ -1310,78 +1383,34 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_4" >
       
       
-        
-          
-            
-          
-        
-          
-        
-          
         
           
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../dispatch/">Dispatch</a>
-          
-            <label for="__nav_5_1_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_3">
+        <label class="md-nav__link" for="__nav_5_1_4" id="__nav_5_1_4_label" tabindex="0">
+          Verification
           <span class="md-nav__icon md-icon"></span>
-          Dispatch
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          Verification
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
             
-          
-            
               
   
   
   
     <li class="md-nav__item">
-      <a href="../../dispatch/direct-blas/" class="md-nav__link">
-        No-copy BLAS
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../dispatch/packing/" class="md-nav__link">
-        When copy pays
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../dispatch/batched-vectors/" class="md-nav__link">
-        Reuse pays
+      <a href="../../verification/correctness/" class="md-nav__link">
+        Correctness
       </a>
     </li>
   
@@ -1390,20 +1419,6 @@
           
         </ul>
       </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../validation/" class="md-nav__link">
-        Same answer
-      </a>
     </li>
   
 
@@ -1449,22 +1464,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#normalization" class="md-nav__link">
-    Normalization
+  <a href="#inputs" class="md-nav__link">
+    Inputs
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#invariant" class="md-nav__link">
-    Invariant
+  <a href="#workloads" class="md-nav__link">
+    Workloads
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#output-shape" class="md-nav__link">
-    Output shape
+  <a href="#selection" class="md-nav__link">
+    Selection
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blas" class="md-nav__link">
+    BLAS
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packing" class="md-nav__link">
+    Packing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#batched-vectors" class="md-nav__link">
+    Batched Vectors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#workload-policy" class="md-nav__link">
+    Workload Policy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boundaries" class="md-nav__link">
+    Boundaries
   </a>
   
 </li>
@@ -1494,52 +1544,241 @@
 
 
 
-<h1 id="synthetic-axes-operand-roles">用 synthetic axes 統一四種 operand roles</h1>
-<h2 id="normalization">Normalization</h2>
-<p><code>make_contraction()</code> 先由 rank 判斷 vector role，再決定 rhs 的 contraction
-axis。<code>M</code> 或 <code>N</code> 不存在時使用 <code>1</code>：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="n">rhs_inner_axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">rhs_vector</span><span class="p">)</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="o">--</span><span class="n">rhs_inner_axis</span><span class="p">;</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">2</span><span class="p">);</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs_vector</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">rhs</span><span class="p">.</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">inner_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">lhs_inner_axis</span><span class="p">);</span>
+<h1 id="dispatch">Dispatch</h1>
+<p>generic implementation 提供完整 semantics，但不代表同一個 kernel 適合所有
+workloads。dispatch 的工作是在 batch traversal 前讀取 operation facts，固定
+kernel 與 optional preparation。BLAS 是其中一種 tactic，不是 dispatch 本身。</p>
+<h2 id="inputs">Inputs</h2>
+<p>selector 使用下列資訊：</p>
+<table>
+<thead>
+<tr>
+<th>input</th>
+<th>purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>operand role</td>
+<td>區分 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code></td>
+</tr>
+<tr>
+<td>value type</td>
+<td>判斷 build 中的 BLAS backend 是否支援</td>
+</tr>
+<tr>
+<td><code>M</code>、<code>N</code>、<code>K</code></td>
+<td>估計 workload，套用 role-specific threshold</td>
+</tr>
+<tr>
+<td>core strides</td>
+<td>判斷 matrix/vector 是否能形成 direct BLAS view</td>
+</tr>
+<tr>
+<td>batch size</td>
+<td>估計 preparation 能否攤提</td>
+</tr>
+<tr>
+<td>reuse flags</td>
+<td>判斷 operand 是否值得 pack once</td>
+</tr>
+</tbody>
+</table>
+<h2 id="workloads">Workloads</h2>
+<p>同一個 selector 對三個 matrix-matrix workloads 會做出不同決定。以下假設 build
+有 BLAS，且 value type 受 backend 支援：</p>
+<table>
+<thead>
+<tr>
+<th>workload</th>
+<th>observed facts</th>
+<th>selection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(3,4) @ (4,6)</code></td>
+<td>contiguous，但 <code>min(M,N,K)=3</code></td>
+<td><code>Generic</code></td>
+</tr>
+<tr>
+<td><code>(64,64) @ (64,64)</code></td>
+<td>兩個 direct views，minimum dimension <code>64</code></td>
+<td><code>BlasGemm</code></td>
+</tr>
+<tr>
+<td><code>(2,1,32,32)[...,::-1] @ (1,5,32,32)</code></td>
+<td>lhs core layout 不相容，但沿 batch axis 重用</td>
+<td>pack lhs once，再用 <code>BlasGemm</code> 完成十個 contractions</td>
+</tr>
+</tbody>
+</table>
+<p>如果最後一列把 lhs 改成 equal-batch <code>(2,5,32,32)</code>，copy 無法由
+shape-broadcast reuse 攤提，這份 policy 會保留 <code>Generic</code>。後面四節逐一拆解
+這些 selection facts。</p>
+<h2 id="selection">Selection</h2>
+<p><code>select_execution()</code> 產生一個 kernel 與一個 optional packing decision：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">MatmulSelection</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">selection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">select_execution</span><span class="p">();</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">pack</span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">packing</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">selection</span><span class="p">.</span><span class="n">kernel</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">Generic</span><span class="p">:</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">Generic</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">case</span><span class="w"> </span><span class="no">MatmulKernel</span><span class="o">::</span><span class="no">BlasDot</span><span class="p">:</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="n">execute_contractions</span><span class="o">&lt;</span><span class="n">MatmulKernel</span><span class="o">::</span><span class="n">BlasDot</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="c1">// BlasGevm, BlasGemv, BlasGemm follow the same pattern.</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<figure class="matmul-figure">
-  <a href="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg">
-    <img src="/assets/images/solvcon/matmul/generic/core-axis-normalization.svg"
-         alt="DOT、GEVM、GEMV、GEMM 轉換成同一個 M 乘 K 與 K 乘 N contraction"
-         loading="lazy">
-  </a>
-  <figcaption>
-    Synthetic <code>1</code> 只補齊 executor 的 core axes。
-  </figcaption>
-</figure>
-
-<h2 id="invariant">Invariant</h2>
-<p>所有 roles 進入 generic executor 時都滿足：</p>
-<pre class="matmul-data"><code>lhs core     [M, K]
-rhs core     [K, N]
-output core  [M, N]</code></pre>
-
-<p>因此 multiply-add 不需要 <code>DOT</code>、<code>GEVM</code>、<code>GEMV</code>、<code>GEMM</code> 四份實作。
-差異只留在 output shape 與 dispatch policy。</p>
-<h2 id="output-shape">Output shape</h2>
-<p>Leading batch axes 在圖中省略。public outputs 分別是
-<code>DOT → (1,)</code>、<code>GEVM → (...,N)</code>、<code>GEMV → (...,M)</code>、
-<code>GEMM → (...,M,N)</code>。Synthetic <code>M</code> 或 <code>N</code> 不會進入 output；<code>DOT</code>
-則沿用 <code>SimpleArray</code> 的 <code>(1,)</code> convention，而不是 NumPy scalar。</p>
+<p><code>execute_contractions&lt;Kernel&gt;()</code> 的 template argument 已固定。batch cursor
+每前進一個 coordinate，只傳 output、lhs、rhs 三個 base offsets；dispatch
+decision tree 不會出現在 contraction loop。</p>
+<h2 id="blas">BLAS</h2>
+<p>matrix view 能直接進 BLAS，只有兩個 core-layout predicates：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">column_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">row_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">columns</span><span class="p">)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">row_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">None</span><span class="p">};</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">}</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">row_stride</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">column_stride</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">rows</span><span class="p">)</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">BlasMatrixView</span><span class="o">&lt;</span><span class="n">value_type</span><span class="o">&gt;</span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">column_stride</span><span class="p">,</span><span class="w"> </span><span class="n">BlasTranspose</span><span class="o">::</span><span class="n">Transpose</span><span class="p">};</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">nullopt</span><span class="p">;</span>
+</span></code></pre></div>
+<p>第一種是 row-major compatible view；第二種以 transpose flag 描述
+transposed-compatible row-major view。兩者都只傳 pointer、leading
+dimension 與 transpose state，不複製 matrix。</p>
+<p>direct routes 包含 <code>BlasDot</code>、<code>BlasGevm</code>、<code>BlasGemv</code>、<code>BlasGemm</code>。
+compatible layout 只是必要條件；selector 仍會檢查 dtype、problem size、
+vector stride 與 batch workload。小型、skinny 或不符合 direct policy 的
+problems 保留 generic，或進一步評估 packing。</p>
+<h2 id="packing">Packing</h2>
+<p>packing 多做一次 copy，只有後續重用足以攤提時才值得。對 BLAS-incompatible
+core layout，matrix packing 只處理 shape-broadcast 且沒有 explicit zero
+batch stride 的 reused operand：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">lhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">lhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_has_zero_batch_stride</span><span class="p">());</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">rhs_supported</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="o">!</span><span class="n">required</span><span class="p">.</span><span class="n">rhs</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_is_broadcast</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">m_plan</span><span class="p">.</span><span class="n">rhs_has_zero_batch_stride</span><span class="p">());</span>
+</span></code></pre></div>
+<p>eligible operand 在 traversal 前轉成 row-major：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">lhs</span><span class="p">)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">m_packed_lhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_lhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">packing</span><span class="p">.</span><span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="p">{</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">m_packed_rhs</span><span class="p">.</span><span class="n">emplace</span><span class="p">(</span><span class="n">m_rhs</span><span class="p">.</span><span class="n">to_row_major</span><span class="p">());</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">}</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_lhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_lhs</span><span class="p">;</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="n">Array</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">*</span><span class="n">m_packed_rhs</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">m_rhs</span><span class="p">;</span>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12"></a><a href="#__codelineno-3-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">m_plan</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MatmulPlan</span><span class="o">::</span><span class="n">make</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="n">rhs</span><span class="p">);</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13"></a><a href="#__codelineno-3-13"><span class="linenos" data-linenos="13 "></span></a><span class="n">m_lhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a><a href="#__codelineno-3-14"><span class="linenos" data-linenos="14 "></span></a><span class="n">m_rhs_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">rhs</span><span class="p">.</span><span class="n">logical_data</span><span class="p">();</span>
+</span></code></pre></div>
+<p>packed storage 改變 core strides，因此 executor 會重建 plan 一次。原本的
+selection 不重跑；同一個 BLAS kernel 接著 traverses 全部 batch coordinates。</p>
+<p>不相容的 equal-batch matrix 與 explicit-zero-stride batch view 不會被這條
+policy pack，它們由 generic kernel 執行。如果 core layout 本來 compatible，
+仍可走 direct BLAS。</p>
+<h2 id="batched-vectors">Batched Vectors</h2>
+<p>batched <code>GEVM</code>、<code>GEMV</code> 的 matrix view compatible 仍不足以保證 BLAS
+有利。direct route 還要求 positive vector stride，並跨過 matrix-work
+threshold：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">use_blas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">packing</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="p">(</span><span class="n">m_plan</span><span class="p">.</span><span class="n">lhs_inner_stride</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">     </span><span class="n">m_plan</span><span class="p">.</span><span class="n">inner_size</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_plan</span><span class="p">.</span><span class="n">columns</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">         </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">direct_min_matrix_elements</span><span class="p">);</span>
+</span></code></pre></div>
+<p><code>GEMV</code> 使用對應的 rhs vector stride 與 <code>M×K</code> work。vector stride
+不相容時，只有 reused vector 才評估 pack-once policy：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">always_pack_min_matrix_elements</span><span class="p">)</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">pack_min_matrix_elements</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">m_plan</span><span class="p">.</span><span class="n">batch_size</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">pack_min_batch_size</span><span class="p">)</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="p">{</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9"></a><a href="#__codelineno-5-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">}</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10"></a><a href="#__codelineno-5-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">matrix_elements</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">TUNING</span><span class="p">.</span><span class="n">batched_vector</span><span class="p">.</span><span class="n">reuse_min_matrix_elements</span><span class="w"> </span><span class="o">||</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11"></a><a href="#__codelineno-5-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">output_size</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12"></a><a href="#__codelineno-5-12"><span class="linenos" data-linenos="12 "></span></a><span class="p">{</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13"></a><a href="#__codelineno-5-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14"></a><a href="#__codelineno-5-14"><span class="linenos" data-linenos="14 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="workload-policy">Workload Policy</h2>
+<p>目前 selector 使用一份 compile-time threshold table：</p>
+<table>
+<thead>
+<tr>
+<th>route</th>
+<th>condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DOT direct BLAS</td>
+<td><code>K &gt;= 128</code>，兩個 vector strides 同為 <code>+1</code> 或同為 <code>-1</code></td>
+</tr>
+<tr>
+<td>Compact GEVM</td>
+<td><code>K×N &gt;= 729</code></td>
+</tr>
+<tr>
+<td>Non-compact GEVM / GEMV</td>
+<td>relevant minimum dimension <code>&gt;= 32</code></td>
+</tr>
+<tr>
+<td>GEMM direct BLAS</td>
+<td><code>min(M,N,K) &gt;= 8</code>，且兩個 matrix views compatible</td>
+</tr>
+<tr>
+<td>GEMM matrix packing</td>
+<td><code>min(M,N,K) &gt;= 16</code>，再檢查 shape-broadcast reuse</td>
+</tr>
+<tr>
+<td>Batched vector direct BLAS</td>
+<td>matrix elements <code>&gt;= 512</code>，且 vector stride positive</td>
+</tr>
+<tr>
+<td>Batched vector always pack</td>
+<td>matrix elements <code>&gt;= 4096</code></td>
+</tr>
+<tr>
+<td>Batched vector pack</td>
+<td>matrix elements <code>&gt;= 1024</code> 且 batch size <code>&gt;= 4</code></td>
+</tr>
+<tr>
+<td>Batched vector reuse</td>
+<td>matrix elements <code>&gt;= 576</code> 且 total output <code>&gt;= 128</code></td>
+</tr>
+</tbody>
+</table>
+<p>這些數字是 dispatch policy 的 crossover boundaries，不是新的 mathematical
+semantics。目前所有支援的 BLAS backends 與 value types 共用這張 table。</p>
+<h2 id="boundaries">Boundaries</h2>
+<p>本文 snapshot 的 kernel enum 包含 <code>Generic</code>、<code>BlasDot</code>、<code>BlasGevm</code>、
+<code>BlasGemv</code>、<code>BlasGemm</code>。沒有 BLAS backend、dtype 不支援、workload 太小，
+或 layout 無法 direct/pack 時，generic kernel 仍提供完整 semantics。</p>
+<p>Strassen engine 已獨立 merged，但尚未加入這個 selector。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L364-L407"><code>make_contraction()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L534-L565"><code>make_output_shape()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L594-L755"><code>execute()</code> and route selection</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L758-L824"><code>select_matrix_packing()</code> and <code>pack()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L826-L927"><code>execute_contractions()</code> and BLAS calls</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/matmul.hpp#L929-L973"><code>make_matrix_view()</code></a></li>
 </ul>
 
 

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="從 matmul 的 HPC 問題、實作樂趣到 generic contract 與 dispatch。">
+        <meta name="description" content="solvcon 矩陣乘法的 generic implementation、dispatch 與驗證。">
       
       
         <meta name="author" content="張君實">
@@ -18,14 +18,14 @@
         <link rel="prev" href="../../pve/">
       
       
-        <link rel="next" href="generic/">
+        <link rel="next" href="project/introduction/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>在 solvcon 開發比 NumPy 更快的矩陣乘法 - 君實的技術筆記</title>
+        <title>Matmul - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solvcon-numpy" class="md-skip">
+        <a href="#matmul" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              在 solvcon 開發比 NumPy 更快的矩陣乘法
+              Matmul
             
           </span>
         </div>
@@ -1098,8 +1098,6 @@
           
         
           
-            
-          
         
       
       
@@ -1139,47 +1137,31 @@
       
         
           
-            
-          
-        
-          
-        
-          
-        
-          
         
           
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="generic/">Generic</a>
-          
-            <label for="__nav_5_1_2">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
+        <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+          Project
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_2">
           <span class="md-nav__icon md-icon"></span>
-          Generic
+          Project
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
             
-          
-            
               
   
   
   
     <li class="md-nav__item">
-      <a href="generic/roles/" class="md-nav__link">
-        Four roles, one kernel
+      <a href="project/introduction/" class="md-nav__link">
+        Introduction
       </a>
     </li>
   
@@ -1192,36 +1174,8 @@
   
   
     <li class="md-nav__item">
-      <a href="generic/batch-mapping/" class="md-nav__link">
-        Broadcast by zero
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="generic/signed-strides/" class="md-nav__link">
-        Walk backwards
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="generic/contraction-loop/" class="md-nav__link">
-        Hot loop
+      <a href="project/development/" class="md-nav__link">
+        Development History
       </a>
     </li>
   
@@ -1251,10 +1205,6 @@
       
         
           
-            
-          
-        
-          
         
           
         
@@ -1262,34 +1212,26 @@
         
       
       
-        
-        
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="dispatch/">Dispatch</a>
-          
-            <label for="__nav_5_1_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
-          
-        </div>
+        <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+          Implementation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_1_3">
           <span class="md-nav__icon md-icon"></span>
-          Dispatch
+          Implementation
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
             
-          
-            
               
   
   
   
     <li class="md-nav__item">
-      <a href="dispatch/direct-blas/" class="md-nav__link">
-        No-copy BLAS
+      <a href="implementation/array/" class="md-nav__link">
+        Array
       </a>
     </li>
   
@@ -1302,8 +1244,8 @@
   
   
     <li class="md-nav__item">
-      <a href="dispatch/packing/" class="md-nav__link">
-        When copy pays
+      <a href="implementation/generic/" class="md-nav__link">
+        Generic Matmul
       </a>
     </li>
   
@@ -1316,8 +1258,8 @@
   
   
     <li class="md-nav__item">
-      <a href="dispatch/batched-vectors/" class="md-nav__link">
-        Reuse pays
+      <a href="implementation/dispatch/" class="md-nav__link">
+        Dispatch
       </a>
     </li>
   
@@ -1336,10 +1278,48 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_4" >
+      
+      
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_1_4" id="__nav_5_1_4_label" tabindex="0">
+          Verification
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1_4">
+          <span class="md-nav__icon md-icon"></span>
+          Verification
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
-      <a href="validation/" class="md-nav__link">
-        Same answer
+      <a href="verification/correctness/" class="md-nav__link">
+        Correctness
       </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -1385,43 +1365,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hpc" class="md-nav__link">
-    為什麼 HPC
+  <a href="#project" class="md-nav__link">
+    Project
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    樂趣
+  <a href="#implementation" class="md-nav__link">
+    Implementation
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    本質
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    貢獻
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#version" class="md-nav__link">
-    Version
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#to-be-continued" class="md-nav__link">
-    To be continued
+  <a href="#verification" class="md-nav__link">
+    Verification
   </a>
   
 </li>
@@ -1444,58 +1403,39 @@
 
 
 
-<h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p>讓矩陣乘法更快，有時要先 copy；有時 copy 一個 element 都嫌多。
-差別不在公式，而在 shape、stride 與 reuse。</p>
-<p><code>A(2, 1, 3, 4) @ B(1, 5, 4, 6) → C(2, 5, 3, 6)</code></p>
-<p>這個 batched <code>GEMM</code> 會展開成十個 <code>3×4 @ 4×6</code> contractions。<code>A</code>、<code>B</code>
-沿不同 batch axes 重用；reverse 或 step-two view 又會改變 address walk。
-沿 signed strides 直接算、建立 no-copy BLAS view，還是 pack once？
-這個選擇在第一個 multiply-add 之前就已經決定。</p>
-<h2 id="hpc">為什麼 HPC</h2>
-<p>大型 contiguous <code>GEMM</code> 已有 BLAS；array library 面對的卻不只是一對乾淨
-matrix。四種 operand roles、broadcast batches、reverse views 與 empty axes
-都屬於同一個 <code>matmul</code> contract。公式只給出乘加次數，沒有回答資料該搬幾次、
-語意該解析幾次，以及 preparation 能不能由後續工作回本。</p>
-<h2 id="_1">樂趣</h2>
-<p>HPC 的樂趣，是把 array semantics 變成可以推理的 address 與 cost rules：</p>
+<h1 id="matmul">Matmul</h1>
+<p>這組文件從一個 NumPy view 穿過 pybind11 開始：buffer、shape、signed
+strides 與 logical origin 先形成 C++ array descriptor；generic matmul 再將它
+normalize 成完整 execution contract，dispatch 最後依 dtype、shape、layout
+和 reuse 選擇 kernel。</p>
+<h2 id="project">Project</h2>
 <ul>
-<li>broadcast axis 變成 mapped <code>stride = 0</code>，整個 tensor 不必展開；</li>
-<li>reverse view 變成 negative stride，不需要另一套乘法；</li>
-<li>eligible reused operand 先 pack 一次，讓 preparation cost 由 batch 攤提。</li>
+<li><a href="project/introduction/">Introduction</a>：要解決的 HPC 問題、execution architecture
+  與技術貢獻。</li>
+<li><a href="project/development/">Development History</a>：從 rank-2 prototype、完整 generic
+  semantics，到 direct BLAS、pack once 與 batched-vector policy。</li>
 </ul>
-<p>每個技巧都在拿掉一種不必要的工作。寫完可以從位址、搬移量與 reuse 解釋它，
-再用 benchmark 找出真正的 crossover；硬體會直接回答推理是否成立。</p>
-<h2 id="_2">本質</h2>
-<p>這個實作控制三件事：每個 output element 重複什麼、每個 contraction 搬多少
-資料，以及一次性的工作在哪一層支付。</p>
-<p>rank、broadcasting 與 signed strides 先被壓成 <code>M/N/K</code>、batch mappings
-與 core strides。selector 固定 kernel 與 optional packing；若需要 packing，
-就 materialize 並 replan 一次，然後用同一個 selection 走完整個 batch。</p>
-<p>generic K-loop 最後只剩 <code>total += lhs[lhs_offset] * rhs[rhs_offset]</code>，
-以及兩個 signed offset increments。</p>
-<h2 id="_3">貢獻</h2>
+<h2 id="implementation">Implementation</h2>
 <ul>
-<li><code>Generic</code>：<a href="generic/">The contract</a> →
-  <a href="generic/roles/">Four roles, one kernel</a> →
-  <a href="generic/batch-mapping/">Broadcast by zero</a> →
-  <a href="generic/signed-strides/">Walk backwards</a> →
-  <a href="generic/contraction-loop/">Hot loop</a>。四種 roles 與 batch/layout semantics
-  收斂成一個 signed-stride contraction。</li>
-<li><code>Dispatch</code>：<a href="dispatch/">Decide once</a> →
-  <a href="dispatch/direct-blas/">No-copy BLAS</a> / <a href="dispatch/packing/">When copy pays</a> /
-  <a href="dispatch/batched-vectors/">Reuse pays</a>。kernel 在 traversal 前固定，packing
-  只在 eligible reuse 能攤提 cost 時發生。</li>
-<li><code>Validation</code>：<a href="validation/">Same answer</a> across dtypes、roles、signed
-  layouts、broadcasting 與 empty axes。</li>
+<li><a href="implementation/array/">Array</a>：用 pybind11 保留 NumPy view 的 buffer、
+  shape、signed strides、logical origin 與 lifetime。</li>
+<li><a href="implementation/generic/">Generic Matmul</a>：operand roles、operation planning、batch
+  broadcasting、signed-stride layout，以及固定的 <code>M×N×K</code> kernel。</li>
+<li><a href="implementation/dispatch/">Dispatch</a>：selection、direct BLAS views、packing and reuse，
+  以及 batched-vector workload policy。</li>
 </ul>
-<h2 id="version">Version</h2>
-<p>本文固定在 solvcon upstream <code>master</code>
+<h2 id="verification">Verification</h2>
+<ul>
+<li><a href="verification/correctness/">Correctness</a>：以 NumPy 驗證 dtypes、roles、
+  signed layouts、broadcasting 與 empty dimensions。</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Implementation snapshot</p>
+<p>本文對應 solvcon upstream <code>master</code>
 <a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>。
-Python entry point：<code>matmul_planned()</code>。</p>
-<h2 id="to-be-continued">To be continued</h2>
-<p>完整 benchmark、測試環境，以及不同 shape、layout、batch reuse 下的
-crossover 正在收尾。</p>
+Python entry point 是 <code>matmul_planned()</code>。完整 benchmark 與不同 workload
+的 crossover 將在後續補上。</p>
+</div>
 
 
 
