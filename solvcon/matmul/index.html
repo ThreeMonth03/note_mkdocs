@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="solvcon 矩陣乘法的 generic implementation、dispatch 與驗證。">
+        <meta name="description" content="solvcon 矩陣乘法的 generic implementation、dispatch 與 profiling。">
       
       
         <meta name="author" content="張君實">
@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/">
       
       
-        <link rel="prev" href="../../pve/">
+        <link rel="prev" href="../array/">
       
       
         <link rel="next" href="project/introduction/">
@@ -314,7 +314,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../array/" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -1058,6 +1058,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -1076,6 +1078,50 @@
               
   
   
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../array/">Array</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1">
+          <span class="md-nav__icon md-icon"></span>
+          Array
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -1085,7 +1131,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
       
       
         
@@ -1098,6 +1144,8 @@
           
         
           
+            
+          
         
       
       
@@ -1106,14 +1154,14 @@
         <div class="md-nav__link md-nav__link--index md-nav__link--active">
           <a href="./">Matmul</a>
           
-            <label for="__nav_5_1">
+            <label for="__nav_5_2">
               <span class="md-nav__icon md-icon"></span>
             </label>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_1">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_2">
           <span class="md-nav__icon md-icon"></span>
           Matmul
         </label>
@@ -1132,7 +1180,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
       
       
         
@@ -1142,13 +1190,13 @@
         
       
       
-        <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
           Project
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_2">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2_2">
           <span class="md-nav__icon md-icon"></span>
           Project
         </label>
@@ -1200,7 +1248,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_3" >
       
       
         
@@ -1208,35 +1256,19 @@
         
           
         
-          
-        
       
       
-        <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
           Implementation
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_3">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2_3">
           <span class="md-nav__icon md-icon"></span>
           Implementation
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="implementation/array/" class="md-nav__link">
-        Array
-      </a>
-    </li>
-  
-
-            
           
             
               
@@ -1278,48 +1310,10 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_4" >
-      
-      
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_1_4" id="__nav_5_1_4_label" tabindex="0">
-          Verification
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_4_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_4">
-          <span class="md-nav__icon md-icon"></span>
-          Verification
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
     <li class="md-nav__item">
-      <a href="verification/correctness/" class="md-nav__link">
-        Correctness
+      <a href="profiling/" class="md-nav__link">
+        Profiling
       </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -1379,8 +1373,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verification" class="md-nav__link">
-    Verification
+  <a href="#profiling" class="md-nav__link">
+    Profiling
   </a>
   
 </li>
@@ -1404,10 +1398,12 @@
 
 
 <h1 id="matmul">Matmul</h1>
-<p>這組文件從一個 NumPy view 穿過 pybind11 開始：buffer、shape、signed
-strides 與 logical origin 先形成 C++ array descriptor；generic matmul 再將它
-normalize 成完整 execution contract，dispatch 最後依 dtype、shape、layout
-和 reuse 選擇 kernel。</p>
+<p>這組文件記錄 solvcon 如何將 matmul 的 operand roles、batch broadcasting
+與 signed layouts 轉成一份 execution plan，再依 shape、layout 與 reuse 選擇
+generic、direct BLAS 或 pack-once execution。</p>
+<p>實作的閱讀順序是 Project → Implementation → Profiling。buffer、shape、
+stride 與 logical origin 屬於獨立的 <a href="../array/">Array</a> 資料模型，不是
+Matmul 的子章節。</p>
 <h2 id="project">Project</h2>
 <ul>
 <li><a href="project/introduction/">Introduction</a>：要解決的 HPC 問題、execution architecture
@@ -1417,24 +1413,22 @@ normalize 成完整 execution contract，dispatch 最後依 dtype、shape、layo
 </ul>
 <h2 id="implementation">Implementation</h2>
 <ul>
-<li><a href="implementation/array/">Array</a>：用 pybind11 保留 NumPy view 的 buffer、
-  shape、signed strides、logical origin 與 lifetime。</li>
 <li><a href="implementation/generic/">Generic Matmul</a>：operand roles、operation planning、batch
   broadcasting、signed-stride layout，以及固定的 <code>M×N×K</code> kernel。</li>
 <li><a href="implementation/dispatch/">Dispatch</a>：selection、direct BLAS views、packing and reuse，
   以及 batched-vector workload policy。</li>
 </ul>
-<h2 id="verification">Verification</h2>
+<h2 id="profiling">Profiling</h2>
 <ul>
-<li><a href="verification/correctness/">Correctness</a>：以 NumPy 驗證 dtypes、roles、
-  signed layouts、broadcasting 與 empty dimensions。</li>
+<li><a href="profiling/">Measurement</a>：將 setup 留在 timer 之外，每個 round
+  先 warm-up，再重複取樣，最後用兩組 median 比較 NumPy 與 solvcon。</li>
 </ul>
 <div class="admonition info">
 <p class="admonition-title">Implementation snapshot</p>
 <p>本文對應 solvcon upstream <code>master</code>
 <a href="https://github.com/solvcon/solvcon/tree/95a681224b95f9c5e7e2ee336b6484539bf8a91d"><code>95a68122</code></a>。
-Python entry point 是 <code>matmul_planned()</code>。完整 benchmark 與不同 workload
-的 crossover 將在後續補上。</p>
+Python entry point 是 <code>matmul_planned()</code>。這一版先記錄量測方法；完整
+benchmark 與 workload crossover 會在 profiling 數據收尾後補上。</p>
 </div>
 
 

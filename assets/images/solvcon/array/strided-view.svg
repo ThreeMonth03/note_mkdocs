@@ -17,13 +17,13 @@
     </pattern>
   </defs>
   <style>
-    .heading { font: 700 30px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .section { font: 700 23px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .label { font: 600 19px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #475569; }
-    .small { font: 500 17px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #64748b; }
-    .mono { font: 600 20px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .cell { font: 700 20px Consolas, "Noto Sans Mono", monospace; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
-    .axis { font: 600 17px Consolas, "Noto Sans Mono", monospace; fill: #64748b; text-anchor: middle; }
+    .heading { font-family: Arial; font-size: 30px; font-weight: 700; fill: #172033; }
+    .section { font-family: Arial; font-size: 23px; font-weight: 700; fill: #172033; }
+    .label { font-family: Arial; font-size: 19px; font-weight: 600; fill: #475569; }
+    .small { font-family: Arial; font-size: 17px; font-weight: 500; fill: #64748b; }
+    .mono { font-family: Consolas; font-size: 20px; font-weight: 600; fill: #334155; }
+    .cell { font-family: Consolas; font-size: 20px; font-weight: 700; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font-family: Consolas; font-size: 17px; font-weight: 600; fill: #64748b; text-anchor: middle; }
     .base { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 1.4; }
     .selected { fill: #ffedd5; stroke: #ea580c; stroke-width: 2.2; }
     .origin { fill: #dbeafe; stroke: #2563eb; stroke-width: 3.2; }

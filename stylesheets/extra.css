@@ -1,9 +1,9 @@
-.md-typeset .matmul-figure {
+.md-typeset .solvcon-figure {
     width: 100%;
     margin: 1.6rem 0 1.8rem;
 }
 
-.md-typeset .matmul-figure > a {
+.md-typeset .solvcon-figure > a {
     display: block;
 }
 
@@ -22,7 +22,7 @@
     color: inherit;
 }
 
-.md-typeset .matmul-figure img {
+.md-typeset .solvcon-figure img {
     display: block;
     width: 100%;
     max-width: 38rem;
@@ -31,7 +31,7 @@
     background: #fff;
 }
 
-.md-typeset .matmul-figure figcaption {
+.md-typeset .solvcon-figure figcaption {
     margin: 0.65rem auto 0;
     color: var(--md-default-fg-color--light);
     font-size: 0.76rem;
@@ -40,17 +40,17 @@
 }
 
 @media screen and (max-width: 44.984375em) {
-    .md-typeset .matmul-figure {
+    .md-typeset .solvcon-figure {
         margin: 1.3rem 0 1.5rem;
     }
 
-    .md-typeset .matmul-figure figcaption {
+    .md-typeset .solvcon-figure figcaption {
         text-align: left;
     }
 }
 
 @media print {
-    .md-typeset .matmul-figure img {
+    .md-typeset .solvcon-figure img {
         max-width: 100%;
     }
 }

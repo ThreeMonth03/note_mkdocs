@@ -146,6 +146,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://note.threemonth03.com/solvcon/array/</loc>
+         <lastmod>2026-08-12</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://note.threemonth03.com/solvcon/matmul/</loc>
          <lastmod>2026-08-12</lastmod>
          <changefreq>daily</changefreq>
@@ -166,17 +171,17 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://note.threemonth03.com/solvcon/matmul/profiling/</loc>
+         <lastmod>2026-08-12</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://note.threemonth03.com/solvcon/matmul/project/development/</loc>
          <lastmod>2026-08-12</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://note.threemonth03.com/solvcon/matmul/project/introduction/</loc>
-         <lastmod>2026-08-12</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://note.threemonth03.com/solvcon/matmul/verification/correctness/</loc>
          <lastmod>2026-08-12</lastmod>
          <changefreq>daily</changefreq>
     </url>

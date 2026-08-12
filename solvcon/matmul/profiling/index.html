@@ -6,31 +6,31 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="以 NumPy differential tests 驗證 matmul roles、layouts 與 route boundaries。">
+        <meta name="description" content="用 warm-up、重複取樣與 median 比較 NumPy 和 solvcon matmul。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/verification/correctness/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/profiling/">
       
       
-        <link rel="prev" href="../../implementation/dispatch/">
+        <link rel="prev" href="../implementation/dispatch/">
       
       
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Correctness - 君實的技術筆記</title>
+        <title>Profiling - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -87,9 +87,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -118,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#correctness" class="md-skip">
+        <a href="#profiling-matmul" class="md-skip">
           跳轉到
         </a>
       
@@ -134,7 +134,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="../../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -153,7 +153,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Correctness
+              Profiling
             
           </span>
         </div>
@@ -242,7 +242,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../../.." class="md-tabs__link">
+    <a href="../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -257,7 +257,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-tabs__link">
+      <a href="../../../algorithm/segment-tree/" class="md-tabs__link">
         Algorithm
       </a>
     </li>
@@ -273,7 +273,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../hdlbits/" class="md-tabs__link">
+      <a href="../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -289,7 +289,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../pve/" class="md-tabs__link">
+      <a href="../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -312,7 +312,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../" class="md-tabs__link md-tabs__link--active">
+      <a href="../../array/" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -348,7 +348,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -367,7 +367,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         首頁
       </a>
     </li>
@@ -425,7 +425,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-nav__link">
+      <a href="../../../algorithm/segment-tree/" class="md-nav__link">
         Segment Tree
       </a>
     </li>
@@ -439,7 +439,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/sqrt-decomposition/" class="md-nav__link">
+      <a href="../../../algorithm/sqrt-decomposition/" class="md-nav__link">
         Sqrt Decomposition
       </a>
     </li>
@@ -453,7 +453,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/number-theory/" class="md-nav__link">
+      <a href="../../../algorithm/number-theory/" class="md-nav__link">
         Number Theory
       </a>
     </li>
@@ -467,7 +467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/convex-hull-trick/" class="md-nav__link">
+      <a href="../../../algorithm/convex-hull-trick/" class="md-nav__link">
         Convex Hull Trick
       </a>
     </li>
@@ -481,7 +481,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/string-matching/" class="md-nav__link">
+      <a href="../../../algorithm/string-matching/" class="md-nav__link">
         String Matching
       </a>
     </li>
@@ -495,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/graph/" class="md-nav__link">
+      <a href="../../../algorithm/graph/" class="md-nav__link">
         Graph
       </a>
     </li>
@@ -509,7 +509,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/tree/" class="md-nav__link">
+      <a href="../../../algorithm/tree/" class="md-nav__link">
         Tree
       </a>
     </li>
@@ -559,7 +559,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../hdlbits/">HDLBits</a>
+          <a href="../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -582,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/getting-started/" class="md-nav__link">
+      <a href="../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -635,7 +635,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/basics/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -649,7 +649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -663,7 +663,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/modules/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -677,7 +677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -691,7 +691,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -761,7 +761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -775,7 +775,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -789,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -803,7 +803,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -817,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -831,7 +831,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/counters/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -845,7 +845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -859,7 +859,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -873,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -887,7 +887,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -941,7 +941,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -955,7 +955,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -976,7 +976,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/cs450/" class="md-nav__link">
+      <a href="../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -1016,7 +1016,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../pve/">Proxmox VE</a>
+          <a href="../../../pve/">Proxmox VE</a>
           
         </div>
       
@@ -1056,6 +1056,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -1074,6 +1076,50 @@
               
   
   
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../array/">Array</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_1">
+          <span class="md-nav__icon md-icon"></span>
+          Array
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
     
   
   
@@ -1083,7 +1129,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
       
       
         
@@ -1096,22 +1142,24 @@
           
         
           
+            
+          
         
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Matmul</a>
+          <a href="../">Matmul</a>
           
-            <label for="__nav_5_1">
+            <label for="__nav_5_2">
               <span class="md-nav__icon md-icon"></span>
             </label>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_1">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_5_2">
           <span class="md-nav__icon md-icon"></span>
           Matmul
         </label>
@@ -1130,7 +1178,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_2" >
       
       
         
@@ -1140,13 +1188,13 @@
         
       
       
-        <label class="md-nav__link" for="__nav_5_1_2" id="__nav_5_1_2_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_5_2_2" id="__nav_5_2_2_label" tabindex="0">
           Project
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_2_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_2">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2_2">
           <span class="md-nav__icon md-icon"></span>
           Project
         </label>
@@ -1158,7 +1206,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../project/introduction/" class="md-nav__link">
+      <a href="../project/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -1172,7 +1220,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../project/development/" class="md-nav__link">
+      <a href="../project/development/" class="md-nav__link">
         Development History
       </a>
     </li>
@@ -1198,7 +1246,7 @@
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2_3" >
       
       
         
@@ -1206,17 +1254,15 @@
         
           
         
-          
-        
       
       
-        <label class="md-nav__link" for="__nav_5_1_3" id="__nav_5_1_3_label" tabindex="0">
+        <label class="md-nav__link" for="__nav_5_2_3" id="__nav_5_2_3_label" tabindex="0">
           Implementation
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_3_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_5_1_3">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_2_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2_3">
           <span class="md-nav__icon md-icon"></span>
           Implementation
         </label>
@@ -1228,21 +1274,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../implementation/array/" class="md-nav__link">
-        Array
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../implementation/generic/" class="md-nav__link">
+      <a href="../implementation/generic/" class="md-nav__link">
         Generic Matmul
       </a>
     </li>
@@ -1256,7 +1288,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../implementation/dispatch/" class="md-nav__link">
+      <a href="../implementation/dispatch/" class="md-nav__link">
         Dispatch
       </a>
     </li>
@@ -1278,39 +1310,6 @@
     
   
   
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-      
-      
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1_4" checked>
-      
-      
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_5_1_4" id="__nav_5_1_4_label" tabindex="0">
-          Verification
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_1_4_label" aria-expanded="true">
-        <label class="md-nav__title" for="__nav_5_1_4">
-          <span class="md-nav__icon md-icon"></span>
-          Verification
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-    
-  
-  
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
@@ -1320,12 +1319,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Correctness
+          Profiling
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Correctness
+        Profiling
       </a>
       
         
@@ -1344,36 +1343,50 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#coverage" class="md-nav__link">
-    Coverage
+  <a href="#timer" class="md-nav__link">
+    Timer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#numpy-reference" class="md-nav__link">
-    NumPy Reference
+  <a href="#warm-up" class="md-nav__link">
+    Warm-up
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#layout-combinations" class="md-nav__link">
-    Layout Combinations
+  <a href="#samples" class="md-nav__link">
+    Samples
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#empty-dimensions" class="md-nav__link">
-    Empty Dimensions
+  <a href="#median" class="md-nav__link">
+    Median
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#route-independence" class="md-nav__link">
-    Route Independence
+  <a href="#cases" class="md-nav__link">
+    Cases
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol" class="md-nav__link">
+    Protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to-be-continued" class="md-nav__link">
+    To be continued
   </a>
   
 </li>
@@ -1389,13 +1402,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -1441,36 +1447,50 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#coverage" class="md-nav__link">
-    Coverage
+  <a href="#timer" class="md-nav__link">
+    Timer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#numpy-reference" class="md-nav__link">
-    NumPy Reference
+  <a href="#warm-up" class="md-nav__link">
+    Warm-up
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#layout-combinations" class="md-nav__link">
-    Layout Combinations
+  <a href="#samples" class="md-nav__link">
+    Samples
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#empty-dimensions" class="md-nav__link">
-    Empty Dimensions
+  <a href="#median" class="md-nav__link">
+    Median
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#route-independence" class="md-nav__link">
-    Route Independence
+  <a href="#cases" class="md-nav__link">
+    Cases
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol" class="md-nav__link">
+    Protocol
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#to-be-continued" class="md-nav__link">
+    To be continued
   </a>
   
 </li>
@@ -1500,114 +1520,166 @@
 
 
 
-<h1 id="correctness">Correctness</h1>
-<p>dispatch 只能改變 execution route，不能改變合法 inputs 或 output semantics。
-matmul 因此以 <code>numpy.matmul</code> 當 reference，而不是替每個 kernel
-維護一套 expected values。</p>
-<h2 id="coverage">Coverage</h2>
+<h1 id="profiling-matmul">Profiling Matmul</h1>
+<p>矩陣乘法只量一次，得到的是那一次執行，不是這個 workload 的典型
+成本。第一次 call 可能還在支付 lazy initialization；後面的 calls 仍會受到
+OS scheduling 與背景活動影響。一個特別快或特別慢的數字，都不適合直接
+當成結論。</p>
+<p>以下聚焦於比較 <code>np.matmul()</code> 與 <code>matmul_planned()</code> 的
+<code>profile_planned_case()</code> measurement path。它把每個 case 拆成四段：setup 不計時，
+每輪先丟掉 warm-up，再記錄 NumPy 與 solvcon 的 single-call samples，最後
+比較兩組時間的 median。</p>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/matmul/profiling/measurement-loop.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/matmul/profiling/measurement-loop-mobile.svg">
+      <img src="/assets/images/solvcon/matmul/profiling/measurement-loop.svg"
+           alt="每輪先 warm-up，再量 NumPy 與 solvcon，將多輪 samples 各自取 median"
+           loading="lazy">
+    </picture>
+  </a>
+  <figcaption>
+    這是量測流程示意，不是 benchmark 結果。空心 calls 被丟棄，
+    實心 calls 才進入 median。
+  </figcaption>
+</figure>
+
+<h2 id="timer">Timer</h2>
+<p>case 開始前已經建好 NumPy operands 與對應的 <code>SimpleArray</code> views。資料生成、
+dtype conversion 和 NumPy-to-solvcon wrapping 都不在 timer 裡。兩條 route 因此
+取得同一份 values、shape、dtype 與 layout。</p>
+<p>每筆 sample 只包住一次 public API call：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">profile_one_call</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">solvcon</span><span class="o">.</span><span class="n">call_profiler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>    <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">call_profiler</span><span class="o">.</span><span class="n">result</span><span class="p">()[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Expected exactly one profiled call&quot;</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>    <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;total_time&quot;</span><span class="p">]</span>
+</span></code></pre></div>
+<p>decorator 內的 <code>CallProfilerProbe</code> 緊貼 <code>np.matmul()</code> 或
+<code>matmul_planned()</code>。profiler reset 與 result extraction 在 probe 之外。對 solvcon
+而言，timed call 包含 Python/C++ entry、planning、dispatch、output allocation、
+optional packing 與 computation。這量到的是一次 API call 的 end-to-end 成本，
+不是單獨 kernel 的時間。</p>
+<p>C++ profiler 使用 <code>std::chrono::high_resolution_clock</code>，先以 nanoseconds 累計，
+Python result 再以 milliseconds 輸出。</p>
+<h2 id="warm-up">Warm-up</h2>
+<p>每個 round 都先執行 <code>W</code> 組未記錄的 calls，順序與正式取樣一樣：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rounds</span><span class="p">):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">warmups</span><span class="p">):</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>        <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a>        <span class="n">lhs_sa</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs_sa</span><span class="p">)</span>
+</span></code></pre></div>
+<p>warm-up 的用途是把 first-call effects 留在記錄區外。例如 dynamic loader、
+backend initialization 或第一次摸到的 code/data pages，都可能使第一筆比後續
+calls 明顯慢。每輪都重做相同數量與順序的 warm-up，但不假設每輪的
+cache 或 machine state 相同。</p>
+<p>warm-up 不等於完全控制 cache、CPU frequency 或溫度。它只清楚地排除一類
+可重現的首次成本。</p>
+<h2 id="samples">Samples</h2>
+<p>warm-up 之後，每輪記錄 <code>S</code> 對 calls：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">samples</span><span class="p">):</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">timings</span><span class="p">[</span><span class="s2">&quot;np&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile_one_call</span><span class="p">(</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a>        <span class="n">profile_matmul_np</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">))</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="n">timings</span><span class="p">[</span><span class="s2">&quot;planned_sa&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">profile_one_call</span><span class="p">(</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a>        <span class="n">profile_matmul_planned_sa</span><span class="p">,</span> <span class="n">lhs_sa</span><span class="p">,</span> <span class="n">rhs_sa</span><span class="p">))</span>
+</span></code></pre></div>
+<p><code>R</code> 個 rounds 會讓每個 method 得到 <code>R × S</code> 筆 raw timings。反覆取樣的目標
+不是讓雜訊「消失」，而是讓雜訊顯現為 distribution。context switch 或背景
+I/O 可能把一個點推到時間軸右邊；其餘 calls 仍保留這個 workload 的主要
+時間尺度。</p>
+<p>目前 runner 將每組 sample 固定排成 NumPy 後接 solvcon。這使每對數據
+使用同一份 inputs，並在相近時間收集；但它仍保留 order effect。當兩者
+差距接近時，應再以反向或交錯順序重跑，確認結論不依賴 AB 次序。</p>
+<h2 id="median">Median</h2>
+<p>NumPy 與 solvcon 的 pooled samples 各自取 median：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">timings</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">method</span><span class="p">:</span> <span class="n">statistics</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">timings</span><span class="p">[</span><span class="n">method</span><span class="p">])</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a>    <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;np&quot;</span><span class="p">,</span> <span class="s2">&quot;planned_sa&quot;</span><span class="p">)</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p>median 將 timings 排序後取中間位置。偶發的長延遲會把 mean 往右拉，卻不會
+同樣幅度地改變 median。這對 wall-time microbenchmark 很實用，但 median 不是
+uncertainty estimate，也不會消除固定順序或 BLAS thread settings 造成的系統性
+差異。</p>
+<p>最後輸出的比值是：</p>
+<div class="arithmatex">\[
+\text{ratio} =
+\frac{\operatorname{median}(T_{\text{solvcon}})}
+     {\operatorname{median}(T_{\text{NumPy}})}.
+\]</div>
+<p><code>ratio &lt; 1</code> 表示在這份 dtype、shape、layout 與 backend 組合下，solvcon 的
+典型 call 比 NumPy 快。程式是「兩組 samples 各取 median 後相除」，不是每對
+calls 先算 ratio 再取 median。</p>
+<h2 id="cases">Cases</h2>
+<p>一個 matmul 數字無法代表所有 workloads。profiler 因此保留影響 dispatch 的
+axes：</p>
 <table>
 <thead>
 <tr>
-<th>Dimension</th>
-<th>Cases</th>
+<th>axis</th>
+<th>cases</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Value type</td>
-<td><code>float32</code>, <code>float64</code>, <code>complex64</code>, <code>complex128</code></td>
+<td>dtype</td>
+<td><code>float32</code>, <code>float64</code></td>
 </tr>
 <tr>
-<td>Operation</td>
-<td><code>DOT</code>, <code>GEVM</code>, <code>GEMV</code>, <code>GEMM</code></td>
+<td>role</td>
+<td><code>DOT</code>, <code>GEVM</code>, <code>GEMV</code>, equal-batch <code>GEMM</code>, cross-broadcast <code>GEMM</code></td>
 </tr>
 <tr>
-<td>Core layout</td>
-<td>C/F-contiguous, padded, negative stride, step-two</td>
+<td>size</td>
+<td>小型 core、vector workloads、較大 DOT/GEMM，以及 batched-vector policy 邊界</td>
 </tr>
 <tr>
-<td>Batch</td>
-<td>equal shape, signed stride, right-aligned broadcasting</td>
-</tr>
-<tr>
-<td>Degenerate shape</td>
-<td><code>M=0</code>, <code>N=0</code>, <code>K=0</code>, empty batch</td>
-</tr>
-<tr>
-<td>Diagnostics</td>
-<td>contraction mismatch, batch mismatch</td>
+<td>layout</td>
+<td>lhs/rhs C-contiguous 與 negative-inner-stride 的 Cartesian product</td>
 </tr>
 </tbody>
 </table>
-<h2 id="numpy-reference">NumPy Reference</h2>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">def</span><span class="w"> </span><span class="nf">assert_matmul_planned</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">lhs</span><span class="o">.</span><span class="n">matmul_planned</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="nb">list</span><span class="p">(</span><span class="n">expected</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    <span class="n">tol</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="o">.</span><span class="n">real</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a>        <span class="n">result</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos="8 "></span></a>    <span class="k">return</span> <span class="n">result</span>
-</span></code></pre></div>
-<p>shape contract 與 numerical values 分開檢查。相同 test base 套用到
-<code>float32</code>、<code>float64</code>、<code>complex64</code>、<code>complex128</code>。</p>
-<h2 id="layout-combinations">Layout Combinations</h2>
-<p>最容易漏掉的 case 不是單一 negative stride，而是 matrix core layout、
-batch layout 與 broadcasting 同時存在：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">19</span><span class="p">)):</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">m</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a>        <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a>        <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a>    <span class="p">),)</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a>    <span class="n">rhs_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_matrix_stride_cases</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">((</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="s1">&#39;negative_batch_and_matrix&#39;</span><span class="p">,</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">make_strided_view</span><span class="p">(</span><span class="n">rhs_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a>    <span class="p">),)</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a>    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_lhs</span><span class="p">),</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a>            <span class="n">lhs_cases</span><span class="p">,</span> <span class="n">rhs_cases</span><span class="p">):</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a>        <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">case_lhs</span><span class="p">,</span> <span class="n">case_rhs</span><span class="p">)</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_lhs</span><span class="p">),</span>
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a>            <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">case_rhs</span><span class="p">),</span>
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a>            <span class="n">expected</span><span class="p">)</span>
-</span></code></pre></div>
-<p>stride cases 包含 C/F-contiguous、padded、negative 與 step-two。這組 shapes、
-layouts 與 sizes 會跨過 selector 的多個 policy boundaries；測試只觀察它們是否
-得到同一個 public result。</p>
-<h2 id="empty-dimensions">Empty Dimensions</h2>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">shapes</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>    <span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">for</span> <span class="n">lhs_shape</span><span class="p">,</span> <span class="n">rhs_shape</span> <span class="ow">in</span> <span class="n">shapes</span><span class="p">:</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    <span class="n">lhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>    <span class="n">rhs_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rhs_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">lhs_data</span><span class="p">,</span> <span class="n">rhs_data</span><span class="p">))</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>    <span class="bp">self</span><span class="o">.</span><span class="n">assert_matmul_planned</span><span class="p">(</span>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11"></a><a href="#__codelineno-2-11"><span class="linenos" data-linenos="11 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">lhs_data</span><span class="p">),</span>
-</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12"></a><a href="#__codelineno-2-12"><span class="linenos" data-linenos="12 "></span></a>        <span class="bp">self</span><span class="o">.</span><span class="n">SimpleArray</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">rhs_data</span><span class="p">),</span>
-</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13"></a><a href="#__codelineno-2-13"><span class="linenos" data-linenos="13 "></span></a>        <span class="n">expected</span><span class="p">)</span>
-</span></code></pre></div>
-<p><code>(3,0) @ (0,2)</code> 專門驗證 <code>K=0</code> 的 empty sum；其他 cases 分別驗證
-zero-size output core 與 empty batch domain。</p>
-<h2 id="route-independence">Route Independence</h2>
-<p>這些 tests 檢查 public output shape 與 numerical values，不直接斷言內部選到
-哪個 kernel。在啟用 BLAS 的 build 中，小型或不相容 layouts 會留在 generic，
-較大的相容 views 可以直接進 BLAS，符合 reuse policy 的 operands 則可能先
-packing。三者最後都必須通過同一個 NumPy reference。</p>
+<p>將這些結果和 <a href="../implementation/dispatch/#workload-policy">Dispatch policy</a>
+對照，才能檢查 route boundary 與 performance crossover 是否落在合理位置，
+而不是只把一個大型 contiguous GEMM 當成整個 matmul API。</p>
+<h2 id="protocol">Protocol</h2>
+<p>CLI 預設是 <code>warmups=1</code>、<code>samples=1</code>、<code>rounds=3</code>。這個設定適合跑完
+廣泛 case matrix；argument help 明確建議，本機要解讀穩定差異時使用至少
+5 rounds。這是跑完大量 cases 的 baseline，不是用來宣告微小差距的最終
+benchmark protocol。特別是小型 matrices，single-call sample 容易讓 timer、probe
+和 Python call overhead 占太大比例。</p>
+<p>結果發布前，會再用一層 block-based protocol 檢查：</p>
+<ol>
+<li><strong>Calibrate</strong>：先試跑一個 call，再選擇 inner repetition count，使每個
+   timed block 累積到足夠長的 wall time，例如 <code>100–500 ms</code>。以一個
+   timer 包住整個 inner loop，再將 block time 除以 call count，可降低 clock
+   與 probe overhead 在小型 workload 中的比例。</li>
+<li><strong>Blocks</strong>：收集多個分開計時的 blocks，例如 <code>9–21</code> 個，而不是只把同一
+   tight loop 總時間除以 call count。每個 block 前重做 warm-up。</li>
+<li><strong>Order</strong>：在 blocks 間交錯 <code>NumPy → solvcon</code> 與 <code>solvcon → NumPy</code>，
+   減少固定次序、溫度與 frequency drift 持續偏向同一邊。</li>
+<li><strong>Spread</strong>：保留 raw block timings，報告 paired ratios 的 median 與 IQR，
+   並列出 sample count。median 告訴讀者典型值，IQR 則顯示中央區間的
+   散布程度。</li>
+<li><strong>Environment</strong>：固定並記錄 CPU、build flags、BLAS backend、thread count
+   與 power mode。當 ratio 靠近 <code>1</code>，換順序或重開 process 後仍要得到相同
+   方向，才值得解讀。</li>
+</ol>
+<p>這些控制不會讓誤差消失。它們的作用是把「典型成本」和「量測散布」同時
+放到報告裡，並把可控制的系統性差異固定下來。</p>
+<h2 id="to-be-continued">To be continued</h2>
+<p>目前頁面先固定 measurement contract。等 profiling runs 收尾後，會以同一套
+protocol 報告 small/large matrices、vector roles、batch reuse 和 signed layouts 相對
+NumPy 的結果。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L60-L141"><code>MatmulTestBase</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_matrix.py#L378-L620"><code>matmul_planned()</code> layout and empty-axis tests</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L88-L94"><code>profile_one_call()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L148-L183"><code>profile_planned_case()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/profiling/profile_matrix_ops.py#L186-L271">case generation and CLI controls</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/profiling/RadixTree.hpp#L217-L244"><code>CallerProfile</code> timer and accumulated duration</a></li>
 </ul>
 
 
@@ -1650,13 +1722,13 @@ packing。三者最後都必須通過同一個 NumPy reference。</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../../../javascripts/mathjax.js"></script>
+          <script src="../../../javascripts/mathjax.js"></script>
         
       
         

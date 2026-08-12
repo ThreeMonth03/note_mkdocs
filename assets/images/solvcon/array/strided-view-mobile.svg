@@ -14,12 +14,12 @@
     </pattern>
   </defs>
   <style>
-    .heading { font: 700 31px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .section { font: 700 26px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .label { font: 600 22px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #475569; }
-    .mono { font: 600 23px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .cell { font: 700 23px Consolas, "Noto Sans Mono", monospace; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
-    .axis { font: 600 20px Consolas, "Noto Sans Mono", monospace; fill: #64748b; text-anchor: middle; }
+    .heading { font-family: Arial; font-size: 31px; font-weight: 700; fill: #172033; }
+    .section { font-family: Arial; font-size: 26px; font-weight: 700; fill: #172033; }
+    .label { font-family: Arial; font-size: 22px; font-weight: 600; fill: #475569; }
+    .mono { font-family: Consolas; font-size: 23px; font-weight: 600; fill: #334155; }
+    .cell { font-family: Consolas; font-size: 23px; font-weight: 700; fill: #172033; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font-family: Consolas; font-size: 20px; font-weight: 600; fill: #64748b; text-anchor: middle; }
     .base { fill: #f1f5f9; stroke: #94a3b8; stroke-width: 1.6; }
     .selected { fill: #ffedd5; stroke: #ea580c; stroke-width: 2.3; }
     .origin { fill: #dbeafe; stroke: #2563eb; stroke-width: 3.3; }

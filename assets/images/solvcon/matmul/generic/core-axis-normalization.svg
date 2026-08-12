@@ -2,12 +2,12 @@
   <title id="title">Public matmul roles normalized to one core contraction</title>
   <desc id="desc">DOT, GEVM, GEMV, and GEMM transform into A M by K times B K by N. Dashed length-one axes are synthetic.</desc>
   <style>
-    .heading { font: 700 28px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .column { font: 600 22px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #64748b; }
-    .role { font: 700 24px Consolas, "Noto Sans Mono", monospace; fill: #172033; }
-    .shape { font: 600 23px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .core { font: 700 24px Consolas, "Noto Sans Mono", monospace; text-anchor: middle; dominant-baseline: middle; }
-    .output { font: 700 24px Consolas, "Noto Sans Mono", monospace; fill: #16a34a; dominant-baseline: middle; }
+    .heading { font-family: Arial; font-size: 28px; font-weight: 700; fill: #172033; }
+    .column { font-family: Arial; font-size: 22px; font-weight: 600; fill: #64748b; }
+    .role { font-family: Consolas; font-size: 24px; font-weight: 700; fill: #172033; }
+    .shape { font-family: Consolas; font-size: 23px; font-weight: 600; fill: #334155; }
+    .core { font-family: Consolas; font-size: 24px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+    .output { font-family: Consolas; font-size: 24px; font-weight: 700; fill: #16a34a; dominant-baseline: middle; }
     .operand-a { fill: #eff6ff; stroke: #2563eb; stroke-width: 2; }
     .operand-b { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
     .synthetic { fill: none; stroke: #7c3aed; stroke-width: 2; stroke-dasharray: 5 4; }

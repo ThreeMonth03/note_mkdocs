@@ -10,11 +10,11 @@
     </marker>
   </defs>
   <style>
-    .heading { font: 700 28px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .label { font: 700 22px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .mono { font: 600 21px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .cell { font: 700 22px Consolas, "Noto Sans Mono", monospace; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
-    .index { font: 600 19px Consolas, "Noto Sans Mono", monospace; fill: #64748b; text-anchor: middle; }
+    .heading { font-family: Arial; font-size: 28px; font-weight: 700; fill: #172033; }
+    .label { font-family: Arial; font-size: 22px; font-weight: 700; fill: #172033; }
+    .mono { font-family: Consolas; font-size: 21px; font-weight: 600; fill: #334155; }
+    .cell { font-family: Consolas; font-size: 22px; font-weight: 700; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
+    .index { font-family: Consolas; font-size: 19px; font-weight: 600; fill: #64748b; text-anchor: middle; }
     .buffer { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
     .guide { stroke: #dbe3ee; stroke-width: 1.25; stroke-dasharray: 4 5; }
     .positive { fill: none; stroke: #2563eb; stroke-width: 3; }

@@ -7,16 +7,16 @@
     </marker>
   </defs>
   <style>
-    .heading { font: 700 28px "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif; fill: #172033; }
-    .matrix-label { font: 700 24px Consolas, "Noto Sans Mono", monospace; }
+    .heading { font-family: Arial; font-size: 28px; font-weight: 700; fill: #172033; }
+    .matrix-label { font-family: Consolas; font-size: 24px; font-weight: 700; }
     .cell { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; }
     .cell-a { fill: #eff6ff; stroke: #2563eb; stroke-width: 2.5; }
     .cell-b { fill: #fff7ed; stroke: #ea580c; stroke-width: 2.5; }
     .cell-c { fill: #f0fdf4; stroke: #16a34a; stroke-width: 3; }
-    .cell-text { font: 600 19px Consolas, "Noto Sans Mono", monospace; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
-    .axis { font: 700 20px Consolas, "Noto Sans Mono", monospace; fill: #7c3aed; text-anchor: middle; }
-    .mono { font: 600 22px Consolas, "Noto Sans Mono", monospace; fill: #334155; }
-    .formula { font: 700 27px Consolas, "Noto Sans Mono", monospace; fill: #334155; text-anchor: middle; }
+    .cell-text { font-family: Consolas; font-size: 19px; font-weight: 600; fill: #334155; text-anchor: middle; dominant-baseline: middle; }
+    .axis { font-family: Consolas; font-size: 20px; font-weight: 700; fill: #7c3aed; text-anchor: middle; }
+    .mono { font-family: Consolas; font-size: 22px; font-weight: 600; fill: #334155; }
+    .formula { font-family: Consolas; font-size: 27px; font-weight: 700; fill: #334155; text-anchor: middle; }
     .a { fill: #2563eb; }
     .b { fill: #ea580c; }
     .c { fill: #16a34a; }
