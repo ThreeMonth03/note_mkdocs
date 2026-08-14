@@ -1279,15 +1279,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#storage" class="md-nav__link">
-    一段 storage，兩種起點
+  <a href="#array-contract-dispatch" class="md-nav__link">
+    架構：最小 Array contract，再做 dispatch
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#logical_data" class="md-nav__link">
-    為什麼不能只保存 logical_data
+  <a href="#view-contract" class="md-nav__link">
+    最小 view contract
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#coordinate-address" class="md-nav__link">
+    Coordinate 如何映射到 address
   </a>
   
 </li>
@@ -1295,6 +1302,13 @@
         <li class="md-nav__item">
   <a href="#numpy-import" class="md-nav__link">
     NumPy import
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifetime-copy-semantics" class="md-nav__link">
+    Lifetime 與 copy semantics
   </a>
   
 </li>
@@ -1332,17 +1346,46 @@
 
 
 <h1 id="simplearray">SimpleArray 的資料結構</h1>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+<p>既然已經有 NumPy，為什麼還要做另一個 array？目標不是重做完整 NumPy，而是讓
+特定數值運算跑得比 NumPy 更快。最直接的路線，是保留 NumPy view 最重要的資料
+模型，拿掉不需要的 surface，再讓 execution layer 根據 shape、layout 與 workload
+選擇 kernel。</p>
+<p>這條 pipeline 有兩個階段。第一階段是簡化版的 NumPy array contract：storage
+lifetime、logical origin、shape 與 signed strides。第二階段是 operation plan
+與 dispatch：
+讀取這些 metadata，選擇 Generic、BLAS 或其他 specialized kernel，並決定是否
+先做 packing。Array contract 越小、越清楚，後面的 dispatch 就越容易分析與
+最佳化。</p>
+<h2 id="array-contract-dispatch">架構：最小 Array contract，再做 dispatch</h2>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>NumPy view
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    ↓ zero-copy import
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>SimpleArray descriptor
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    ├── C++ adapter: signed mdspan
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    ├── Python adapter: indexing / setitem
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    └── operation plan → dispatch → selected kernel
 </span></code></pre></div>
-<p><code>view</code> 沒有搬動 <code>base</code> 的六個 values。它只把 <code>(0,0)</code> 放到最後一格，並把
-兩個 axes 的走訪方向改成負數。C++ 若只保留 pointer 與 shape，就無法重建這個
-view；<code>SimpleArray</code> 保存的是完整的 address mapping。</p>
+<p>同一份 metadata 會直接影響 execution route：BLAS-compatible view 可以直接進
+vendor kernel；部分不相容 layout 可以先 packing 再進 BLAS；其餘 layout 則由
+signed-stride Generic kernel 處理。Descriptor 不只是保存 array，也提供 dispatch
+做決策所需的 layout facts。</p>
+<p>這一章先建立最底層的 descriptor。它不嘗試實作整套 NumPy API，只保留足以描述
+view、計算 address、維持 lifetime，並讓 execution layer 判斷 layout 的資訊。</p>
+<h2 id="view-contract">最小 view contract</h2>
+<p>NumPy reverse 可以用最小例子看出這份 contract 需要保存什麼：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+</span></code></pre></div>
+<p><code>view</code> 看起來像一個新 array，實際上六個值一個也沒有搬。它只改變 coordinate
+<code>(0,0)</code> 從哪一格開始，以及每個 axis 往哪個方向前進。Pointer 與 shape 不足以
+表達這件事；descriptor 還需要 logical origin 與 signed strides。</p>
+<p>SimpleArray contract 由兩個組件構成。<code>ConcreteBuffer</code> 保存 retained bytes 與
+owner lifetime；typed descriptor 保存 <code>logical_data</code>、shape 與 signed strides。
+C++ adapter、Python adapter 與 operation planning 都從這份 metadata 出發。</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/simplearray-descriptor.svg">
     <picture>
@@ -1354,11 +1397,14 @@ view；<code>SimpleArray</code> 保存的是完整的 address mapping。</p>
     </picture>
   </a>
   <figcaption>
-    Buffer 管理 retained storage；descriptor 將 coordinate 映射到其中一格。
+    同一段 storage 有兩個起點：buffer 起點與 descriptor coordinate 起點。
   </figcaption>
 </figure>
 
-<h2 id="storage">一段 storage，兩種起點</h2>
+<p>這個分層讓 ownership 不必理解 layout，address mapping 也不必負責 lifetime。
+Operation layer 因而可以直接讀取 descriptor facts，而不需要重新分析原始 NumPy
+object。</p>
+<h2 id="coordinate-address">Coordinate 如何映射到 address</h2>
 <p><code>ConcreteBuffer</code> 管理一段連續 byte span。<code>SimpleArray&lt;T&gt;</code> 再疊上一個 typed
 descriptor：</p>
 <table>
@@ -1404,14 +1450,11 @@ descriptor：</p>
 \end{aligned}
 \]</div>
 <p>例如：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
 </span></code></pre></div>
 <p><code>stride</code> 的單位是 elements；NumPy 與 Python buffer protocol 的 stride 單位則是
 bytes。importer 會先驗證 byte stride 可被 <code>sizeof(T)</code> 整除，再轉成 element
 stride。</p>
-<p>這裡的 coordinate 屬於 storage descriptor。設定 <code>nghost</code> 後，Python axis 0
-會再疊上一層 body-relative indexing；<code>logical_data()</code> 本身不會改變。</p>
-<h2 id="logical_data">為什麼不能只保存 logical_data</h2>
 <p>negative stride 會走到 <code>logical_data()</code> 前方。對上例而言，所有可達位址是
 <code>root[0..5]</code>，但 descriptor origin 是 <code>root+5</code>。因此：</p>
 <ul>
@@ -1419,50 +1462,52 @@ stride。</p>
 <li><code>logical_data()</code> 決定 descriptor coordinate 從哪裡開始；</li>
 <li><code>shape + stride</code> 決定接下來往哪裡走。</li>
 </ul>
-<p>這個區分也修正了 clone 的 ownership 問題。Clone 會複製 <code>ConcreteBuffer</code>
-宣告的完整 retained span，並保留 <code>logical_data - data</code> 的 offset。NumPy importer
-恰好把這個 buffer 收斂成最小 reachable envelope；若舊模型只從
-<code>logical_data</code> 開始複製，reversed clone 的下一步就會讀到新 allocation 前方。</p>
 <h2 id="numpy-import">NumPy import</h2>
 <p>NumPy constructor 以每個 axis 的 endpoint 計算可達的最小與最大 byte offset：</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a>if any extent is zero:
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    begin = end = storage_nbytes = 0
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>else:
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    delta[d] = (shape[d] - 1) * byte_stride[d]
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a>    begin = sum(min(delta[d], 0))
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a>    end = sum(max(delta[d], 0))
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    storage_nbytes = end - begin + itemsize
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>storage_ptr = view_ptr + begin
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>data_offset = -begin
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a>if any extent is zero:
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a>    begin = end = storage_nbytes = 0
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>else:
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a>    delta[d] = (shape[d] - 1) * byte_stride[d]
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a>    begin = sum(min(delta[d], 0))
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a>    end = sum(max(delta[d], 0))
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a>    storage_nbytes = end - begin + itemsize
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>storage_ptr = view_ptr + begin
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a>data_offset = -begin
 </span></code></pre></div>
 <p><code>ConcreteBuffer</code> 從 <code>storage_ptr</code> 保留整個 envelope，<code>logical_data</code> 則是
 <code>data + data_offset / sizeof(T)</code>。這個 envelope 可能包含 padding holes，所以
 storage span 不一定等於 <code>prod(shape) * sizeof(T)</code>。</p>
+<h2 id="lifetime-copy-semantics">Lifetime 與 copy semantics</h2>
 <p>Zero-copy 還需要保存 owner lifetime。外部 NumPy storage 由 buffer remover 持有；
 反向 export 成 ndarray 時，NumPy 的 <code>.base</code> 再持有 <code>ConcreteBuffer</code>。因此兩邊都
 能修改同一份 bytes：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
 </span></code></pre></div>
+<p><code>clone()</code> 是明確的 deep-copy path。它複製完整 <code>ConcreteBuffer</code>，並保留
+<code>logical_data - data</code> 的 offset；新 array 因此不再依賴 NumPy owner，卻維持相同
+shape、strides 與 coordinate mapping。</p>
 <h2 id="_1">接下來</h2>
 <ul>
 <li><a href="mdspan/">Signed mdspan</a> 說明 signed stride 如何轉成合法的 mdspan mapping。</li>
 <li><a href="setitem/">Indexing 與 setitem</a> 說明 Python negative index、<code>nghost</code> 與
   slice assignment 的 normalization。</li>
+<li><a href="../matmul/">Matmul</a> 將在同一份 descriptor 上建立 operation plan 與
+  execution dispatch。</li>
 </ul>
-<p>這兩條路徑彼此獨立：C++ <code>as_mdspan()</code> 不負責 Python indexing；Python
-<code>__setitem__</code> 也不經過 mdspan。</p>
+<p>這兩條路徑共享同一份 descriptor，卻各自處理不同座標系。C++ <code>as_mdspan()</code>
+需要把 signed stride 轉成合法 mapping；Python axis 0 設定 <code>nghost</code> 後，還會
+疊上一層 body-relative indexing。<code>logical_data()</code> 本身在兩條路徑中都不改變。</p>
 <h2 id="source">Source</h2>
 <ul>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2621-L2633"><code>SimpleArray&lt;T&gt;</code> descriptor members</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2354-L2367"><code>data()</code>, <code>logical_data()</code>, and <code>body()</code> accessors</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2694-L2738"><code>SimpleArray&lt;T&gt;</code> layout validation</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/pymod/wrap_SimpleArray.hpp#L757-L858">NumPy view importer</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1101">PR #1101: complete storage span and logical origin</a></li>
 </ul>
 
 

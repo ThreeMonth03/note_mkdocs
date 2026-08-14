@@ -1221,6 +1221,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#indexing" class="md-nav__link">
+    Indexing 的整體架構
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scalar-index" class="md-nav__link">
     Scalar index
   </a>
@@ -1341,6 +1348,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#indexing" class="md-nav__link">
+    Indexing 的整體架構
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scalar-index" class="md-nav__link">
     Scalar index
   </a>
@@ -1387,12 +1401,51 @@
 
 
 <h1 id="indexing-setitem">Indexing 與 setitem</h1>
-<p><code>nghost</code> 將第一軸分成 ghost cells 與 body cells。它不改 storage，也不改
-<code>logical_data()</code>；它建立另一個 pointer：</p>
+<p>簡化版 NumPy 架構不代表把所有 Python semantics 塞進核心資料結構。相反地，
+descriptor 只保存 storage 與 layout；Python adapter 負責把 user-facing index
+轉成 storage coordinate。這樣 C++ kernel 與後續 dispatch 看到的 contract 保持
+簡單；Python 端則在 ghost translation 後，繼續使用 Python 的 negative wrap、
+slice clipping 與 negative-step normalization。</p>
+<p>數值方法常把 ghost cells 與真正的計算區域放在同一個 allocation。這樣 stencil
+與 boundary update 可以直接共享 storage，不必在兩份 array 之間搬資料；但 C++
+看到的是完整 storage，Python 使用者通常想從第一個 body cell 開始數。</p>
+<p>如果 Python index <code>0</code> 仍直接等於 storage index <code>0</code>，每段 boundary-condition code
+都得手動加上 ghost offset。若只把 pointer 永久往 body 移，negative index、完整
+storage slice 與 reversed destination 又會失去原本的基準。需要的不是另一份
+buffer，而是一層明確的 coordinate translation。</p>
+<p>沒有 ghost cells 時，Python index <code>0</code> 與 descriptor coordinate <code>0</code> 恰好重合。
+設定 <code>nghost=3</code> 後，<code>logical_data()</code> 仍是 descriptor origin，但 <code>a[0]</code> 必須代表
+第一個 body cell；完成 ghost translation 後，才套用 Python negative-index 與
+slice normalization。</p>
+<h2 id="indexing">Indexing 的整體架構</h2>
+<p><code>nghost</code> 不修改 <code>logical_data</code>、shape 或 strides。它只在 axis 0 建立 body pointer：</p>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>body() = logical_data() + nghost * stride[0]
 </span></code></pre></div>
-<p>Python API 讓 axis 0 的非負 index 從 body 開始。其他 axes 則維持一般 Python
-indexing。</p>
+<p>Python adapter 先把 key 正規化成 storage coordinate，再交給原本的 descriptor
+address rule。Wrapper 先依 assignment form 選擇路徑：</p>
+<table>
+<thead>
+<tr>
+<th>assignment</th>
+<th>normalize</th>
+<th>writer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scalar RHS + integer key</td>
+<td>axis 0 加 <code>nghost</code>，再做 negative wrap</td>
+<td><code>at()</code></td>
+</tr>
+<tr>
+<td>sequence RHS + slice key</td>
+<td>平移 explicit bounds，再做 <code>slice.compute()</code></td>
+<td><code>TypeBroadcast</code></td>
+</tr>
+</tbody>
+</table>
+<p>兩條路徑最後都沿同一組 signed strides 找到 address。這裡的 dispatch 只決定
+如何解讀 Python key，不會改變 storage allocation、layout 或 descriptor。</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/ghost-indexing.svg">
     <picture>
@@ -1419,14 +1472,33 @@ indexing。</p>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address = logical_data + storage_index * stride[0]
 </span></code></pre></div>
 <p>以 <code>N=8, G=3</code> 為例：<code>-3</code> 到 storage 0（first ghost），<code>0</code> 到 storage 3
-（first body），<code>-4</code> 經 Python wrap 到 storage 7。另一個邊界案例是
-<code>-11 → -8 → 0</code>，它和 <code>-3</code> alias 同一格。</p>
+（first body），<code>-4</code> 經 Python wrap 到 storage 7。</p>
 <p>所以完整 valid interval 是 <code>[-N-G, N-G)</code>，不只是 <code>[-G, nbody)</code>。Scalar
 getitem 與 setitem 共用相同的 <code>normalize_index()</code>；多維 tuple 只有 axis 0
 加上 <code>nghost</code>，其他 axes 僅處理一般 negative index。</p>
+<div class="admonition note">
+<p class="admonition-title">一個容易忽略的 alias</p>
+<p><code>-11 → -8 → 0</code>，因此它和 <code>-3</code> 指向同一個 storage cell。這不是額外的
+ghost 規則，而是 shift 之後仍套用完整 Python negative-index normalization
+的結果。</p>
+</div>
 <h2 id="slice-assignment">Slice assignment</h2>
-<p>Slice setitem 是另一條路徑：先把 Python slice 轉成 storage coordinates，再沿
-destination 的 signed strides 寫入。</p>
+<p>Slice 不能當成兩個 scalar indices 分別處理。<code>None</code>、negative step 與 clipping
+都屬於 Python slice semantics，必須先完整 normalize；之後才能沿 destination
+的 signed strides 寫入。</p>
+<p>先看一個具體結果：explicit bounds <code>[-2:0]</code> 是 body-relative，所以會選到兩個
+ghost cells；<code>[0:1]</code> 則從第一個 body cell 開始。</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="n">a</span><span class="o">.</span><span class="n">nghost</span> <span class="o">=</span> <span class="mi">2</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">11.0</span><span class="p">])</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">20.0</span><span class="p">])</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</span></code></pre></div>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/ghost-slice-setitem.svg">
     <picture>
@@ -1442,17 +1514,6 @@ destination 的 signed strides 寫入。</p>
   </figcaption>
 </figure>
 
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="n">a</span><span class="o">.</span><span class="n">nghost</span> <span class="o">=</span> <span class="mi">2</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="n">a</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">11.0</span><span class="p">])</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">20.0</span><span class="p">])</span>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_array_equal</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-</span></code></pre></div>
 <p>每個 axis 先有 storage-wide default slice <code>[0:N:1]</code>。對 axis 0：</p>
 <ol>
 <li>Explicit <code>start</code> 與 <code>stop</code> 各加 <code>nghost</code>；<code>None</code> 保持 <code>None</code>。</li>
@@ -1484,7 +1545,9 @@ storage，ghost cells 也包含在內。</p>
   boolean index。</li>
 <li><code>__getitem__</code> 目前也沒有 slice getter。</li>
 </ul>
-<p>這些限制屬於 Python setitem parser，與 <code>SignedStrideLayout</code> 無關。</p>
+<p>這些限制屬於 Python setitem parser。無論前面經過 scalar 或 slice
+normalization，最後仍回到第一章同一條 address rule：
+<code>logical_data + Σ index[d] · stride[d]</code>。</p>
 <h2 id="source">Source</h2>
 <ul>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2179-L2205"><code>at()</code> signed address calculation</a></li>
@@ -1492,9 +1555,7 @@ storage，ghost cells 也包含在內。</p>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/pymod/array_common.hpp#L170-L233">Scalar and slice setitem dispatch</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/pymod/array_common.hpp#L326-L480">Ghost-aware slice normalization</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/pymod/TypeBroadcast.hpp#L22-L147">Signed-stride slice copy</a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/tests/test_buffer.py#L1240-L1320">Ghost slice regression tests</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/875">PR #875: ghost negative indexing</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1156">PR #1156: ghost slice assignment</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/tests/test_buffer.py#L1240-L1320">Ghost slice tests</a></li>
 </ul>
 
 

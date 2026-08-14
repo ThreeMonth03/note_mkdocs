@@ -1207,22 +1207,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#stdlayout_stride" class="md-nav__link">
-    為什麼不能直接用 std::layout_stride
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#signedstridelayout" class="md-nav__link">
-    SignedStrideLayout 保存什麼
+  <a href="#_1" class="md-nav__link">
+    解法的整體架構
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#mapping" class="md-nav__link">
-    Mapping 公式
+    為什麼標準 mapping 不夠
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-signed-stride" class="md-nav__link">
+    Mapping 如何保存 signed stride
   </a>
   
 </li>
@@ -1355,22 +1355,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#stdlayout_stride" class="md-nav__link">
-    為什麼不能直接用 std::layout_stride
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#signedstridelayout" class="md-nav__link">
-    SignedStrideLayout 保存什麼
+  <a href="#_1" class="md-nav__link">
+    解法的整體架構
   </a>
   
 </li>
       
         <li class="md-nav__item">
   <a href="#mapping" class="md-nav__link">
-    Mapping 公式
+    為什麼標準 mapping 不夠
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-signed-stride" class="md-nav__link">
+    Mapping 如何保存 signed stride
   </a>
   
 </li>
@@ -1415,37 +1415,25 @@
 
 
 <h1 id="signed-mdspan">Signed mdspan</h1>
-<h2 id="stdlayout_stride">為什麼不能直接用 <code>std::layout_stride</code></h2>
-<p>限制不在 <code>std::mdspan</code> 本身。<code>std::mdspan</code> 可以接收自訂 <code>LayoutPolicy</code>；真正的
-缺口是標準 <code>std::layout_stride::mapping</code> 要求 supplied stride 全部大於零。
-<code>SimpleArray</code> 的 reversed view 必須保存 <code>(-3,-1)</code>，所以不能直接把 descriptor
-交給 <code>std::layout_stride</code>。</p>
-<p>此外，通用 mapping contract 要求合法 index 對應到 non-negative offset；
-<code>default_accessor</code> 接收的 offset type 也是 <code>size_t</code>。因此解法不是讓 accessor
-吃 negative offset，而是重寫 mapping 資料結構：保留 signed per-axis strides，
-再加入 <code>origin_offset</code>，把結果平移到 non-negative range。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/array/layout-stride-gap.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/array/layout-stride-gap-mobile.svg">
-      <img src="/assets/images/solvcon/array/layout-stride-gap.svg"
-           alt="std layout stride 要求正 stride，而 reversed SimpleArray 需要保存負三與負一，因此必須提供自訂 LayoutPolicy mapping"
-           loading="lazy">
-    </picture>
-  </a>
-  <figcaption>
-    重寫的是 <code>LayoutPolicy::mapping</code>，不是 <code>mdspan</code> 或 accessor。
-  </figcaption>
-</figure>
-
-<h2 id="signedstridelayout"><code>SignedStrideLayout</code> 保存什麼</h2>
-<p>同一個 reversed view 交給 C++ kernel 時，<code>SignedStrideLayout</code> 會保存 extents、
-signed strides、<code>origin_offset</code> 與 required span。若 mapping 直接回傳 raw
-negative offset，會違反 mapping contract；custom mapping 因此把 offsets
-正規化為 non-negative range。<code>as_mdspan()</code> 再把 data handle 移到最低
-reachable address。一般 <code>SimpleArray</code> 的 buffer 可能還有 unused prefix，所以
-該位址不一定等於 <code>data()</code>。</p>
+<p>簡化 Array 架構的價值，是讓 kernel 不必重新理解每一種 NumPy layout。對一般
+C++ algorithm 而言，最小介面應該是一個 multidimensional view：algorithm 處理
+coordinate，layout 處理 address。這樣 reversed view 不需要先 materialize，也
+不需要在每個 kernel 重寫 signed address arithmetic。</p>
+<p><code>std::mdspan</code> 是這層 C++ adapter。它本身不是 execution dispatch；它示範的是
+同一個架構原則：複雜 layout 在邊界正規化，kernel 只接收穩定、簡單的介面。</p>
+<p><code>std::mdspan</code> 正是這個介面，但標準 <code>std::layout_stride::mapping</code> 的 supplied
+strides 必須大於零，無法直接保存 reversed view 的 <code>(-3,-1)</code>。沒有新的 mapping，
+我們只能先 copy 成 contiguous array，或讓每個 kernel 繼續手算 address。前者
+失去 zero-copy，後者失去統一的 kernel interface。</p>
+<p>所以本章的目標不是「讓 accessor 接受負 offset」，而是讓同一個 mdspan kernel
+同時使用 contiguous 與 reversed view：<strong>保留 <code>std::mdspan</code> 與
+<code>default_accessor</code>，只重寫 <code>LayoutPolicy::mapping</code>。</strong></p>
+<h2 id="_1">解法的整體架構</h2>
+<p>這個 adapter 分成三步：<code>SimpleArray</code> 提供 <code>logical_data</code>、extents 與 signed
+strides；<code>SignedStrideLayout</code> 把 raw offset range 平移成合法的 non-negative
+mapping；<code>as_mdspan()</code> 再反向平移 data handle。Mapping 與 handle 的位移互相
+抵消，所以 kernel 看到標準 mdspan 介面，實際 address 仍與原 descriptor 完全
+相同。</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/signed-mdspan.svg">
     <picture>
@@ -1461,8 +1449,35 @@ reachable address。一般 <code>SimpleArray</code> 的 buffer 可能還有 unus
   </figcaption>
 </figure>
 
-<h2 id="mapping">Mapping 公式</h2>
+<p><code>SignedStrideLayout</code> 保存 extents、signed strides、<code>origin_offset</code> 與
+<code>required_span_size</code>。<code>as_mdspan()</code> 調整後的 handle 指向最低 reachable
+address；若一般 <code>SimpleArray</code> buffer 有 unused prefix，該位址不一定等於
+<code>data()</code>。</p>
+<h2 id="mapping">為什麼標準 mapping 不夠</h2>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/array/layout-stride-gap.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/array/layout-stride-gap-mobile.svg">
+      <img src="/assets/images/solvcon/array/layout-stride-gap.svg"
+           alt="std layout stride 要求正 stride，而 reversed SimpleArray 需要保存負三與負一，因此必須提供自訂 LayoutPolicy mapping"
+           loading="lazy">
+    </picture>
+  </a>
+  <figcaption>
+    重寫的是 <code>LayoutPolicy::mapping</code>，不是 <code>mdspan</code> 或 accessor。
+  </figcaption>
+</figure>
+
+<p>與 negative stride 直接相關的兩個關鍵條件是：
+<code>std::layout_stride::mapping</code> 的 supplied strides 必須大於零；通用 mapping
+對合法 index 必須回傳 non-negative offset，而 <code>default_accessor</code> 以 <code>size_t</code>
+接收這個總 offset。</p>
+<h2 id="mapping-signed-stride">Mapping 如何保存 signed stride</h2>
 <p>對 extent <span class="arithmatex">\(e_d\)</span> 與 signed element stride <span class="arithmatex">\(s_d\)</span>：</p>
+<p>每一軸對 raw offset 的 contribution 都是線性的，所以該軸的極值只可能出現在
+index <code>0</code> 或 <code>e_d-1</code>。各軸彼此獨立，因此 global minimum 與 maximum 可以把
+每一軸的 endpoint contribution 分別加總。</p>
 <div class="arithmatex">\[
 \operatorname{raw}(i)=\sum_d i_d s_d
 \]</div>
@@ -1489,9 +1504,9 @@ reachable address。一般 <code>SimpleArray</code> 的 buffer 可能還有 unus
 <p>當所有 extents 都非零時，<code>required_span_size</code> 是 <code>max - min + 1</code>；任一
 extent 為零時則是 0。</p>
 <p>對 shape <code>(2,3)</code>、strides <code>(-3,-1)</code>：</p>
-<p>兩個 axis deltas 是 <code>-3</code> 與 <code>-2</code>，所以 raw range 為 <code>[-5,0]</code>、
-<code>origin_offset=5</code>、required span 為 6 elements。最後 <code>map(0,0)=5</code>、
-<code>map(1,2)=0</code>，所有 valid mdspan offsets 都落在 <code>[0,5]</code>。</p>
+<p>兩個 axis deltas 是 <code>-3</code> 與 <code>-2</code>，所以 <code>min=-5</code>，進而得到
+<code>origin_offset=5</code>。原本的兩端 <code>(0,0)</code> 與 <code>(1,2)</code> 分別映到 5 與 0；所有 valid
+mdspan offsets 都落在 <code>[0,5]</code>。</p>
 <h2 id="data-handle">data handle 為什麼要往回移</h2>
 <p><code>SimpleArray::as_mdspan&lt;N&gt;()</code> 先建立 mapping，再調整 accessor handle：</p>
 <div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_mdspan_mapping</span><span class="o">&lt;</span><span class="n">N</span><span class="o">&gt;</span><span class="p">();</span>
@@ -1530,16 +1545,15 @@ extent 為零時則是 0。</p>
 <h2 id="contract">Contract 與限制</h2>
 <ul>
 <li>Shape 的 storage type 是 signed，但 shape value 仍必須非負。</li>
-<li>任一 extent 為零時，origin 與 required span 都是零。</li>
 <li>Required span 是覆蓋所有 reachable addresses 的 envelope；它可以包含 holes。</li>
 <li>Layout 宣告 mapping unique，但 runtime 不檢查 zero/overlapping strides。Caller
   必須提供 unique、可表示的 mapping。</li>
 <li>Offset arithmetic 沒有 overflow check，也不做 element bounds check。</li>
 <li><code>nghost</code> 不進入 mdspan metadata。mdspan axis 0 仍從 storage index 0 開始；
   body 的起點是 mdspan index <code>nghost</code>。</li>
-<li>目前 <code>as_mdspan()</code> 沒有 Python binding，也不是 Python <code>__setitem__</code> 的實作
-  路徑。</li>
 </ul>
+<p>到這裡，C++ view 的問題已經結束。Python <code>__setitem__</code> 不經過 mdspan；下一章
+會回到同一份 descriptor，處理 Python index 如何正規化成 storage coordinate。</p>
 <h2 id="source">Source</h2>
 <ul>
 <li><a href="https://eel.is/c++draft/mdspan.layout.stride#cons-4.1"><code>std::layout_stride</code> positive-stride precondition</a></li>
@@ -1549,8 +1563,7 @@ extent 為零時則是 0。</p>
 <li><a href="https://eel.is/c++draft/mdspan.accessor.default.members"><code>default_accessor</code> members</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/signed_stride_layout.hpp#L18-L168"><code>SignedStrideLayout</code></a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2636-L2671"><code>SimpleArray::as_mdspan()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/gtests/test_nopython_mdspan.cpp#L583-L618">Negative-stride mdspan regression</a></li>
-<li><a href="https://github.com/solvcon/solvcon/pull/1102">PR #1102: signed-stride mdspan</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/gtests/test_nopython_mdspan.cpp#L583-L618">Negative-stride mdspan tests</a></li>
 </ul>
 
 
