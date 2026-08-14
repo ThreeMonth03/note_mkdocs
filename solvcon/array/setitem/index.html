@@ -1221,15 +1221,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#indexing-architecture" class="md-nav__link">
-    Indexing architecture
+  <a href="#one-descriptor-two-assignment-paths" class="md-nav__link">
+    One descriptor, two assignment paths
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#scalar-indices" class="md-nav__link">
-    Scalar indices
+  <a href="#scalar-indexing" class="md-nav__link">
+    Scalar indexing
   </a>
   
 </li>
@@ -1348,15 +1348,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#indexing-architecture" class="md-nav__link">
-    Indexing architecture
+  <a href="#one-descriptor-two-assignment-paths" class="md-nav__link">
+    One descriptor, two assignment paths
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#scalar-indices" class="md-nav__link">
-    Scalar indices
+  <a href="#scalar-indexing" class="md-nav__link">
+    Scalar indexing
   </a>
   
 </li>
@@ -1401,31 +1401,17 @@
 
 
 <h1 id="indexing-and-assignment">Indexing and Assignment</h1>
-<p>A compact NumPy-like array should not encode every Python indexing rule in its
-core descriptor. The descriptor records storage and layout. A Python adapter
-translates user-facing indices into storage coordinates. Kernels and numerical
-dispatch therefore see the same small contract, while Python can still apply
-negative-index wrapping, slice clipping, and negative-step normalization after
-ghost-cell translation.</p>
-<p>Numerical methods often store ghost cells and the computational domain in one
-allocation so stencil and boundary updates can share storage. C++ sees the
-entire allocation, but Python users normally index from the first body cell. If
-Python index <code>0</code> also meant storage index <code>0</code>, every boundary-condition routine
-would have to add the ghost offset manually. Permanently moving the pointer to
-the body would create a different problem: negative indices, full-storage
-slices, and reversed destinations would lose the storage origin they need.</p>
-<p>The adapter therefore translates coordinates instead of moving storage. With
-<code>nghost=3</code>, <code>logical_data()</code> remains the descriptor origin, while <code>a[0]</code> names
-the first body cell. Only after this ghost-cell translation does the wrapper
-apply Python index and slice normalization.</p>
-<h2 id="indexing-architecture">Indexing architecture</h2>
-<p><code>nghost</code> does not change <code>logical_data</code>, shape, or strides. It defines the body
-origin on axis 0:</p>
+<p><code>SimpleArray</code> keeps its descriptor small by handling coordinates at the access
+boundary. Scalar keys go through <code>normalize_index()</code> and <code>at()</code>; slice keys go
+through the Python wrapper and <code>py::slice.compute()</code>. Both translate
+body-relative axis-0 keys into storage coordinates before following signed
+strides.</p>
+<h2 id="one-descriptor-two-assignment-paths">One descriptor, two assignment paths</h2>
+<p><code>nghost</code> does not move <code>logical_data()</code> or change shape and strides. It only
+defines the axis-0 body origin:</p>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>body() = logical_data() + nghost * stride[0]
 </span></code></pre></div>
-<p>The Python adapter converts a key into storage coordinates and then uses the
-descriptor's original address rule. The wrapper chooses a path from the
-assignment form:</p>
+<p>The wrapper dispatches on the Python assignment form:</p>
 <table>
 <thead>
 <tr>
@@ -1437,19 +1423,19 @@ assignment form:</p>
 <tbody>
 <tr>
 <td>scalar RHS + integer key</td>
-<td>add <code>nghost</code> on axis 0, then apply negative wrap</td>
+<td>ghost shift, then negative-index wrap</td>
 <td><code>at()</code></td>
 </tr>
 <tr>
 <td>array RHS + slice key</td>
-<td>shift explicit bounds, then call <code>slice.compute()</code></td>
+<td>shift explicit bounds, then <code>slice.compute()</code></td>
 <td><code>TypeBroadcast</code></td>
 </tr>
 </tbody>
 </table>
-<p>Both paths follow the same signed strides. This parser dispatch chooses how to
-interpret the Python key; assignment changes stored values but does not replace
-the allocation or alter the layout descriptor.</p>
+<p>Both paths change values in the existing allocation. Neither replaces the
+allocation nor rewrites the descriptor.</p>
+<h2 id="scalar-indexing">Scalar indexing</h2>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/ghost-indexing.svg">
     <picture>
@@ -1461,40 +1447,59 @@ the allocation or alter the layout descriptor.</p>
     </picture>
   </a>
   <figcaption>
-    On axis 0, add <code>nghost</code> before applying Python negative-index
-    normalization.
+    Axis 0 adds <code>nghost</code> before Python negative-index wrapping.
   </figcaption>
 </figure>
 
-<h2 id="scalar-indices">Scalar indices</h2>
-<p>Let the axis-0 storage length be <span class="arithmatex">\(N\)</span>, the ghost count be <span class="arithmatex">\(G\)</span>, and the input
-index be <span class="arithmatex">\(i\)</span>. First shift the index:</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>shifted = i + G
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>require -N &lt;= shifted &lt; N
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>storage_index = shifted &lt; 0 ? shifted + N : shifted
+<p>The scalar implementation makes that ordering explicit:</p>
+<div class="language-cpp highlight"><span class="filename">SimpleArray.hpp</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="nf">normalize_index</span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">it</span><span class="p">)</span><span class="w"> </span><span class="k">const</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ndim</span><span class="p">()</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">out_of_range</span><span class="p">(</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;SimpleArray::normalize_index(): &quot;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">                        </span><span class="s">&quot;cannot use scalar index for {}-dimensional array&quot;</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">                        </span><span class="n">ndim</span><span class="p">()));</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">dim_length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">shape</span><span class="p">(</span><span class="mi">0</span><span class="p">));</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">ghost_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">m_nghost</span><span class="p">);</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12"></a><a href="#__codelineno-1-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">shifted_index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">ghost_offset</span><span class="p">;</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13"></a><a href="#__codelineno-1-13"><span class="linenos" data-linenos="13 "></span></a>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14"></a><a href="#__codelineno-1-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">shifted_index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="o">-</span><span class="n">dim_length</span><span class="p">)</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15"></a><a href="#__codelineno-1-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16"></a><a href="#__codelineno-1-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">out_of_range</span><span class="p">(</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17"></a><a href="#__codelineno-1-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;SimpleArray: index {} &lt; -nghost - shape[0]: {}&quot;</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18"></a><a href="#__codelineno-1-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">                        </span><span class="n">it</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="n">dim_length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ghost_offset</span><span class="p">));</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19"></a><a href="#__codelineno-1-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20"></a><a href="#__codelineno-1-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">shifted_index</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">dim_length</span><span class="p">)</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21"></a><a href="#__codelineno-1-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22"></a><a href="#__codelineno-1-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">out_of_range</span><span class="p">(</span>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23"></a><a href="#__codelineno-1-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;SimpleArray: index {} &gt;= {} (shape[0]: {} - nghost: {})&quot;</span><span class="p">,</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24"></a><a href="#__codelineno-1-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">                        </span><span class="n">it</span><span class="p">,</span><span class="w"> </span><span class="n">dim_length</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">ghost_offset</span><span class="p">,</span><span class="w"> </span><span class="n">shape</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span><span class="w"> </span><span class="n">m_nghost</span><span class="p">));</span>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25"></a><a href="#__codelineno-1-25"><span class="linenos" data-linenos="25 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26"></a><a href="#__codelineno-1-26"><span class="linenos" data-linenos="26 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">to_nonnegative_index</span><span class="p">(</span><span class="n">shifted_index</span><span class="p">,</span><span class="w"> </span><span class="n">dim_length</span><span class="p">);</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27"></a><a href="#__codelineno-1-27"><span class="linenos" data-linenos="27 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p>Then <code>at()</code> follows the signed stride:</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address = logical_data + storage_index * stride[0]
+<p><code>at()</code> then converts the normalized coordinate into an address:</p>
+<div class="language-cpp highlight"><span class="filename">SimpleArray.hpp</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">value_type</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="nf">at</span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">it</span><span class="p">)</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="p">{</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">shape_type</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">idx</span><span class="p">{</span><span class="n">normalize_index</span><span class="p">(</span><span class="n">it</span><span class="p">)};</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">buffer_offset</span><span class="p">(</span><span class="n">m_stride</span><span class="p">,</span><span class="w"> </span><span class="n">idx</span><span class="p">);</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">logical_data</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p>For <code>N=8, G=3</code>, index <code>-3</code> reaches storage 0, the first ghost cell. Index <code>0</code>
-reaches storage 3, the first body cell. Index <code>-4</code> wraps to storage 7 under the
-usual Python rule.</p>
-<p>The complete valid interval is <code>[-N-G, N-G)</code>, not merely <code>[-G, nbody)</code>.
-Scalar <code>getitem</code> and <code>setitem</code> share <code>normalize_index()</code>. In a multidimensional
-tuple, only axis 0 receives the ghost offset; other axes apply ordinary Python
-negative-index normalization.</p>
+<p>For storage length <code>N=8</code> and <code>nghost=3</code>, <code>-3</code> reaches storage 0, <code>0</code> reaches
+storage 3, and <code>-4</code> wraps to storage 7. The complete valid interval is
+<code>[-N-G, N-G)</code>. Only axis 0 receives the ghost offset in a multidimensional
+tuple.</p>
 <div class="admonition note">
-<p class="admonition-title">An unexpected alias</p>
-<p><code>-11 → -8 → 0</code>, so <code>-11</code> and <code>-3</code> reach the same storage cell. This is not
-another ghost rule. It follows from applying full Python negative-index
-normalization after the ghost shift.</p>
+<p class="admonition-title">An edge alias</p>
+<p><code>-11 + 3 = -8</code>, which wraps to storage 0. Therefore <code>-11</code> and <code>-3</code>
+name the same cell. This follows from Python wrapping after the ghost shift.</p>
 </div>
 <h2 id="slice-assignment">Slice assignment</h2>
-<p>A slice cannot be treated as two independent scalar indices. Python must
-normalize <code>None</code>, negative steps, and clipped bounds together before the writer
-can follow the destination's signed strides.</p>
-<p>Consider explicit bounds first. <code>[-2:0]</code> is body-relative, so it selects two
-ghost cells. <code>[0:1]</code> begins at the first body cell:</p>
+<p>A slice is not two scalar indices. <code>None</code>, negative steps, and clipped bounds
+must be normalized together.</p>
 <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>
@@ -1517,47 +1522,82 @@ ghost cells. <code>[0:1]</code> begins at the first body cell:</p>
     </picture>
   </a>
   <figcaption>
-    Explicit bounds become storage coordinates; signed strides determine the
-    destination addresses.
+    Explicit bounds become storage coordinates before Python normalizes the
+    complete slice.
   </figcaption>
 </figure>
 
-<p>Every axis starts with the storage-wide default slice <code>[0:N:1]</code>. On axis 0:</p>
-<ol>
-<li>Add <code>nghost</code> only to explicit <code>start</code> and <code>stop</code>; leave <code>None</code> unchanged.</li>
-<li>Preserve <code>step</code>.</li>
-<li>Call <code>py::slice.compute(N)</code> for clipped <code>(start, stop, step, length)</code>.</li>
-<li>Require the RHS ndarray to have the same rank and per-axis shape as the
-   normalized slice.</li>
-<li>Compute a destination address for every slice coordinate <span class="arithmatex">\(k\)</span>.</li>
-</ol>
-<div class="arithmatex">\[
-\begin{aligned}
-\operatorname{index}_d &amp;= \operatorname{start}_d
-  + k_d\operatorname{step}_d, \\
-\operatorname{offset} &amp;= \sum_d
-  \operatorname{index}_d\operatorname{stride}[d], \\
-\operatorname{dst} &amp;= \operatorname{logical\_data} + \operatorname{offset}.
-\end{aligned}
-\]</div>
-<p>The destination stride may be negative. The RHS ndarray is also traversed with
-its own signed byte strides. Because <code>None</code> bounds do not receive the ghost
-offset, <code>a[::2]</code> and <code>a[::-1]</code> operate on the full storage, including ghost
-cells. In contrast, <code>a[0:]</code> begins at the body.</p>
+<p>The wrapper first shifts explicit bounds. <code>shift_slice_bound()</code> deliberately
+leaves <code>None</code> unchanged:</p>
+<div class="language-cpp highlight"><span class="filename">array_common.hpp</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="n">object</span><span class="w"> </span><span class="n">ArrayPropertyHelper</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;::</span><span class="n">shift_slice_bound</span><span class="p">(</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">pybind11</span><span class="o">::</span><span class="n">handle</span><span class="w"> </span><span class="n">bound</span><span class="p">,</span><span class="w"> </span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">offset</span><span class="p">)</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="p">{</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">bound</span><span class="p">.</span><span class="n">is_none</span><span class="p">())</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">none</span><span class="p">();</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><a href="#__codelineno-4-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><a href="#__codelineno-4-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyNumber_Index</span><span class="p">(</span><span class="n">bound</span><span class="p">.</span><span class="n">ptr</span><span class="p">());</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10"></a><a href="#__codelineno-4-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">index</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">)</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a><a href="#__codelineno-4-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a><a href="#__codelineno-4-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">error_already_set</span><span class="p">();</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13"></a><a href="#__codelineno-4-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">reinterpret_steal</span><span class="o">&lt;</span><span class="n">pybind11</span><span class="o">::</span><span class="n">object</span><span class="o">&gt;</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15"></a><a href="#__codelineno-4-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">           </span><span class="o">+</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">int_</span><span class="p">(</span><span class="n">offset</span><span class="p">);</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16"></a><a href="#__codelineno-4-16"><span class="linenos" data-linenos="16 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>copy_slice()</code> then delegates clipping and negative-step behavior to Python:</p>
+<div class="language-cpp highlight"><span class="filename">array_common.hpp</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="n">slice</span><span class="w"> </span><span class="n">normalized_slice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slice_in</span><span class="p">;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">offset</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="p">{</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">pybind11</span><span class="o">::</span><span class="n">object</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="n">shift_slice_bound</span><span class="p">(</span><span class="n">slice_in</span><span class="p">.</span><span class="n">attr</span><span class="p">(</span><span class="s">&quot;start&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">pybind11</span><span class="o">::</span><span class="n">object</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">        </span><span class="n">shift_slice_bound</span><span class="p">(</span><span class="n">slice_in</span><span class="p">.</span><span class="n">attr</span><span class="p">(</span><span class="s">&quot;stop&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="n">normalized_slice</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9"></a><a href="#__codelineno-5-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">pybind11</span><span class="o">::</span><span class="n">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="p">,</span><span class="w"> </span><span class="n">slice_in</span><span class="p">.</span><span class="n">attr</span><span class="p">(</span><span class="s">&quot;step&quot;</span><span class="p">));</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10"></a><a href="#__codelineno-5-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11"></a><a href="#__codelineno-5-11"><span class="linenos" data-linenos="11 "></span></a>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12"></a><a href="#__codelineno-5-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13"></a><a href="#__codelineno-5-13"><span class="linenos" data-linenos="13 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14"></a><a href="#__codelineno-5-14"><span class="linenos" data-linenos="14 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">step</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15"></a><a href="#__codelineno-5-15"><span class="linenos" data-linenos="15 "></span></a><span class="n">pybind11</span><span class="o">::</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">slicelength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16"></a><a href="#__codelineno-5-16"><span class="linenos" data-linenos="16 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">normalized_slice</span><span class="p">.</span><span class="n">compute</span><span class="p">(</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17"></a><a href="#__codelineno-5-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">        </span><span class="n">length</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">stop</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">step</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">slicelength</span><span class="p">))</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18"></a><a href="#__codelineno-5-18"><span class="linenos" data-linenos="18 "></span></a><span class="p">{</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19"></a><a href="#__codelineno-5-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">error_already_set</span><span class="p">();</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20"></a><a href="#__codelineno-5-20"><span class="linenos" data-linenos="20 "></span></a><span class="p">}</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21"></a><a href="#__codelineno-5-21"><span class="linenos" data-linenos="21 "></span></a>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22"></a><a href="#__codelineno-5-22"><span class="linenos" data-linenos="22 "></span></a><span class="n">slice_out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">;</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23"></a><a href="#__codelineno-5-23"><span class="linenos" data-linenos="23 "></span></a><span class="n">slice_out</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stop</span><span class="p">;</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24"></a><a href="#__codelineno-5-24"><span class="linenos" data-linenos="24 "></span></a><span class="n">slice_out</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">step</span><span class="p">;</span>
+</span><span id="__span-5-25"><a id="__codelineno-5-25" name="__codelineno-5-25"></a><a href="#__codelineno-5-25"><span class="linenos" data-linenos="25 "></span></a><span class="n">slice_out</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">slicelength</span><span class="p">;</span>
+</span></code></pre></div>
+<p>Finally, <code>TypeBroadcast</code> follows the destination's signed strides:</p>
+<div class="language-cpp highlight"><span class="filename">TypeBroadcast.hpp</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">arr_out</span><span class="p">.</span><span class="n">ndim</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">axis</span><span class="p">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">{</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">        </span><span class="n">slices</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sidx</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">slices</span><span class="p">[</span><span class="n">axis</span><span class="p">][</span><span class="mi">2</span><span class="p">];</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="n">offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">arr_out</span><span class="p">.</span><span class="n">stride</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">index</span><span class="p">;</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos="7 "></span></a><span class="p">}</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos="8 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span>
+</span></code></pre></div>
+<p>The RHS array is walked with its own signed byte strides. Because omitted
+bounds remain <code>None</code>, <code>a[::2]</code> and <code>a[::-1]</code> cover the full storage, including
+ghost cells. In contrast, explicit <code>a[0:]</code> begins at the body.</p>
 <h2 id="supported-operations">Supported operations</h2>
-<p>The Python wrapper intentionally exposes a smaller indexing surface:</p>
 <ul>
 <li>A scalar RHS accepts an integer key or an all-integer tuple.</li>
-<li>An array RHS accepts a slice, a tuple of slices, and at most one ellipsis.</li>
-<li>A slice RHS must have identical rank and shape. <code>TypeBroadcast</code> does not
-  provide NumPy singleton broadcasting.</li>
-<li>Assigning a scalar to a slice, mixed integer/slice tuples, <code>newaxis</code>, fancy
+<li>An array RHS accepts slices and at most one ellipsis.</li>
+<li>The RHS must have identical rank and per-axis shape; singleton broadcasting
+  is not implemented.</li>
+<li>Scalar-to-slice assignment, mixed integer/slice tuples, <code>newaxis</code>, fancy
   indexing, and boolean indexing are unsupported.</li>
 <li><code>__getitem__</code> does not yet support slices.</li>
 </ul>
-<p>These are limitations of the Python assignment parser, not of the descriptor.
-Both scalar and slice paths ultimately use the address calculation from the
-first page: <code>logical_data + Σ index[d] * stride[d]</code>.</p>
+<p>These are parser limits, not descriptor limits. Both paths end at the first
+page's rule: <code>logical_data + sum(index[d] * stride[d])</code>.</p>
 <h2 id="sources">Sources</h2>
 <ul>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2179-L2205"><code>at()</code> signed address calculation</a></li>

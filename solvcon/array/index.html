@@ -1279,22 +1279,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#architecture-a-minimal-array-contract-then-dispatch" class="md-nav__link">
-    Architecture: a minimal array contract, then dispatch
+  <a href="#from-view-contract-to-execution" class="md-nav__link">
+    From view contract to execution
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#a-minimal-view-contract" class="md-nav__link">
-    A minimal view contract
+  <a href="#the-descriptor-in-code" class="md-nav__link">
+    The descriptor in code
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#mapping-coordinates-to-addresses" class="md-nav__link">
-    Mapping coordinates to addresses
+  <a href="#one-view-no-copy" class="md-nav__link">
+    One view, no copy
   </a>
   
 </li>
@@ -1307,8 +1307,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ownership-and-copy-semantics" class="md-nav__link">
-    Ownership and copy semantics
+  <a href="#lifetime-and-copy" class="md-nav__link">
+    Lifetime and copy
   </a>
   
 </li>
@@ -1346,52 +1346,82 @@
 
 
 <h1 id="the-simplearray-data-model">The SimpleArray Data Model</h1>
-<p>Why build another array when NumPy already exists? The goal is not to
-reimplement NumPy. It is to make selected numerical workloads faster than
-NumPy's default paths. <code>SimpleArray</code> keeps the parts of NumPy's view model that
-kernels need, omits the rest of the API surface, and lets the execution layer
-choose an implementation from the shape, layout, and workload.</p>
-<p>The pipeline has two stages. First, a compact NumPy-like view contract records
-the retained storage and its lifetime, the logical origin, the shape, and signed
-strides. Then an operation planner reads that metadata to select a Generic,
-BLAS, or specialized kernel and to decide separately whether an input should be
-packed first. A small, explicit contract makes those choices easier to reason
-about and optimize.</p>
-<h2 id="architecture-a-minimal-array-contract-then-dispatch">Architecture: a minimal array contract, then dispatch</h2>
+<p>NumPy is the reference for array semantics, but a numerical kernel does not
+need the whole NumPy object model. Solvcon keeps a smaller view contract:
+storage lifetime, a logical origin, shape, and signed strides. An operation can
+then select a kernel, and separately decide whether to pack an input, from the
+same compact descriptor.</p>
+<h2 id="from-view-contract-to-execution">From view contract to execution</h2>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>NumPy view
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    ↓ zero-copy import
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>SimpleArray descriptor
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    ├── C++ adapter: signed-stride mdspan
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    ├── Python adapter: indexing and assignment
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    └── operation plan → dispatch → selected kernel
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    └── operation plan → kernel selection + packing state
 </span></code></pre></div>
-<p>The same metadata determines the execution path. A BLAS-compatible view can go
-directly to a vendor kernel. Some BLAS-incompatible layouts can be packed and
-then passed to BLAS. Remaining supported layouts use the signed-stride Generic
-kernel. Kernel selection and the packing decision are separate, but both depend
-on the same descriptor.</p>
-<p>This page develops the descriptor at the bottom of that pipeline. It retains
-only enough information to describe a view, compute addresses, keep its storage
-alive, and expose layout properties to the execution layer.</p>
-<h2 id="a-minimal-view-contract">A minimal view contract</h2>
-<p>A reversed NumPy view is the smallest example that reveals what this contract
-must preserve:</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+<p>The descriptor is the shared boundary. Python syntax stops above it; storage
+addressing starts below it; execution policy only reads its facts.</p>
+<h2 id="the-descriptor-in-code">The descriptor in code</h2>
+<p>The implementation state is deliberately small:</p>
+<div class="language-cpp highlight"><span class="filename">SimpleArray.hpp</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">buffer_type</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m_buffer</span><span class="p">;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">m_shape</span><span class="p">;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">m_stride</span><span class="p">;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">value_type</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_logical_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">m_nghost</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">value_type</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span>
 </span></code></pre></div>
-<p><code>view</code> looks like a new array, but no elements are copied. Reversal changes the
-element named by coordinate <code>(0,0)</code> and the direction in which each axis moves.
-A pointer and a shape cannot describe that mapping by themselves. The
-descriptor also needs a logical origin and signed strides.</p>
-<p>The <code>SimpleArray</code> contract has two components. <code>ConcreteBuffer</code> retains the byte
-span and the source owner. The typed descriptor records <code>logical_data</code>, shape,
-and signed strides. C++ adapters, Python adapters, and operation planning all
-start from this metadata.</p>
+<p><code>ConcreteBuffer</code> owns or retains one byte span. The remaining fields describe
+how coordinates name elements inside that span:</p>
+<table>
+<thead>
+<tr>
+<th>field</th>
+<th>meaning</th>
+<th>reversed-view example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>data()</code></td>
+<td>beginning of the retained buffer</td>
+<td><code>root + 0</code></td>
+</tr>
+<tr>
+<td><code>logical_data()</code></td>
+<td>descriptor coordinate <code>(0,...,0)</code></td>
+<td><code>root + 5</code></td>
+</tr>
+<tr>
+<td><code>shape</code></td>
+<td>valid coordinate domain</td>
+<td><code>(2,3)</code></td>
+</tr>
+<tr>
+<td><code>stride</code></td>
+<td>element offset for one axis step</td>
+<td><code>(-3,-1)</code></td>
+</tr>
+<tr>
+<td><code>body()</code></td>
+<td>body origin on axis 0</td>
+<td><code>logical_data + nghost * stride[0]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Keeping <code>data()</code> and <code>logical_data()</code> separate is essential. The first belongs
+to storage lifetime; the second belongs to coordinate mapping.</p>
+<h2 id="one-view-no-copy">One view, no copy</h2>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos="6 "></span></a>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
+</span></code></pre></div>
+<p>Reversal moves descriptor coordinate <code>(0,0)</code> to <code>root+5</code> and changes both axis
+directions. It does not move any values.</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/simplearray-descriptor.svg">
     <picture>
@@ -1403,118 +1433,96 @@ start from this metadata.</p>
     </picture>
   </a>
   <figcaption>
-    The retained storage span and the view descriptor have different origins.
+    One retained span, one logical origin, and signed steps through storage.
   </figcaption>
 </figure>
 
-<p>This separation keeps ownership independent of layout and keeps address mapping
-independent of lifetime. The operation layer can read descriptor properties
-without recovering them from the original NumPy object.</p>
-<h2 id="mapping-coordinates-to-addresses">Mapping coordinates to addresses</h2>
-<p><code>ConcreteBuffer</code> manages one contiguous byte span. <code>SimpleArray&lt;T&gt;</code> adds a
-typed descriptor:</p>
-<table>
-<thead>
-<tr>
-<th>field</th>
-<th>meaning</th>
-<th>example</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>data()</code></td>
-<td>beginning of the retained <code>ConcreteBuffer</code> span</td>
-<td><code>root + 0</code></td>
-</tr>
-<tr>
-<td><code>logical_data()</code></td>
-<td>address of descriptor coordinate <code>(0,...,0)</code></td>
-<td><code>root + 5</code></td>
-</tr>
-<tr>
-<td><code>shape</code></td>
-<td>valid coordinate domain</td>
-<td><code>(2,3)</code></td>
-</tr>
-<tr>
-<td><code>stride</code></td>
-<td>element offset for one step along each axis</td>
-<td><code>(-3,-1)</code></td>
-</tr>
-</tbody>
-</table>
-<p>Every element follows one address rule:</p>
-<div class="arithmatex">\[
-\operatorname{offset}(i)=\sum_d i_d\operatorname{stride}[d]
-\]</div>
+<p>Every coordinate uses the same rule:</p>
 <div class="arithmatex">\[
 \begin{aligned}
-\operatorname{address}(i)
-&amp;=\operatorname{logical\_data}\\
-&amp;\quad+\operatorname{offset}(i).
+\operatorname{offset}(i) &amp;= \sum_d i_d\operatorname{stride}[d], \\
+\operatorname{address}(i) &amp;= \operatorname{logical\_data}
+  + \operatorname{offset}(i).
 \end{aligned}
 \]</div>
-<p>For example:</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
+<p>For the reversed view:</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
 </span></code></pre></div>
-<p><code>SimpleArray</code> strides are measured in elements. NumPy and the Python buffer
-protocol report strides in bytes, so the importer first verifies that each byte
-stride is divisible by <code>sizeof(T)</code> and then converts it to an element stride.</p>
-<p>A negative stride can reach addresses before <code>logical_data()</code>. In this example,
-the reachable range is <code>root[0..5]</code>, while the descriptor origin is <code>root+5</code>.
-The responsibilities are therefore distinct:</p>
-<ul>
-<li><code>ConcreteBuffer</code> uses <code>data()</code>, <code>nbytes()</code>, and its owner to retain valid bytes.</li>
-<li><code>logical_data()</code> defines descriptor coordinate <code>(0,...,0)</code>.</li>
-<li><code>shape</code> and <code>stride</code> define how coordinates move through storage.</li>
-</ul>
 <h2 id="importing-a-numpy-view">Importing a NumPy view</h2>
-<p>For a nonempty view, the NumPy constructor computes the minimum and maximum
-reachable byte offsets from each axis endpoint. Empty views retain zero bytes:</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a>if any extent is zero:
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a>    begin = end = storage_nbytes = 0
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>else:
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a>    delta[d] = (shape[d] - 1) * byte_stride[d]
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a>    begin = sum(min(delta[d], 0))
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a>    end = sum(max(delta[d], 0))
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a>    storage_nbytes = end - begin + itemsize
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>storage_ptr = view_ptr + begin
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a>data_offset = -begin
+<p>NumPy reports byte strides. The importer converts them to element strides and
+finds the complete reachable byte envelope. This is the implementation that
+computes both:</p>
+<div class="language-cpp highlight"><span class="filename">wrap_SimpleArray.hpp</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">solvcon</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">shape_type</span><span class="w"> </span><span class="n">shape</span><span class="p">;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="n">solvcon</span><span class="o">::</span><span class="n">detail</span><span class="o">::</span><span class="n">shape_type</span><span class="w"> </span><span class="n">stride</span><span class="p">;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">constexpr</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">itemsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="o">&gt;</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">value_type</span><span class="p">));</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="n">has_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">arr_in</span><span class="p">.</span><span class="n">ndim</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">i</span><span class="p">)</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><a href="#__codelineno-4-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="p">{</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><a href="#__codelineno-4-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="n">shape</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">arr_in</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">i</span><span class="p">));</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10"></a><a href="#__codelineno-4-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">byte_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr_in</span><span class="p">.</span><span class="n">strides</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a><a href="#__codelineno-4-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">byte_stride</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">itemsize</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a><a href="#__codelineno-4-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13"></a><a href="#__codelineno-4-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;NumPy byte stride {} in dimension {} is not divisible by item size {}&quot;</span><span class="p">,</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15"></a><a href="#__codelineno-4-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">                        </span><span class="n">byte_stride</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">itemsize</span><span class="p">));</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16"></a><a href="#__codelineno-4-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17"></a><a href="#__codelineno-4-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="n">stride</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">byte_stride</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">itemsize</span><span class="p">);</span>
+</span><span id="__span-4-18"><a id="__codelineno-4-18" name="__codelineno-4-18"></a><a href="#__codelineno-4-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-4-19"><a id="__codelineno-4-19" name="__codelineno-4-19"></a><a href="#__codelineno-4-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-20"><a id="__codelineno-4-20" name="__codelineno-4-20"></a><a href="#__codelineno-4-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="n">has_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</span><span id="__span-4-21"><a id="__codelineno-4-21" name="__codelineno-4-21"></a><a href="#__codelineno-4-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="k">continue</span><span class="p">;</span>
+</span><span id="__span-4-22"><a id="__codelineno-4-22" name="__codelineno-4-22"></a><a href="#__codelineno-4-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-23"><a id="__codelineno-4-23" name="__codelineno-4-23"></a><a href="#__codelineno-4-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">axis_byte_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">byte_stride</span><span class="p">;</span>
+</span><span id="__span-4-24"><a id="__codelineno-4-24" name="__codelineno-4-24"></a><a href="#__codelineno-4-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">axis_byte_offset</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-4-25"><a id="__codelineno-4-25" name="__codelineno-4-25"></a><a href="#__codelineno-4-25"><span class="linenos" data-linenos="25 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-26"><a id="__codelineno-4-26" name="__codelineno-4-26"></a><a href="#__codelineno-4-26"><span class="linenos" data-linenos="26 "></span></a><span class="w">        </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">axis_byte_offset</span><span class="p">;</span>
+</span><span id="__span-4-27"><a id="__codelineno-4-27" name="__codelineno-4-27"></a><a href="#__codelineno-4-27"><span class="linenos" data-linenos="27 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-28"><a id="__codelineno-4-28" name="__codelineno-4-28"></a><a href="#__codelineno-4-28"><span class="linenos" data-linenos="28 "></span></a><span class="w">    </span><span class="k">else</span>
+</span><span id="__span-4-29"><a id="__codelineno-4-29" name="__codelineno-4-29"></a><a href="#__codelineno-4-29"><span class="linenos" data-linenos="29 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-4-30"><a id="__codelineno-4-30" name="__codelineno-4-30"></a><a href="#__codelineno-4-30"><span class="linenos" data-linenos="30 "></span></a><span class="w">        </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">axis_byte_offset</span><span class="p">;</span>
+</span><span id="__span-4-31"><a id="__codelineno-4-31" name="__codelineno-4-31"></a><a href="#__codelineno-4-31"><span class="linenos" data-linenos="31 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-32"><a id="__codelineno-4-32" name="__codelineno-4-32"></a><a href="#__codelineno-4-32"><span class="linenos" data-linenos="32 "></span></a><span class="p">}</span>
+</span><span id="__span-4-33"><a id="__codelineno-4-33" name="__codelineno-4-33"></a><a href="#__codelineno-4-33"><span class="linenos" data-linenos="33 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">has_element</span><span class="p">)</span>
+</span><span id="__span-4-34"><a id="__codelineno-4-34" name="__codelineno-4-34"></a><a href="#__codelineno-4-34"><span class="linenos" data-linenos="34 "></span></a><span class="p">{</span>
+</span><span id="__span-4-35"><a id="__codelineno-4-35" name="__codelineno-4-35"></a><a href="#__codelineno-4-35"><span class="linenos" data-linenos="35 "></span></a><span class="w">    </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-4-36"><a id="__codelineno-4-36" name="__codelineno-4-36"></a><a href="#__codelineno-4-36"><span class="linenos" data-linenos="36 "></span></a><span class="w">    </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-4-37"><a id="__codelineno-4-37" name="__codelineno-4-37"></a><a href="#__codelineno-4-37"><span class="linenos" data-linenos="37 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p><code>ConcreteBuffer</code> retains the complete envelope from <code>storage_ptr</code>.
-<code>logical_data</code> is <code>data + data_offset / sizeof(T)</code>. The envelope may contain
-padding holes, so its byte size need not equal <code>prod(shape) * sizeof(T)</code>.</p>
-<h2 id="ownership-and-copy-semantics">Ownership and copy semantics</h2>
-<p>Zero-copy also requires the source owner to remain alive. When <code>SimpleArray</code>
-imports a NumPy view, the buffer remover retains the source NumPy object. When
-the array is exported back to NumPy, the returned ndarray keeps the
-<code>ConcreteBuffer</code> as its <code>.base</code>. Both objects can therefore modify the same
-bytes:</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
+<p>After retaining the ultimate NumPy owner and checking alignment, the importer
+constructs the storage and descriptor:</p>
+<div class="language-cpp highlight"><span class="filename">wrap_SimpleArray.hpp</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">storage_ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">view_ptr</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">byte_span_begin</span><span class="p">;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">storage_nbytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">has_element</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">                                  </span><span class="o">?</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">itemsize</span><span class="p">)</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">                                  </span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">data_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="o">-</span><span class="n">byte_span_begin</span><span class="p">);</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">remover</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">ConcreteBufferNdarrayRemover</span><span class="o">&gt;</span><span class="p">(</span><span class="n">owner</span><span class="p">);</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos="7 "></span></a><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ConcreteBuffer</span><span class="o">::</span><span class="n">construct</span><span class="p">(</span><span class="n">storage_nbytes</span><span class="p">,</span><span class="w"> </span><span class="n">storage_ptr</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">remover</span><span class="p">));</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos="8 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">wrapped_type</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span><span class="w"> </span><span class="n">stride</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">data_offset</span><span class="p">,</span><span class="w"> </span><span class="n">array_order</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The envelope may contain padding holes, so its byte size need not equal
+<code>prod(shape) * sizeof(T)</code>. <code>logical_data</code> is reconstructed from <code>data_offset</code>.</p>
+<h2 id="lifetime-and-copy">Lifetime and copy</h2>
+<p>The buffer remover retains the NumPy owner, so the imported view and a NumPy
+round trip share the same bytes:</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
 </span></code></pre></div>
 <p><code>clone()</code> is the explicit deep-copy path. It clones the complete retained
-<code>ConcreteBuffer</code> and preserves the <code>logical_data - data</code> offset. The clone no
-longer depends on the NumPy owner, but it keeps the same shape, strides, and
-coordinate mapping.</p>
+<code>ConcreteBuffer</code> and preserves the <code>logical_data - data</code> offset, shape, and
+strides.</p>
 <h2 id="next-steps">Next steps</h2>
 <ul>
-<li><a href="mdspan/">Signed-stride mdspan</a> adapts signed strides to a valid mdspan
-  mapping.</li>
-<li><a href="setitem/">Indexing and assignment</a> translates Python negative indices,
-  <code>nghost</code>, and slices into storage coordinates.</li>
-<li><a href="../matmul/">Matmul</a> will build operation planning and execution
-  dispatch on the same descriptor.</li>
+<li><a href="mdspan/">Signed-stride mdspan</a> turns this descriptor into a C++ view.</li>
+<li><a href="setitem/">Indexing and assignment</a> translates Python coordinates before
+  applying the same address rule.</li>
+<li><a href="../matmul/">Matmul</a> will use the descriptor for planning and
+  dispatch.</li>
 </ul>
-<p>The first two adapters share one descriptor but interpret different coordinate
-systems. <code>as_mdspan()</code> adapts signed strides for C++. The Python adapter adds
-body-relative indexing on axis 0. Matrix multiplication then builds the second
-pipeline stage: operation planning and execution dispatch.</p>
 <h2 id="sources">Sources</h2>
 <ul>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2621-L2633"><code>SimpleArray&lt;T&gt;</code> descriptor members</a></li>

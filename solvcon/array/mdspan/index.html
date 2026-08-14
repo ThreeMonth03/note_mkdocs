@@ -1207,22 +1207,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-stdlayout_stride-is-not-enough" class="md-nav__link">
-    Why std::layout_stride is not enough
+  <a href="#the-standard-gap" class="md-nav__link">
+    The standard gap
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#adapter-architecture" class="md-nav__link">
-    Adapter architecture
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mapping-signed-strides" class="md-nav__link">
-    Mapping signed strides
+  <a href="#the-custom-mapping-in-code" class="md-nav__link">
+    The custom mapping in code
   </a>
   
 </li>
@@ -1355,22 +1348,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-stdlayout_stride-is-not-enough" class="md-nav__link">
-    Why std::layout_stride is not enough
+  <a href="#the-standard-gap" class="md-nav__link">
+    The standard gap
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#adapter-architecture" class="md-nav__link">
-    Adapter architecture
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#mapping-signed-strides" class="md-nav__link">
-    Mapping signed strides
+  <a href="#the-custom-mapping-in-code" class="md-nav__link">
+    The custom mapping in code
   </a>
   
 </li>
@@ -1415,23 +1401,11 @@
 
 
 <h1 id="signed-stride-mdspan">Signed-Stride mdspan</h1>
-<p>A compact array model is useful only if kernels do not have to rediscover every
-NumPy layout. A C++ algorithm should receive a multidimensional view: the
-algorithm works with coordinates, while the layout maps those coordinates to
-addresses. Reversed views can then remain zero-copy, and signed address
-arithmetic does not leak into every kernel.</p>
-<p><code>std::mdspan</code> provides that kernel-facing interface, but
-<code>std::layout_stride::mapping</code> requires every supplied stride to be positive and
-therefore cannot represent the <code>(-3,-1)</code> reversed view directly. Without
-another mapping, the implementation must either materialize a contiguous copy
-or make each kernel compute addresses itself. The first choice loses zero-copy;
-the second loses a uniform kernel interface.</p>
-<p>The solution keeps <code>std::mdspan</code> and <code>default_accessor</code> unchanged and replaces
-only <code>LayoutPolicy::mapping</code>. <code>SignedStrideLayout</code> shifts signed raw offsets
-into a nonnegative range, while <code>as_mdspan()</code> rebases the data handle in the
-opposite direction. The two shifts cancel, so the mdspan and the original
-descriptor refer to exactly the same addresses.</p>
-<h2 id="why-stdlayout_stride-is-not-enough">Why <code>std::layout_stride</code> is not enough</h2>
+<p>Kernels should consume coordinates, not reimplement NumPy layout rules.
+<code>std::mdspan</code> provides that interface, but <code>std::layout_stride::mapping</code>
+requires positive supplied strides. Solvcon keeps <code>mdspan</code> and its accessor, and
+replaces only the mapping that connects coordinates to offsets.</p>
+<h2 id="the-standard-gap">The standard gap</h2>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/layout-stride-gap.svg">
     <picture>
@@ -1448,16 +1422,55 @@ descriptor refer to exactly the same addresses.</p>
   </figcaption>
 </figure>
 
-<p>Two standard-library requirements determine the design.
-<code>std::layout_stride::mapping</code> cannot directly represent negative supplied
-strides. A general layout mapping must return a nonnegative total offset for
-every valid index, and <code>default_accessor</code> receives that offset as <code>size_t</code>.
-<code>std::mdspan</code> itself accepts a custom <code>LayoutPolicy</code>.</p>
-<h2 id="adapter-architecture">Adapter architecture</h2>
-<p>The adapter has three steps. <code>SimpleArray</code> provides <code>logical_data</code>, extents,
-and signed strides. <code>SignedStrideLayout</code> shifts the raw offset range into a
-valid nonnegative mapping. <code>as_mdspan()</code> shifts the data handle in the opposite
-direction.</p>
+<p>A custom mapping must still return a nonnegative total offset because
+<code>default_accessor</code> receives that offset as <code>size_t</code>.</p>
+<h2 id="the-custom-mapping-in-code">The custom mapping in code</h2>
+<p><code>SignedStrideLayout</code> keeps the signed per-axis strides. During construction it
+finds the lowest and highest raw offsets and records the translation needed to
+make every mapping result nonnegative:</p>
+<div class="language-cpp highlight"><span class="filename">signed_stride_layout.hpp</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">constexpr</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">SignedStrideLayout</span><span class="o">::</span><span class="n">mapping</span><span class="o">&lt;</span><span class="n">Extents</span><span class="o">&gt;::</span><span class="n">initialize_offsets</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">index_type</span><span class="w"> </span><span class="n">min_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">index_type</span><span class="w"> </span><span class="n">max_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">rank_type</span><span class="w"> </span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">rank</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">extents_type</span><span class="o">::</span><span class="n">rank</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">rank</span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m_extents</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">            </span><span class="n">m_origin_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="n">m_required_span_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">            </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13"></a><a href="#__codelineno-0-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14"></a><a href="#__codelineno-0-14"><span class="linenos" data-linenos="14 "></span></a>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="n">index_type</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">axis_offset</span><span class="w"> </span><span class="o">=</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16"></a><a href="#__codelineno-0-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">            </span><span class="p">(</span><span class="n">m_extents</span><span class="p">.</span><span class="n">extent</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_strides</span><span class="p">[</span><span class="n">rank</span><span class="p">];</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17"></a><a href="#__codelineno-0-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">axis_offset</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18"></a><a href="#__codelineno-0-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19"></a><a href="#__codelineno-0-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">            </span><span class="n">min_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">axis_offset</span><span class="p">;</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20"></a><a href="#__codelineno-0-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21"></a><a href="#__codelineno-0-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="k">else</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22"></a><a href="#__codelineno-0-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23"></a><a href="#__codelineno-0-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">            </span><span class="n">max_offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">axis_offset</span><span class="p">;</span>
+</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24"></a><a href="#__codelineno-0-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25"></a><a href="#__codelineno-0-25"><span class="linenos" data-linenos="25 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26"></a><a href="#__codelineno-0-26"><span class="linenos" data-linenos="26 "></span></a>
+</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27"></a><a href="#__codelineno-0-27"><span class="linenos" data-linenos="27 "></span></a><span class="w">    </span><span class="n">m_origin_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">min_offset</span><span class="p">;</span>
+</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28"></a><a href="#__codelineno-0-28"><span class="linenos" data-linenos="28 "></span></a><span class="w">    </span><span class="n">m_required_span_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max_offset</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">min_offset</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29"></a><a href="#__codelineno-0-29"><span class="linenos" data-linenos="29 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Each axis is linear, so its extrema occur at index <code>0</code> or <code>extent-1</code>. The loop
+sums those independent endpoint contributions.</p>
+<p>The mapping applies the saved translation on every access:</p>
+<div class="language-cpp highlight"><span class="filename">signed_stride_layout.hpp</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">index_type</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_origin_offset</span><span class="p">;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">rank_type</span><span class="w"> </span><span class="n">rank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">((</span><span class="n">offset</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">index_type</span><span class="o">&gt;</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_strides</span><span class="p">[</span><span class="n">rank</span><span class="o">++</span><span class="p">]),</span><span class="w"> </span><span class="p">...);</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">offset</span><span class="p">;</span>
+</span></code></pre></div>
+<p>This implements one mapping equation:</p>
+<div class="arithmatex">\[
+\operatorname{map}(i)=\operatorname{origin\_offset}
+  + \sum_d i_d\operatorname{stride}[d].
+\]</div>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/signed-mdspan.svg">
     <picture>
@@ -1469,101 +1482,65 @@ direction.</p>
     </picture>
   </a>
   <figcaption>
-    The signed strides are unchanged. <code>origin_offset</code> shifts the
-    mapping results while the data handle moves in the opposite direction.
+    Signed strides remain signed; only the final mapping offset is translated.
   </figcaption>
 </figure>
 
-<p><code>SignedStrideLayout</code> stores extents, signed strides, <code>origin_offset</code>, and
-<code>required_span_size</code>. The adjusted mdspan handle points to the lowest reachable
-address. If a general <code>SimpleArray</code> buffer contains an unused prefix, that
-address need not equal <code>data()</code>.</p>
-<h2 id="mapping-signed-strides">Mapping signed strides</h2>
-<p>For extent <span class="arithmatex">\(e_d\)</span> and signed element stride <span class="arithmatex">\(s_d\)</span>, define the raw offset as:</p>
-<div class="arithmatex">\[
-\operatorname{raw}(i)=\sum_d i_d s_d
-\]</div>
-<p>Each axis contributes linearly, so its extrema occur at index <code>0</code> or <code>e_d-1</code>.
-Because the axes are independent, the global minimum and maximum are sums of
-their endpoint contributions:</p>
-<div class="arithmatex">\[
-\Delta_d=(e_d-1)s_d
-\]</div>
-<div class="arithmatex">\[
-\operatorname{min}=\sum_d\min(\Delta_d,0)
-\]</div>
-<div class="arithmatex">\[
-\operatorname{max}=\sum_d\max(\Delta_d,0)
-\]</div>
-<p>The mapping then defines:</p>
-<div class="arithmatex">\[
-\operatorname{origin\_offset}=-\operatorname{min}
-\]</div>
-<div class="arithmatex">\[
-\begin{aligned}
-\operatorname{map}(i)
-&amp;=\operatorname{origin\_offset}\\
-&amp;\quad+\operatorname{raw}(i).
-\end{aligned}
-\]</div>
-<p>If every extent is nonzero, <code>required_span_size</code> is <code>max - min + 1</code>. If any
-extent is zero, the required span is zero.</p>
-<p>For shape <code>(2,3)</code> and strides <code>(-3,-1)</code>, the axis deltas are <code>-3</code> and <code>-2</code>.
-Therefore <code>min=-5</code> and <code>origin_offset=5</code>. The endpoints <code>(0,0)</code> and <code>(1,2)</code> map
-to 5 and 0, so every valid mdspan offset lies in <code>[0,5]</code>.</p>
+<p>For shape <code>(2,3)</code> and strides <code>(-3,-1)</code>, the two axis endpoints contribute
+<code>-3</code> and <code>-2</code>. Therefore <code>min=-5</code>, <code>origin_offset=5</code>, and the descriptor
+endpoints <code>(0,0)</code> and <code>(1,2)</code> map to <code>5</code> and <code>0</code>.</p>
 <h2 id="rebasing-the-data-handle">Rebasing the data handle</h2>
-<p><code>SimpleArray::as_mdspan&lt;N&gt;()</code> builds the mapping and then adjusts the accessor
-handle:</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_mdspan_mapping</span><span class="o">&lt;</span><span class="n">N</span><span class="o">&gt;</span><span class="p">();</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logical_data</span><span class="p">();</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">{</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">handle</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">mapping</span><span class="p">.</span><span class="n">origin_offset</span><span class="p">();</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">mdspan_type</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">mapping</span><span class="p">);</span>
+<p>Translating the mapping alone would change physical addresses. <code>as_mdspan()</code>
+therefore moves the handle in the opposite direction:</p>
+<div class="language-cpp highlight"><span class="filename">SimpleArray.hpp</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_mdspan_mapping</span><span class="o">&lt;</span><span class="n">N</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">value_type</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">data_handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logical_data</span><span class="p">();</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">data_handle</span><span class="p">)</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">{</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">data_handle</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">mapping</span><span class="p">.</span><span class="n">origin_offset</span><span class="p">();</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos="7 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">mdspan</span><span class="o">&lt;</span><span class="n">value_type</span><span class="p">,</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos="8 "></span></a><span class="w">                   </span><span class="n">std</span><span class="o">::</span><span class="n">dextents</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="p">,</span><span class="w"> </span><span class="n">N</span><span class="o">&gt;</span><span class="p">,</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos="9 "></span></a><span class="w">                   </span><span class="n">detail</span><span class="o">::</span><span class="n">SignedStrideLayout</span><span class="o">&gt;</span><span class="p">(</span><span class="n">data_handle</span><span class="p">,</span><span class="w"> </span><span class="n">mapping</span><span class="p">);</span>
 </span></code></pre></div>
-<p>The two shifts cancel:</p>
+<p>The two translations cancel:</p>
 <div class="arithmatex">\[
 \begin{aligned}
-\operatorname{handle} + \operatorname{map}(i)
-&amp;=(\operatorname{logical\_data}-o)\\
-&amp;\quad +(o+\operatorname{raw}(i))\\
+\operatorname{handle}+\operatorname{map}(i)
+&amp;=(\operatorname{logical\_data}-o)+(o+\operatorname{raw}(i)) \\
 &amp;=\operatorname{logical\_data}+\operatorname{raw}(i),
 \end{aligned}
 \]</div>
-<p>where <code>o</code> is <code>origin_offset</code>.</p>
-<p>A minimal C++ example follows:</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">using</span><span class="w"> </span><span class="n">Array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">SimpleArray</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">ConcreteBuffer</span><span class="o">::</span><span class="n">construct</span><span class="p">(</span><span class="mi">6</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="n">Array</span><span class="w"> </span><span class="nf">a</span><span class="p">(</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">buffer</span><span class="p">,</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="mi">5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">as_mdspan</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">();</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="c1">// &amp;view[0, 0] == a.logical_data()</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="c1">// &amp;view[1, 2] == a.data()</span>
+<p>where <code>o</code> is <code>origin_offset</code>. The adjusted handle is the lowest reachable
+address. It need not equal <code>data()</code> if a general <code>ConcreteBuffer</code> contains an
+unused prefix.</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">using</span><span class="w"> </span><span class="n">Array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">SimpleArray</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">ConcreteBuffer</span><span class="o">::</span><span class="n">construct</span><span class="p">(</span><span class="mi">6</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="n">Array</span><span class="w"> </span><span class="nf">a</span><span class="p">(</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">buffer</span><span class="p">,</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="mi">5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">as_mdspan</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a><span class="c1">// &amp;view[0, 0] == a.logical_data()</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11"></a><a href="#__codelineno-3-11"><span class="linenos" data-linenos="11 "></span></a><span class="c1">// &amp;view[1, 2] == a.data()</span>
 </span></code></pre></div>
-<p><code>as_mdspan&lt;N&gt;()</code> checks only that the runtime rank equals <code>N</code>. The mdspan does
-not own the <code>SimpleArray</code> or its buffer; the handle becomes dangling when the
-owner is destroyed.</p>
 <h2 id="contracts-and-limitations">Contracts and limitations</h2>
 <ul>
-<li>The storage type for shape values is signed, but every shape value must still
-  be nonnegative.</li>
+<li>Shape storage is signed, but each shape value must remain nonnegative.</li>
 <li>The required span is the envelope of reachable addresses and may contain
   holes.</li>
-<li>The layout reports a unique mapping, but runtime code does not reject zero or
+<li>An empty extent produces a zero-size required span.</li>
+<li>The mapping reports uniqueness, but runtime code does not reject zero or
   overlapping strides. The caller must provide a unique, representable mapping.</li>
 <li>Offset arithmetic has no overflow check, and element access has no bounds
   check.</li>
-<li><code>nghost</code> is not mdspan metadata. Axis 0 still starts at storage index 0; the
-  body begins at mdspan index <code>nghost</code>.</li>
+<li><code>as_mdspan&lt;N&gt;()</code> checks the runtime rank but does not own the array or buffer.</li>
+<li><code>nghost</code> is not mdspan metadata. The body begins at mdspan index <code>nghost</code> on
+  axis 0.</li>
 </ul>
-<p>The C++ view adapter is now complete. Python's <code>__setitem__</code> path does not use
-mdspan, so the next page returns to the same descriptor and translates Python
-indices into storage coordinates.</p>
+<p>Python assignment does not use this mdspan path. The next page translates a
+Python key into storage coordinates, then follows the same descriptor strides.</p>
 <h2 id="sources">Sources</h2>
 <ul>
 <li><a href="https://eel.is/c++draft/mdspan.layout.stride#cons-4.1"><code>std::layout_stride</code> positive-stride precondition</a></li>
