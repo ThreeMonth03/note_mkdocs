@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="SimpleArray 如何以 buffer、logical_data、shape 與 signed strides 保存 NumPy view。">
+        <meta name="description" content="How SimpleArray represents NumPy views with retained storage, a logical origin, shape, and signed strides.">
       
       
         <meta name="author" content="張君實">
@@ -25,7 +25,7 @@
     
     
       
-        <title>SimpleArray 的資料結構 - 君實的技術筆記</title>
+        <title>The SimpleArray Data Model - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#simplearray" class="md-skip">
+        <a href="#the-simplearray-data-model" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              SimpleArray 的資料結構
+              The SimpleArray Data Model
             
           </span>
         </div>
@@ -1174,7 +1174,7 @@
   
     <li class="md-nav__item">
       <a href="mdspan/" class="md-nav__link">
-        Signed mdspan
+        Signed-stride mdspan
       </a>
     </li>
   
@@ -1188,7 +1188,7 @@
   
     <li class="md-nav__item">
       <a href="setitem/" class="md-nav__link">
-        Indexing and setitem
+        Indexing and assignment
       </a>
     </li>
   
@@ -1279,50 +1279,50 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#array-contract-dispatch" class="md-nav__link">
-    架構：最小 Array contract，再做 dispatch
+  <a href="#architecture-a-minimal-array-contract-then-dispatch" class="md-nav__link">
+    Architecture: a minimal array contract, then dispatch
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#view-contract" class="md-nav__link">
-    最小 view contract
+  <a href="#a-minimal-view-contract" class="md-nav__link">
+    A minimal view contract
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#coordinate-address" class="md-nav__link">
-    Coordinate 如何映射到 address
+  <a href="#mapping-coordinates-to-addresses" class="md-nav__link">
+    Mapping coordinates to addresses
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#numpy-import" class="md-nav__link">
-    NumPy import
+  <a href="#importing-a-numpy-view" class="md-nav__link">
+    Importing a NumPy view
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#lifetime-copy-semantics" class="md-nav__link">
-    Lifetime 與 copy semantics
+  <a href="#ownership-and-copy-semantics" class="md-nav__link">
+    Ownership and copy semantics
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
-    接下來
+  <a href="#next-steps" class="md-nav__link">
+    Next steps
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#source" class="md-nav__link">
-    Source
+  <a href="#sources" class="md-nav__link">
+    Sources
   </a>
   
 </li>
@@ -1345,33 +1345,37 @@
 
 
 
-<h1 id="simplearray">SimpleArray 的資料結構</h1>
-<p>既然已經有 NumPy，為什麼還要做另一個 array？目標不是重做完整 NumPy，而是讓
-特定數值運算跑得比 NumPy 更快。最直接的路線，是保留 NumPy view 最重要的資料
-模型，拿掉不需要的 surface，再讓 execution layer 根據 shape、layout 與 workload
-選擇 kernel。</p>
-<p>這條 pipeline 有兩個階段。第一階段是簡化版的 NumPy array contract：storage
-lifetime、logical origin、shape 與 signed strides。第二階段是 operation plan
-與 dispatch：
-讀取這些 metadata，選擇 Generic、BLAS 或其他 specialized kernel，並決定是否
-先做 packing。Array contract 越小、越清楚，後面的 dispatch 就越容易分析與
-最佳化。</p>
-<h2 id="array-contract-dispatch">架構：最小 Array contract，再做 dispatch</h2>
+<h1 id="the-simplearray-data-model">The SimpleArray Data Model</h1>
+<p>Why build another array when NumPy already exists? The goal is not to
+reimplement NumPy. It is to make selected numerical workloads faster than
+NumPy's default paths. <code>SimpleArray</code> keeps the parts of NumPy's view model that
+kernels need, omits the rest of the API surface, and lets the execution layer
+choose an implementation from the shape, layout, and workload.</p>
+<p>The pipeline has two stages. First, a compact NumPy-like view contract records
+the retained storage and its lifetime, the logical origin, the shape, and signed
+strides. Then an operation planner reads that metadata to select a Generic,
+BLAS, or specialized kernel and to decide separately whether an input should be
+packed first. A small, explicit contract makes those choices easier to reason
+about and optimize.</p>
+<h2 id="architecture-a-minimal-array-contract-then-dispatch">Architecture: a minimal array contract, then dispatch</h2>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>NumPy view
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    ↓ zero-copy import
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>SimpleArray descriptor
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    ├── C++ adapter: signed mdspan
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    ├── Python adapter: indexing / setitem
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a>    ├── C++ adapter: signed-stride mdspan
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a>    ├── Python adapter: indexing and assignment
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>    └── operation plan → dispatch → selected kernel
 </span></code></pre></div>
-<p>同一份 metadata 會直接影響 execution route：BLAS-compatible view 可以直接進
-vendor kernel；部分不相容 layout 可以先 packing 再進 BLAS；其餘 layout 則由
-signed-stride Generic kernel 處理。Descriptor 不只是保存 array，也提供 dispatch
-做決策所需的 layout facts。</p>
-<p>這一章先建立最底層的 descriptor。它不嘗試實作整套 NumPy API，只保留足以描述
-view、計算 address、維持 lifetime，並讓 execution layer 判斷 layout 的資訊。</p>
-<h2 id="view-contract">最小 view contract</h2>
-<p>NumPy reverse 可以用最小例子看出這份 contract 需要保存什麼：</p>
+<p>The same metadata determines the execution path. A BLAS-compatible view can go
+directly to a vendor kernel. Some BLAS-incompatible layouts can be packed and
+then passed to BLAS. Remaining supported layouts use the signed-stride Generic
+kernel. Kernel selection and the packing decision are separate, but both depend
+on the same descriptor.</p>
+<p>This page develops the descriptor at the bottom of that pipeline. It retains
+only enough information to describe a view, compute addresses, keep its storage
+alive, and expose layout properties to the execution layer.</p>
+<h2 id="a-minimal-view-contract">A minimal view contract</h2>
+<p>A reversed NumPy view is the smallest example that reveals what this contract
+must preserve:</p>
 <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a>
@@ -1380,33 +1384,35 @@ view、計算 address、維持 lifetime，並讓 execution layer 判斷 layout �
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
 </span></code></pre></div>
-<p><code>view</code> 看起來像一個新 array，實際上六個值一個也沒有搬。它只改變 coordinate
-<code>(0,0)</code> 從哪一格開始，以及每個 axis 往哪個方向前進。Pointer 與 shape 不足以
-表達這件事；descriptor 還需要 logical origin 與 signed strides。</p>
-<p>SimpleArray contract 由兩個組件構成。<code>ConcreteBuffer</code> 保存 retained bytes 與
-owner lifetime；typed descriptor 保存 <code>logical_data</code>、shape 與 signed strides。
-C++ adapter、Python adapter 與 operation planning 都從這份 metadata 出發。</p>
+<p><code>view</code> looks like a new array, but no elements are copied. Reversal changes the
+element named by coordinate <code>(0,0)</code> and the direction in which each axis moves.
+A pointer and a shape cannot describe that mapping by themselves. The
+descriptor also needs a logical origin and signed strides.</p>
+<p>The <code>SimpleArray</code> contract has two components. <code>ConcreteBuffer</code> retains the byte
+span and the source owner. The typed descriptor records <code>logical_data</code>, shape,
+and signed strides. C++ adapters, Python adapters, and operation planning all
+start from this metadata.</p>
 <figure class="solvcon-figure">
   <a href="/assets/images/solvcon/array/simplearray-descriptor.svg">
     <picture>
       <source media="(max-width: 44.984375em)"
               srcset="/assets/images/solvcon/array/simplearray-descriptor-mobile.svg">
       <img src="/assets/images/solvcon/array/simplearray-descriptor.svg"
-           alt="SimpleArray 將 ConcreteBuffer 的 data 起點與 reversed view 的 logical_data、shape、signed strides 分開保存"
+           alt="SimpleArray stores the ConcreteBuffer base separately from the logical origin, shape, and signed strides of a reversed view"
            loading="lazy">
     </picture>
   </a>
   <figcaption>
-    同一段 storage 有兩個起點：buffer 起點與 descriptor coordinate 起點。
+    The retained storage span and the view descriptor have different origins.
   </figcaption>
 </figure>
 
-<p>這個分層讓 ownership 不必理解 layout，address mapping 也不必負責 lifetime。
-Operation layer 因而可以直接讀取 descriptor facts，而不需要重新分析原始 NumPy
-object。</p>
-<h2 id="coordinate-address">Coordinate 如何映射到 address</h2>
-<p><code>ConcreteBuffer</code> 管理一段連續 byte span。<code>SimpleArray&lt;T&gt;</code> 再疊上一個 typed
-descriptor：</p>
+<p>This separation keeps ownership independent of layout and keeps address mapping
+independent of lifetime. The operation layer can read descriptor properties
+without recovering them from the original NumPy object.</p>
+<h2 id="mapping-coordinates-to-addresses">Mapping coordinates to addresses</h2>
+<p><code>ConcreteBuffer</code> manages one contiguous byte span. <code>SimpleArray&lt;T&gt;</code> adds a
+typed descriptor:</p>
 <table>
 <thead>
 <tr>
@@ -1418,27 +1424,27 @@ descriptor：</p>
 <tbody>
 <tr>
 <td><code>data()</code></td>
-<td><code>ConcreteBuffer</code> retained span 的起點</td>
+<td>beginning of the retained <code>ConcreteBuffer</code> span</td>
 <td><code>root + 0</code></td>
 </tr>
 <tr>
 <td><code>logical_data()</code></td>
-<td>descriptor coordinate <code>(0,...,0)</code></td>
+<td>address of descriptor coordinate <code>(0,...,0)</code></td>
 <td><code>root + 5</code></td>
 </tr>
 <tr>
 <td><code>shape</code></td>
-<td>合法 coordinate domain</td>
+<td>valid coordinate domain</td>
 <td><code>(2,3)</code></td>
 </tr>
 <tr>
 <td><code>stride</code></td>
-<td>每個 axis 前進一格的 element offset</td>
+<td>element offset for one step along each axis</td>
 <td><code>(-3,-1)</code></td>
 </tr>
 </tbody>
 </table>
-<p>address rule 只有一條：</p>
+<p>Every element follows one address rule:</p>
 <div class="arithmatex">\[
 \operatorname{offset}(i)=\sum_d i_d\operatorname{stride}[d]
 \]</div>
@@ -1449,21 +1455,23 @@ descriptor：</p>
 &amp;\quad+\operatorname{offset}(i).
 \end{aligned}
 \]</div>
-<p>例如：</p>
+<p>For example:</p>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
 </span></code></pre></div>
-<p><code>stride</code> 的單位是 elements；NumPy 與 Python buffer protocol 的 stride 單位則是
-bytes。importer 會先驗證 byte stride 可被 <code>sizeof(T)</code> 整除，再轉成 element
-stride。</p>
-<p>negative stride 會走到 <code>logical_data()</code> 前方。對上例而言，所有可達位址是
-<code>root[0..5]</code>，但 descriptor origin 是 <code>root+5</code>。因此：</p>
+<p><code>SimpleArray</code> strides are measured in elements. NumPy and the Python buffer
+protocol report strides in bytes, so the importer first verifies that each byte
+stride is divisible by <code>sizeof(T)</code> and then converts it to an element stride.</p>
+<p>A negative stride can reach addresses before <code>logical_data()</code>. In this example,
+the reachable range is <code>root[0..5]</code>, while the descriptor origin is <code>root+5</code>.
+The responsibilities are therefore distinct:</p>
 <ul>
-<li><code>ConcreteBuffer</code> 的 <code>data() + nbytes() + owner</code> 決定哪些 bytes 必須保持有效；</li>
-<li><code>logical_data()</code> 決定 descriptor coordinate 從哪裡開始；</li>
-<li><code>shape + stride</code> 決定接下來往哪裡走。</li>
+<li><code>ConcreteBuffer</code> uses <code>data()</code>, <code>nbytes()</code>, and its owner to retain valid bytes.</li>
+<li><code>logical_data()</code> defines descriptor coordinate <code>(0,...,0)</code>.</li>
+<li><code>shape</code> and <code>stride</code> define how coordinates move through storage.</li>
 </ul>
-<h2 id="numpy-import">NumPy import</h2>
-<p>NumPy constructor 以每個 axis 的 endpoint 計算可達的最小與最大 byte offset：</p>
+<h2 id="importing-a-numpy-view">Importing a NumPy view</h2>
+<p>For a nonempty view, the NumPy constructor computes the minimum and maximum
+reachable byte offsets from each axis endpoint. Empty views retain zero bytes:</p>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a>if any extent is zero:
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos=" 2 "></span></a>    begin = end = storage_nbytes = 0
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos=" 3 "></span></a>else:
@@ -1475,34 +1483,39 @@ stride。</p>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9"></a><a href="#__codelineno-3-9"><span class="linenos" data-linenos=" 9 "></span></a>storage_ptr = view_ptr + begin
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10"></a><a href="#__codelineno-3-10"><span class="linenos" data-linenos="10 "></span></a>data_offset = -begin
 </span></code></pre></div>
-<p><code>ConcreteBuffer</code> 從 <code>storage_ptr</code> 保留整個 envelope，<code>logical_data</code> 則是
-<code>data + data_offset / sizeof(T)</code>。這個 envelope 可能包含 padding holes，所以
-storage span 不一定等於 <code>prod(shape) * sizeof(T)</code>。</p>
-<h2 id="lifetime-copy-semantics">Lifetime 與 copy semantics</h2>
-<p>Zero-copy 還需要保存 owner lifetime。外部 NumPy storage 由 buffer remover 持有；
-反向 export 成 ndarray 時，NumPy 的 <code>.base</code> 再持有 <code>ConcreteBuffer</code>。因此兩邊都
-能修改同一份 bytes：</p>
+<p><code>ConcreteBuffer</code> retains the complete envelope from <code>storage_ptr</code>.
+<code>logical_data</code> is <code>data + data_offset / sizeof(T)</code>. The envelope may contain
+padding holes, so its byte size need not equal <code>prod(shape) * sizeof(T)</code>.</p>
+<h2 id="ownership-and-copy-semantics">Ownership and copy semantics</h2>
+<p>Zero-copy also requires the source owner to remain alive. When <code>SimpleArray</code>
+imports a NumPy view, the buffer remover retains the source NumPy object. When
+the array is exported back to NumPy, the returned ndarray keeps the
+<code>ConcreteBuffer</code> as its <code>.base</code>. Both objects can therefore modify the same
+bytes:</p>
 <div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
 </span></code></pre></div>
-<p><code>clone()</code> 是明確的 deep-copy path。它複製完整 <code>ConcreteBuffer</code>，並保留
-<code>logical_data - data</code> 的 offset；新 array 因此不再依賴 NumPy owner，卻維持相同
-shape、strides 與 coordinate mapping。</p>
-<h2 id="_1">接下來</h2>
+<p><code>clone()</code> is the explicit deep-copy path. It clones the complete retained
+<code>ConcreteBuffer</code> and preserves the <code>logical_data - data</code> offset. The clone no
+longer depends on the NumPy owner, but it keeps the same shape, strides, and
+coordinate mapping.</p>
+<h2 id="next-steps">Next steps</h2>
 <ul>
-<li><a href="mdspan/">Signed mdspan</a> 說明 signed stride 如何轉成合法的 mdspan mapping。</li>
-<li><a href="setitem/">Indexing 與 setitem</a> 說明 Python negative index、<code>nghost</code> 與
-  slice assignment 的 normalization。</li>
-<li><a href="../matmul/">Matmul</a> 將在同一份 descriptor 上建立 operation plan 與
-  execution dispatch。</li>
+<li><a href="mdspan/">Signed-stride mdspan</a> adapts signed strides to a valid mdspan
+  mapping.</li>
+<li><a href="setitem/">Indexing and assignment</a> translates Python negative indices,
+  <code>nghost</code>, and slices into storage coordinates.</li>
+<li><a href="../matmul/">Matmul</a> will build operation planning and execution
+  dispatch on the same descriptor.</li>
 </ul>
-<p>這兩條路徑共享同一份 descriptor，卻各自處理不同座標系。C++ <code>as_mdspan()</code>
-需要把 signed stride 轉成合法 mapping；Python axis 0 設定 <code>nghost</code> 後，還會
-疊上一層 body-relative indexing。<code>logical_data()</code> 本身在兩條路徑中都不改變。</p>
-<h2 id="source">Source</h2>
+<p>The first two adapters share one descriptor but interpret different coordinate
+systems. <code>as_mdspan()</code> adapts signed strides for C++. The Python adapter adds
+body-relative indexing on axis 0. Matrix multiplication then builds the second
+pipeline stage: operation planning and execution dispatch.</p>
+<h2 id="sources">Sources</h2>
 <ul>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2621-L2633"><code>SimpleArray&lt;T&gt;</code> descriptor members</a></li>
 <li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2354-L2367"><code>data()</code>, <code>logical_data()</code>, and <code>body()</code> accessors</a></li>
