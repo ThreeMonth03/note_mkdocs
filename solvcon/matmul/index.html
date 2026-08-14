@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="solvcon 如何利用 broadcast reuse，讓 BLAS-incompatible matrix views 比 NumPy 更快。">
+        <meta name="description" content="solvcon matmul implementation notes，內容整理中。">
       
       
         <meta name="author" content="張君實">
@@ -15,10 +15,8 @@
         <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/">
       
       
-        <link rel="prev" href="../array/">
+        <link rel="prev" href="../array/setitem/">
       
-      
-        <link rel="next" href="implementation/generic/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
@@ -120,7 +118,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#solvcon-numpy" class="md-skip">
+        <a href="#matmul" class="md-skip">
           跳轉到
         </a>
       
@@ -1139,12 +1137,20 @@
             
           
         
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
           <a href="../array/">Array</a>
+          
+            <label for="__nav_5_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1155,6 +1161,34 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../array/mdspan/" class="md-nav__link">
+        Signed mdspan
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../array/setitem/" class="md-nav__link">
+        Indexing and setitem
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1185,24 +1219,12 @@
             
           
         
-          
-        
-          
-        
-          
-            
-          
-        
       
       
         
         
         <div class="md-nav__link md-nav__link--index md-nav__link--active">
           <a href="./">Matmul</a>
-          
-            <label for="__nav_5_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
           
         </div>
       
@@ -1213,48 +1235,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="implementation/generic/" class="md-nav__link">
-        Generic
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="implementation/dispatch/" class="md-nav__link">
-        Dispatch
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="profiling/" class="md-nav__link">
-        Benchmarks
-      </a>
-    </li>
-  
-
             
           
         </ul>
@@ -1290,49 +1270,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目錄
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#anomaly" class="md-nav__link">
-    Anomaly
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#generic" class="md-nav__link">
-    Generic
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#blas" class="md-nav__link">
-    BLAS
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pack-once" class="md-nav__link">
-    Pack Once
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#results" class="md-nav__link">
-    Results
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1349,124 +1286,8 @@
 
 
 
-<h1 id="solvcon-numpy">在 solvcon 開發比 NumPy 更快的矩陣乘法</h1>
-<p>當一個不能直接表示成 BLAS view 的矩陣，會被 batch broadcasting 重複使用時，
-solvcon 的 Matmul 能比 NumPy 快。</p>
-<p>最初的線索很反常：只加一個 <code>::-1</code>，NumPy 的時間就從約 <code>12 ms</code> 變成
-<code>1998 ms</code>。以下兩個 operands 會做 64 次 <code>256 x 256</code> GEMM；LHS 的 values
-沒有複製，只是沿最後一軸反向讀取：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">storage</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">lhs</span> <span class="o">=</span> <span class="n">storage</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">rhs</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="mi">64</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">out</span> <span class="o">=</span> <span class="n">lhs</span> <span class="o">@</span> <span class="n">rhs</span>
-</span></code></pre></div>
-<p><code>lhs</code> 的 shape 是 <code>(1,256,256)</code>，element strides 是 <code>(65536,256,-1)</code>；
-batch extent <code>1</code> broadcast 成 <code>64</code>，所以同一個 reversed matrix 被重用 64 次。</p>
-<p><a href="../array/">SimpleArray</a> 會原樣保留這類 NumPy view 的 buffer、shape、
-strides 與 logical origin。Slice 或 reverse 因而能直接流進後續 numerical
-kernels，不會自動 materialize 成 contiguous matrix。</p>
-<h2 id="anomaly">Anomaly</h2>
-<p><a href="https://github.com/solvcon/solvcon/issues/1172">Issue #1172</a> 在 Apple M1、
-Accelerate 單執行緒上，對同一個 <code>(1,256,256) @ (64,256,256)</code> 做了三組
-對照：</p>
-<table>
-<thead>
-<tr>
-<th>LHS layout</th>
-<th style="text-align: right;">NumPy</th>
-<th style="text-align: right;">solvcon prototype</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>dense</td>
-<td style="text-align: right;"><code>11.960 ms</code></td>
-<td style="text-align: right;"><code>11.873 ms</code></td>
-</tr>
-<tr>
-<td>reversed columns</td>
-<td style="text-align: right;"><code>1997.845 ms</code></td>
-<td style="text-align: right;"><code>12.099 ms</code></td>
-</tr>
-<tr>
-<td>reversed values，計時前排成 contiguous</td>
-<td style="text-align: right;"><code>11.967 ms</code></td>
-<td style="text-align: right;"><code>11.950 ms</code></td>
-</tr>
-</tbody>
-</table>
-<p>Dense 時兩邊都約 12 ms。只把 columns reverse，NumPy 變成 1998 ms；保留
-相同 values 與 64 次 GEMM，但在計時前排成 contiguous，NumPy 又回到 12 ms。
-差距不在乘法規模、broadcast 次數或數值，只在資料排列。</p>
-<p>Prototype 也只整理唯一一份 LHS，再讓 64 次 GEMM 共用，沒有改寫乘法。
-問題因此變成：同一筆資料整理成本要付很多次，還是只付一次？</p>
-<h2 id="generic">Generic</h2>
-<p>Prototype 只證明方向。完整 Matmul 還要處理 DOT、GEVM、GEMV、GEMM、
-right-aligned broadcasting，以及正、負或 step-two strides。solvcon 因此先做
-generic route：plan 將四種 roles 正規化成 <code>M x K @ K x N</code>，kernel 直接沿
-signed strides 走訪資料。<a href="https://github.com/solvcon/solvcon/pull/1208">PR #1208</a>
-完成這條正確性基準，也立刻暴露效能牆：大型 C-contiguous
-GEVM/GEMV 仍跑 scalar loop，曾比 NumPy 慢 4 到 14 倍。位址推導見
-<a href="implementation/generic/">Generic</a>。</p>
-<h2 id="blas">BLAS</h2>
-<p>規則 layout 不該留在 scalar loop。若一個 core axis 是 unit stride，另一軸可作
-合法的 positive leading dimension，BLAS 就能直接讀取這個 view。</p>
-<p><a href="https://github.com/solvcon/solvcon/pull/1209">PR #1209</a> 以 forced generic / CBLAS
-對照量 crossover，再加入 direct BLAS。大型 compatible layouts 回到與 NumPy
-相近；小 GEMM 在 <code>min(M,N,K) &lt; 8</code> 時仍保留 generic。</p>
-<p>但 core strides <code>(256,-1)</code> 的 reversed LHS 仍進不了 BLAS，step-two view 也
-一樣。只能每次走 generic，或先排成 BLAS 能讀的 layout。</p>
-<h2 id="pack-once">Pack Once</h2>
-<p>關鍵是在哪裡 copy。Plan 已從 broadcasting 知道 operand 會被使用 <code>B</code> 次，
-因此可在 traversal 前把 <code>B * T_generic</code> 改成 <code>T_pack + B * T_blas_call</code>。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)" srcset="/assets/images/solvcon/matmul/dispatch/pack-once-ledger-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/dispatch/pack-once-ledger.svg" alt="同一個 reversed matrix 走十次 generic contraction，或 pack 一次後走十次 BLAS 的成本比較" loading="eager">
-    </picture>
-  </a>
-  <figcaption>`S=32` 的實際成本帳。一次整理 8 KiB LHS，十個 GEMM 共用 packed storage。</figcaption>
-</figure>
-
-<p><a href="https://github.com/solvcon/solvcon/pull/1256">PR #1256</a> 把這個判斷放進
-selector：只有無法直接交給 BLAS、又由 shape broadcasting 證明會重用的 matrix
-才可能 pack。Packing 完成後重建 plan，整個 batch 再走既有 BLAS route。
-<a href="implementation/dispatch/">Dispatch</a> 列出完整 selector。</p>
-<p>Packing 本身是成熟技巧。這裡的關鍵是 array-level plan 在 traversal 前已同時
-知道 layout 與 reuse，因此只 materialize 必要的 supplied operands，而且每份
-只做一次。</p>
-<h2 id="results">Results</h2>
-<p>正式 benchmark 把 output batch 固定為十個 contractions，交叉測試 float32 /
-float64、LHS / RHS / cross broadcasting、negative / step-two inner strides，
-以及 <code>S=8</code> 到 <code>S=256</code>。<code>S &gt;= 16</code> 時選擇 pack once；72 個因此改變 route 的
-cases 全部比舊 generic route 與 NumPy 快。</p>
-<figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg">
-    <picture>
-      <source media="(max-width: 44.984375em)" srcset="/assets/images/solvcon/matmul/story/benchmark-pack-once-mobile.svg">
-      <img src="/assets/images/solvcon/matmul/story/benchmark-pack-once.svg" alt="reversed broadcast matrix 在不同尺寸的 NumPy 相對 solvcon 速度比" loading="lazy">
-    </picture>
-  </a>
-  <figcaption>PR #1256，float64、LHS broadcast、negative inner stride。Packing 在 `S=16` 啟用，之後六個尺寸皆由 solvcon 勝出。</figcaption>
-</figure>
-
-<p>在完整的 72 個 affected cases 中，相對舊 route 的 speedup 是
-<code>3.30x</code> 到 <code>549.52x</code>，相對 NumPy 2.5.1 是 <code>1.11x</code> 到 <code>2.97x</code>。圖中的
-<code>S=32</code> 是 <code>0.0100 ms</code> 對 NumPy 的 <code>0.0244 ms</code>，快 <code>2.44x</code>；<code>S=256</code>
-則是 <code>1.6779 ms</code> 對 <code>1.9245 ms</code>，大矩陣同樣勝出。</p>
-<p><code>S=8</code> 與 <code>S=12</code> 保留 generic，也仍由 NumPy 領先。HPC 在這裡不是永遠
-zero-copy，也不是永遠先 copy；是讓 shape 揭露 reuse、stride 限定可用 kernel，
-再由量測決定一次資料整理能不能回本。量測方法與 raw data 收錄在
-<a href="profiling/">Benchmarks</a>。</p>
-<div class="admonition note">
-<p class="admonition-title">To be continued</p>
-<p>目前 Python 的 opt-in entry point 是 <code>matmul_planned()</code>；<code>matmul()</code> 與 <code>@</code>
-尚未切換。一般 API 的整合與後續 routes 仍在收尾。</p>
-</div>
+<h1 id="matmul">Matmul</h1>
+<p>To be continued.</p>
 
 
 

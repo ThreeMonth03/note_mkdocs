@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="用 pybind11 建立保留 NumPy buffer、shape、signed strides 與 logical origin 的 C++ array。">
+        <meta name="description" content="SimpleArray 如何以 buffer、logical_data、shape 與 signed strides 保存 NumPy view。">
       
       
         <meta name="author" content="張君實">
@@ -18,14 +18,14 @@
         <link rel="prev" href="../preface/">
       
       
-        <link rel="next" href="../matmul/">
+        <link rel="next" href="mdspan/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Array - 君實的技術筆記</title>
+        <title>SimpleArray 的資料結構 - 君實的技術筆記</title>
       
     
     
@@ -120,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#a-numpy-like-array-in-c" class="md-skip">
+        <a href="#simplearray" class="md-skip">
           跳轉到
         </a>
       
@@ -155,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Array
+              SimpleArray 的資料結構
             
           </span>
         </div>
@@ -1141,12 +1141,20 @@
             
           
         
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index md-nav__link--active">
           <a href="./">Array</a>
+          
+            <label for="__nav_5_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
@@ -1157,6 +1165,34 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="mdspan/" class="md-nav__link">
+        Signed mdspan
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="setitem/" class="md-nav__link">
+        Indexing and setitem
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1185,24 +1221,12 @@
             
           
         
-          
-        
-          
-        
-          
-            
-          
-        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
           <a href="../matmul/">Matmul</a>
-          
-            <label for="__nav_5_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
           
         </div>
       
@@ -1213,48 +1237,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../matmul/implementation/generic/" class="md-nav__link">
-        Generic
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../matmul/implementation/dispatch/" class="md-nav__link">
-        Dispatch
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../matmul/profiling/" class="md-nav__link">
-        Benchmarks
-      </a>
-    </li>
-  
-
             
           
         </ul>
@@ -1297,64 +1279,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#view" class="md-nav__link">
-    View
+  <a href="#storage" class="md-nav__link">
+    一段 storage，兩種起點
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#buffer" class="md-nav__link">
-    Buffer
+  <a href="#logical_data" class="md-nav__link">
+    為什麼不能只保存 logical_data
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#shape" class="md-nav__link">
-    Shape
+  <a href="#numpy-import" class="md-nav__link">
+    NumPy import
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#stride" class="md-nav__link">
-    Stride
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#origin" class="md-nav__link">
-    Origin
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#lifetime" class="md-nav__link">
-    Lifetime
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#protocol" class="md-nav__link">
-    Protocol
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#copies" class="md-nav__link">
-    Copies
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#numerical-kernels" class="md-nav__link">
-    Numerical Kernels
+  <a href="#_1" class="md-nav__link">
+    接下來
   </a>
   
 </li>
@@ -1384,268 +1331,138 @@
 
 
 
-<h1 id="a-numpy-like-array-in-c">A NumPy-like Array in C++</h1>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+<h1 id="simplearray">SimpleArray 的資料結構</h1>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="kn">import</span><span class="w"> </span><span class="nn">solvcon</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">arr</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">arr</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">base</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">view</span> <span class="o">=</span> <span class="n">base</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">a</span> <span class="o">=</span> <span class="n">solvcon</span><span class="o">.</span><span class="n">SimpleArrayFloat64</span><span class="p">(</span><span class="n">array</span><span class="o">=</span><span class="n">view</span><span class="p">)</span>
 </span></code></pre></div>
-<p><code>view</code> 只有 12 個 logical elements，可到達的位址卻從 <code>base[0,0]</code> 橫跨到
-<code>base[3,4]</code>，共 23 個 <code>double</code>。第一個 element 位於 offset <code>18</code>；換到下一列
-要往回走 6 格，換到下一欄則向前走 2 格。</p>
-<p>C++ 如果只收到 pointer 和 shape，這個 view 會立刻失去原來的意義。要在
-pybind11 邊界保留它，不需要 copy values，而是需要完整保存一個 address
-mapping。</p>
-<h2 id="view">View</h2>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>view
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a>[[18. 20. 22.]
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a> [12. 14. 16.]
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a> [ 6.  8. 10.]
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a> [ 0.  2.  4.]]
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a>NumPy shape / byte strides       (4, 3) / (-48, 16)
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos="8 "></span></a>SimpleArray shape / strides      (4, 3) / ( -6,  2)
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos="9 "></span></a>logical origin                   base + 18 elements
-</span></code></pre></div>
-<p>同一個 view 在兩側保存相同資訊，只有 stride 的單位不同。NumPy 與 Python
-buffer protocol 使用 bytes；<code>SimpleArray&lt;T&gt;</code> 使用 elements。</p>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a>address(i, j) = logical_origin + i * (-6) + j * 2
-</span></code></pre></div>
-<p>例如 <code>(i,j)=(1,2)</code> 對應 <code>18 - 6 + 4 = 16</code>，也就是 <code>base[2,4]</code>。</p>
-<h2 id="buffer">Buffer</h2>
-<p><code>ConcreteBuffer</code> 管理一段 fixed-size contiguous byte span。它可以配置自己的
-storage，也可以指向外部 storage 並攜帶一個 remover。typed array 則在這段
-storage 上保存 descriptor：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">buffer_type</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m_buffer</span><span class="p">;</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">m_shape</span><span class="p">;</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="c1">// Number of elements, not bytes, skipped along each axis.</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">shape_type</span><span class="w"> </span><span class="n">m_stride</span><span class="p">;</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos="6 "></span></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos="7 "></span></a><span class="c1">// Address corresponding to index (0, ..., 0).</span>
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8"></a><a href="#__codelineno-3-8"><span class="linenos" data-linenos="8 "></span></a><span class="n">value_type</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">m_logical_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">nullptr</span><span class="p">;</span>
-</span></code></pre></div>
-<p>因此 buffer 與 array 不是同一件事：buffer 回答「哪些 bytes 必須保持有效」，
-descriptor 回答「logical index 如何找到其中一個 typed value」。dtype 由模板
-參數 <code>T</code> 決定。</p>
-<p>對 running example，view 有 12 個 logical elements，所以 logical payload
-<code>arr.nbytes == 96</code>；
-可到達的 storage span 卻是 offsets <code>0..22</code>，所以 <code>roundtrip.base.nbytes == 184</code>。
-原始 <code>base</code> 的 offset <code>23</code> 不會被這個 view 觸及，也不需要包進 buffer。</p>
-<h2 id="shape">Shape</h2>
-<p>shape 定義合法的 coordinate domain：</p>
-<div class="arithmatex">\[
-0 \le i_d &lt; \operatorname{shape}[d].
-\]</div>
-<p><code>(4,3)</code> 因此有 12 個 logical elements。它沒有說明元素是否相鄰、走訪方向，
-也不能推導 backing span 的 byte size。這些資訊屬於 stride 與 origin。</p>
-<p>C-contiguous array 的 default element strides 可由 shape 從右往左累乘：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">stride</span><span class="p">[</span><span class="n">shape</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">shape</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">axis</span><span class="p">)</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">{</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">stride</span><span class="p">[</span><span class="n">axis</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stride</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">];</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-<p>shape <code>(4,6)</code> 因而得到 <code>(6,1)</code>。slice <code>[::-1, ::2]</code> 不改動 buffer，只把
-descriptor 改成 shape <code>(4,3)</code>、stride <code>(-6,2)</code> 與新的 logical origin。</p>
-<h2 id="stride">Stride</h2>
-<p>NumPy importer 先驗證 byte stride 可由 element size 整除，再轉成 element
-stride：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">byte_stride</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arr_in</span><span class="p">.</span><span class="n">strides</span><span class="p">(</span><span class="n">axis</span><span class="p">);</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">byte_stride</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">itemsize</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">{</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="s">&quot;stride is not divisible by item size&quot;</span><span class="p">);</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">}</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">stride</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">byte_stride</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">itemsize</span><span class="p">);</span>
-</span></code></pre></div>
-<table>
-<thead>
-<tr>
-<th>representation</th>
-<th>unit</th>
-<th>running example</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>NumPy <code>ndarray.strides</code></td>
-<td>bytes</td>
-<td><code>(-48, 16)</code></td>
-</tr>
-<tr>
-<td><code>pybind11::buffer_info</code></td>
-<td>bytes</td>
-<td><code>(-48, 16)</code></td>
-</tr>
-<tr>
-<td><code>SimpleArray::stride()</code></td>
-<td>elements</td>
-<td><code>(-6, 2)</code></td>
-</tr>
-</tbody>
-</table>
-<p>signed stride 讓 transpose、step slice 與 reverse view 共用同一個 indexing
-formula。它不是特殊 case flag；每個 axis 只提供下一個 element 的 address step。</p>
-<h2 id="origin">Origin</h2>
-<p>negative stride 讓 <code>data()</code> 與 <code>logical_data()</code> 必須分開。<code>data()</code> 指向 retained
-storage span 的起點；<code>logical_data()</code> 指向 index <code>(0,...,0)</code>。</p>
+<p><code>view</code> 沒有搬動 <code>base</code> 的六個 values。它只把 <code>(0,0)</code> 放到最後一格，並把
+兩個 axes 的走訪方向改成負數。C++ 若只保留 pointer 與 shape，就無法重建這個
+view；<code>SimpleArray</code> 保存的是完整的 address mapping。</p>
 <figure class="solvcon-figure">
-  <a href="/assets/images/solvcon/array/strided-view.svg">
+  <a href="/assets/images/solvcon/array/simplearray-descriptor.svg">
     <picture>
       <source media="(max-width: 44.984375em)"
-              srcset="/assets/images/solvcon/array/strided-view-mobile.svg">
-      <img src="/assets/images/solvcon/array/strided-view.svg"
-           alt="四乘六 buffer 如何由 origin 18、shape 四乘三與 strides 負六正二形成 reverse step-two view"
+              srcset="/assets/images/solvcon/array/simplearray-descriptor-mobile.svg">
+      <img src="/assets/images/solvcon/array/simplearray-descriptor.svg"
+           alt="SimpleArray 將 ConcreteBuffer 的 data 起點與 reversed view 的 logical_data、shape、signed strides 分開保存"
            loading="lazy">
     </picture>
   </a>
   <figcaption>
-    <code>buffer + shape + stride + logical origin</code> 完整決定一個 view。
+    Buffer 管理 retained storage；descriptor 將 coordinate 映射到其中一格。
   </figcaption>
 </figure>
 
-<p>importer 先計算所有 axes 可到達的最小與最大 byte offsets。empty view 沒有
-reachable element，因此 span 會另外歸零：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="kt">ssize_t</span><span class="w"> </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="n">has_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">axis</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">arr_in</span><span class="p">.</span><span class="n">ndim</span><span class="p">();</span><span class="w"> </span><span class="o">++</span><span class="n">axis</span><span class="p">)</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">{</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">arr_in</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">{</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="n">has_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="k">continue</span><span class="p">;</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><a href="#__codelineno-6-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">delta</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12"></a><a href="#__codelineno-6-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="p">(</span><span class="n">arr_in</span><span class="p">.</span><span class="n">shape</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">arr_in</span><span class="p">.</span><span class="n">strides</span><span class="p">(</span><span class="n">axis</span><span class="p">);</span>
-</span><span id="__span-6-13"><a id="__codelineno-6-13" name="__codelineno-6-13"></a><a href="#__codelineno-6-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">);</span>
-</span><span id="__span-6-14"><a id="__codelineno-6-14" name="__codelineno-6-14"></a><a href="#__codelineno-6-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="o">&lt;</span><span class="kt">ssize_t</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">delta</span><span class="p">);</span>
-</span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15"></a><a href="#__codelineno-6-15"><span class="linenos" data-linenos="15 "></span></a><span class="p">}</span>
-</span><span id="__span-6-16"><a id="__codelineno-6-16" name="__codelineno-6-16"></a><a href="#__codelineno-6-16"><span class="linenos" data-linenos="16 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">has_element</span><span class="p">)</span>
-</span><span id="__span-6-17"><a id="__codelineno-6-17" name="__codelineno-6-17"></a><a href="#__codelineno-6-17"><span class="linenos" data-linenos="17 "></span></a><span class="p">{</span>
-</span><span id="__span-6-18"><a id="__codelineno-6-18" name="__codelineno-6-18"></a><a href="#__codelineno-6-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="n">byte_span_begin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-6-19"><a id="__codelineno-6-19" name="__codelineno-6-19"></a><a href="#__codelineno-6-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="n">byte_span_end</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-6-20"><a id="__codelineno-6-20" name="__codelineno-6-20"></a><a href="#__codelineno-6-20"><span class="linenos" data-linenos="20 "></span></a><span class="p">}</span>
-</span><span id="__span-6-21"><a id="__codelineno-6-21" name="__codelineno-6-21"></a><a href="#__codelineno-6-21"><span class="linenos" data-linenos="21 "></span></a>
-</span><span id="__span-6-22"><a id="__codelineno-6-22" name="__codelineno-6-22"></a><a href="#__codelineno-6-22"><span class="linenos" data-linenos="22 "></span></a><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">storage_ptr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">view_ptr</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">byte_span_begin</span><span class="p">;</span>
-</span><span id="__span-6-23"><a id="__codelineno-6-23" name="__codelineno-6-23"></a><a href="#__codelineno-6-23"><span class="linenos" data-linenos="23 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">data_offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">byte_span_begin</span><span class="p">;</span>
-</span></code></pre></div>
-<p>running example 的 <code>view_ptr</code> 是 <code>base + 18</code>。minimum delta 是 <code>-18</code>
-elements，maximum delta 是 <code>+4</code> elements，因此 retained span 是 <code>base[0..22]</code>，
-而 <code>data_offset</code> 將 logical origin 放回 span 內的 element <code>18</code>。</p>
-<h2 id="lifetime">Lifetime</h2>
-<p>zero-copy 只有在 owner 活得夠久時才成立。NumPy import 會沿 <code>.base</code> chain
-保留其中最深的 ndarray，再把它放進 buffer remover；若更底層是其他 Python
-object，該 ndarray 會透過自己的 <code>.base</code> 間接保活：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">remover</span><span class="w"> </span><span class="o">=</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">ConcreteBufferNdarrayRemover</span><span class="o">&gt;</span><span class="p">(</span><span class="n">owner</span><span class="p">);</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ConcreteBuffer</span><span class="o">::</span><span class="n">construct</span><span class="p">(</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a><a href="#__codelineno-7-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">storage_nbytes</span><span class="p">,</span><span class="w"> </span><span class="n">storage_ptr</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">remover</span><span class="p">));</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a><a href="#__codelineno-7-5"><span class="linenos" data-linenos="5 "></span></a>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a><a href="#__codelineno-7-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">wrapped_type</span><span class="p">(</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a><a href="#__codelineno-7-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="n">shape</span><span class="p">,</span><span class="w"> </span><span class="n">stride</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">data_offset</span><span class="p">,</span><span class="w"> </span><span class="n">array_order</span><span class="p">);</span>
-</span></code></pre></div>
-<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos="1 "></span></a>NumPy import
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos="2 "></span></a>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos="3 "></span></a>SimpleArray&lt;T&gt; --shared_ptr--&gt; ConcreteBuffer --points to--&gt; external bytes
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><a href="#__codelineno-8-4"><span class="linenos" data-linenos="4 "></span></a>                                      |
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a><a href="#__codelineno-8-5"><span class="linenos" data-linenos="5 "></span></a>                                      +--remover retains--&gt; NumPy owner
-</span></code></pre></div>
-<p><code>ConcreteBufferNdarrayRemover</code> 不釋放外部 pointer；它保存一個
-<code>pybind11::array</code> reference。當最後一個 buffer reference 消失，remover 被
-destroy，NumPy owner 才能跟著釋放 storage。</p>
-<p>反方向輸出 ndarray 時，NumPy 的 <code>.base</code> 會持有 <code>ConcreteBuffer</code>，所以即使
-原本的 <code>SimpleArray</code> Python name 消失，C++ storage 仍然有效。</p>
-<h2 id="protocol">Protocol</h2>
-<p>wrapper 以 <code>pybind11::buffer_protocol()</code> 註冊，並由 <code>.def_buffer()</code> 暴露
-typed view。export 時 element strides 乘回 <code>itemsize</code>：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">ssize_t</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">array</span><span class="p">.</span><span class="n">stride</span><span class="p">())</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">byte_stride</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">value</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">itemsize</span><span class="p">);</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="p">}</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><a href="#__codelineno-9-5"><span class="linenos" data-linenos=" 5 "></span></a>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><a href="#__codelineno-9-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">pybind11</span><span class="o">::</span><span class="n">buffer_info</span><span class="p">(</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><a href="#__codelineno-9-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">array</span><span class="p">.</span><span class="n">logical_data</span><span class="p">(),</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><a href="#__codelineno-9-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">sizeof</span><span class="p">(</span><span class="n">T</span><span class="p">),</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a><a href="#__codelineno-9-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="n">format</span><span class="p">,</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a><a href="#__codelineno-9-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="n">array</span><span class="p">.</span><span class="n">ndim</span><span class="p">(),</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a><a href="#__codelineno-9-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="n">shape</span><span class="p">,</span>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a><a href="#__codelineno-9-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="n">byte_stride</span><span class="p">);</span>
-</span></code></pre></div>
-<p>explicit <code>.ndarray</code> property 使用同一份 descriptor，並把 buffer object 放進
-NumPy base slot：</p>
-<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">py</span><span class="o">::</span><span class="n">array</span><span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">dtype</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">shape</span><span class="p">,</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><a href="#__codelineno-10-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">byte_stride</span><span class="p">,</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><a href="#__codelineno-10-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">sarr</span><span class="p">.</span><span class="n">logical_data</span><span class="p">(),</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><a href="#__codelineno-10-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="n">py</span><span class="o">::</span><span class="n">cast</span><span class="p">(</span><span class="n">sarr</span><span class="p">.</span><span class="n">buffer</span><span class="p">().</span><span class="n">shared_from_this</span><span class="p">()));</span>
-</span></code></pre></div>
-<p>可以用雙向 mutation 驗證沒有發生 copy：</p>
-<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><a href="#__codelineno-11-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><a href="#__codelineno-11-3"><span class="linenos" data-linenos="3 "></span></a>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><a href="#__codelineno-11-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><a href="#__codelineno-11-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">2</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><a href="#__codelineno-11-6"><span class="linenos" data-linenos="6 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
-</span></code></pre></div>
-<p>這條 constructor 要求 exact dtype、writable <code>pybind11::array</code>、合法 alignment，
-且每個 byte stride 必須可由 <code>itemsize</code> 整除。buffer protocol 是 export
-contract，不代表 constructor 接受任意 PEP 3118 provider。</p>
-<h2 id="copies">Copies</h2>
+<h2 id="storage">一段 storage，兩種起點</h2>
+<p><code>ConcreteBuffer</code> 管理一段連續 byte span。<code>SimpleArray&lt;T&gt;</code> 再疊上一個 typed
+descriptor：</p>
 <table>
 <thead>
 <tr>
-<th>operation</th>
-<th>storage behavior</th>
+<th>field</th>
+<th>meaning</th>
+<th>example</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>SimpleArrayFloat64(shape=...)</code></td>
-<td>配置新的 C++ storage</td>
+<td><code>data()</code></td>
+<td><code>ConcreteBuffer</code> retained span 的起點</td>
+<td><code>root + 0</code></td>
 </tr>
 <tr>
-<td><code>SimpleArrayFloat64(array=ndarray)</code></td>
-<td>zero-copy 包裝 NumPy storage</td>
+<td><code>logical_data()</code></td>
+<td>descriptor coordinate <code>(0,...,0)</code></td>
+<td><code>root + 5</code></td>
 </tr>
 <tr>
-<td><code>arr.ndarray</code></td>
-<td>zero-copy NumPy view</td>
+<td><code>shape</code></td>
+<td>合法 coordinate domain</td>
+<td><code>(2,3)</code></td>
 </tr>
 <tr>
-<td><code>arr.clone()</code></td>
-<td>deep copy</td>
-</tr>
-<tr>
-<td><code>arr.reshape(...)</code></td>
-<td>exact C-contiguous region 可 zero-copy，其他 layouts copy</td>
-</tr>
-<tr>
-<td><code>arr.to_row_major()</code></td>
-<td>materialize independent row-major array</td>
+<td><code>stride</code></td>
+<td>每個 axis 前進一格的 element offset</td>
+<td><code>(-3,-1)</code></td>
 </tr>
 </tbody>
 </table>
-<p>這些 copy boundaries 會直接影響 matmul dispatch：packing 並不是「修正」array
-representation，而是在 reuse 足以攤提成本時，刻意建立另一個 row-major
-representation。</p>
-<h2 id="numerical-kernels">Numerical Kernels</h2>
-<p>到這裡，pybind11 的工作結束了。後續的 numerical kernel 不需要知道
-<code>[::-1, ::2]</code> 或 NumPy owner；它只看到 <code>logical_data()</code>、shape 與
-physical strides。</p>
-<p><a href="../matmul/">Matmul</a> 是其中一個 consumer。它將 trailing core axes
-normalize 成 <code>M/N/K</code>，再另建 batch mappings 表示 reuse。physical stride
-回答「下一筆資料在哪裡」；mapped zero stride 回答「同一份資料如何被
-broadcast 重用」。兩者是不同層次的 address rule。</p>
+<p>address rule 只有一條：</p>
+<div class="arithmatex">\[
+\operatorname{offset}(i)=\sum_d i_d\operatorname{stride}[d]
+\]</div>
+<div class="arithmatex">\[
+\begin{aligned}
+\operatorname{address}(i)
+&amp;=\operatorname{logical\_data}\\
+&amp;\quad+\operatorname{offset}(i).
+\end{aligned}
+\]</div>
+<p>例如：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>address(1, 2) = root + 5 + 1·(-3) + 2·(-1) = root + 0
+</span></code></pre></div>
+<p><code>stride</code> 的單位是 elements；NumPy 與 Python buffer protocol 的 stride 單位則是
+bytes。importer 會先驗證 byte stride 可被 <code>sizeof(T)</code> 整除，再轉成 element
+stride。</p>
+<p>這裡的 coordinate 屬於 storage descriptor。設定 <code>nghost</code> 後，Python axis 0
+會再疊上一層 body-relative indexing；<code>logical_data()</code> 本身不會改變。</p>
+<h2 id="logical_data">為什麼不能只保存 logical_data</h2>
+<p>negative stride 會走到 <code>logical_data()</code> 前方。對上例而言，所有可達位址是
+<code>root[0..5]</code>，但 descriptor origin 是 <code>root+5</code>。因此：</p>
+<ul>
+<li><code>ConcreteBuffer</code> 的 <code>data() + nbytes() + owner</code> 決定哪些 bytes 必須保持有效；</li>
+<li><code>logical_data()</code> 決定 descriptor coordinate 從哪裡開始；</li>
+<li><code>shape + stride</code> 決定接下來往哪裡走。</li>
+</ul>
+<p>這個區分也修正了 clone 的 ownership 問題。Clone 會複製 <code>ConcreteBuffer</code>
+宣告的完整 retained span，並保留 <code>logical_data - data</code> 的 offset。NumPy importer
+恰好把這個 buffer 收斂成最小 reachable envelope；若舊模型只從
+<code>logical_data</code> 開始複製，reversed clone 的下一步就會讀到新 allocation 前方。</p>
+<h2 id="numpy-import">NumPy import</h2>
+<p>NumPy constructor 以每個 axis 的 endpoint 計算可達的最小與最大 byte offset：</p>
+<div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a>if any extent is zero:
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos=" 2 "></span></a>    begin = end = storage_nbytes = 0
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos=" 3 "></span></a>else:
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4"></a><a href="#__codelineno-2-4"><span class="linenos" data-linenos=" 4 "></span></a>    delta[d] = (shape[d] - 1) * byte_stride[d]
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5"></a><a href="#__codelineno-2-5"><span class="linenos" data-linenos=" 5 "></span></a>    begin = sum(min(delta[d], 0))
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6"></a><a href="#__codelineno-2-6"><span class="linenos" data-linenos=" 6 "></span></a>    end = sum(max(delta[d], 0))
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos=" 7 "></span></a>    storage_nbytes = end - begin + itemsize
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9"></a><a href="#__codelineno-2-9"><span class="linenos" data-linenos=" 9 "></span></a>storage_ptr = view_ptr + begin
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10"></a><a href="#__codelineno-2-10"><span class="linenos" data-linenos="10 "></span></a>data_offset = -begin
+</span></code></pre></div>
+<p><code>ConcreteBuffer</code> 從 <code>storage_ptr</code> 保留整個 envelope，<code>logical_data</code> 則是
+<code>data + data_offset / sizeof(T)</code>。這個 envelope 可能包含 padding holes，所以
+storage span 不一定等於 <code>prod(shape) * sizeof(T)</code>。</p>
+<p>Zero-copy 還需要保存 owner lifetime。外部 NumPy storage 由 buffer remover 持有；
+反向 export 成 ndarray 時，NumPy 的 <code>.base</code> 再持有 <code>ConcreteBuffer</code>。因此兩邊都
+能修改同一份 bytes：</p>
+<div class="language-python highlight"><span class="filename">Python</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">assert</span> <span class="n">base</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">roundtrip</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">ndarray</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">shares_memory</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">roundtrip</span><span class="p">)</span>
+</span></code></pre></div>
+<h2 id="_1">接下來</h2>
+<ul>
+<li><a href="mdspan/">Signed mdspan</a> 說明 signed stride 如何轉成合法的 mdspan mapping。</li>
+<li><a href="setitem/">Indexing 與 setitem</a> 說明 Python negative index、<code>nghost</code> 與
+  slice assignment 的 normalization。</li>
+</ul>
+<p>這兩條路徑彼此獨立：C++ <code>as_mdspan()</code> 不負責 Python indexing；Python
+<code>__setitem__</code> 也不經過 mdspan。</p>
 <h2 id="source">Source</h2>
 <ul>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/SimpleArray.hpp#L2486-L2498"><code>SimpleArray&lt;T&gt;</code> descriptor and logical origin</a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/pymod/wrap_SimpleArray.hpp#L730-L834"><code>make_array_from_numpy()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/buffer/pymod/array_common.hpp#L236-L271"><code>get_buffer_info()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/cpp/solvcon/python/common.hpp#L167-L216"><code>ConcreteBufferNdarrayRemover</code> and <code>to_ndarray()</code></a></li>
-<li><a href="https://github.com/solvcon/solvcon/blob/95a681224b95f9c5e7e2ee336b6484539bf8a91d/tests/test_buffer.py#L864-L974">NumPy interop tests</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2621-L2633"><code>SimpleArray&lt;T&gt;</code> descriptor members</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2354-L2367"><code>data()</code>, <code>logical_data()</code>, and <code>body()</code> accessors</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2694-L2738"><code>SimpleArray&lt;T&gt;</code> layout validation</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/pymod/wrap_SimpleArray.hpp#L757-L858">NumPy view importer</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1101">PR #1101: complete storage span and logical origin</a></li>
 </ul>
 
 

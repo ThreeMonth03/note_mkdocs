@@ -6,29 +6,33 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="我整理的演算法、硬體描述語言練習與系統建置筆記。">
+        <meta name="description" content="SignedStrideLayout 如何正規化負 stride，讓 std::mdspan 使用 non-negative accessor offsets。">
       
       
         <meta name="author" content="張君實">
       
       
-        <link rel="canonical" href="https://note.threemonth03.com/solvcon/matmul/project/introduction/">
+        <link rel="canonical" href="https://note.threemonth03.com/solvcon/array/mdspan/">
       
       
+        <link rel="prev" href="../">
       
-      <link rel="icon" href="../../../../assets/images/favicon.png">
+      
+        <link rel="next" href="../setitem/">
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.1, mkdocs-material-9.1.21">
     
     
       
-        <title>Matmul article moved - 君實的技術筆記</title>
+        <title>Signed mdspan - 君實的技術筆記</title>
       
     
     
-      <link rel="stylesheet" href="../../../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
   
@@ -85,9 +89,9 @@
       
     
     
-      <link rel="stylesheet" href="../../../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -116,7 +120,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#matmul-article-moved" class="md-skip">
+        <a href="#signed-mdspan" class="md-skip">
           跳轉到
         </a>
       
@@ -132,7 +136,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="頁首">
-    <a href="../../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-header__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -151,7 +155,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Matmul article moved
+              Signed mdspan
             
           </span>
         </div>
@@ -240,7 +244,7 @@
 
 
   <li class="md-tabs__item">
-    <a href="../../../.." class="md-tabs__link">
+    <a href="../../.." class="md-tabs__link">
       首頁
     </a>
   </li>
@@ -255,7 +259,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-tabs__link">
+      <a href="../../../algorithm/segment-tree/" class="md-tabs__link">
         Algorithm
       </a>
     </li>
@@ -271,7 +275,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../hdlbits/" class="md-tabs__link">
+      <a href="../../../hdlbits/" class="md-tabs__link">
         HDLBits
       </a>
     </li>
@@ -287,7 +291,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../../pve/" class="md-tabs__link">
+      <a href="../../../pve/" class="md-tabs__link">
         Proxmox VE
       </a>
     </li>
@@ -296,6 +300,8 @@
       
         
   
+  
+    
   
 
 
@@ -308,7 +314,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../../preface/" class="md-tabs__link">
+      <a href="../../preface/" class="md-tabs__link md-tabs__link--active">
         solvcon
       </a>
     </li>
@@ -344,7 +350,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="導覽列" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
+    <a href="../../.." title="君實的技術筆記" class="md-nav__button md-logo" aria-label="君實的技術筆記" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -363,7 +369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../.." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         首頁
       </a>
     </li>
@@ -421,7 +427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/segment-tree/" class="md-nav__link">
+      <a href="../../../algorithm/segment-tree/" class="md-nav__link">
         Segment Tree
       </a>
     </li>
@@ -435,7 +441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/sqrt-decomposition/" class="md-nav__link">
+      <a href="../../../algorithm/sqrt-decomposition/" class="md-nav__link">
         Sqrt Decomposition
       </a>
     </li>
@@ -449,7 +455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/number-theory/" class="md-nav__link">
+      <a href="../../../algorithm/number-theory/" class="md-nav__link">
         Number Theory
       </a>
     </li>
@@ -463,7 +469,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/convex-hull-trick/" class="md-nav__link">
+      <a href="../../../algorithm/convex-hull-trick/" class="md-nav__link">
         Convex Hull Trick
       </a>
     </li>
@@ -477,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/string-matching/" class="md-nav__link">
+      <a href="../../../algorithm/string-matching/" class="md-nav__link">
         String Matching
       </a>
     </li>
@@ -491,7 +497,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/graph/" class="md-nav__link">
+      <a href="../../../algorithm/graph/" class="md-nav__link">
         Graph
       </a>
     </li>
@@ -505,7 +511,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../algorithm/tree/" class="md-nav__link">
+      <a href="../../../algorithm/tree/" class="md-nav__link">
         Tree
       </a>
     </li>
@@ -555,7 +561,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../hdlbits/">HDLBits</a>
+          <a href="../../../hdlbits/">HDLBits</a>
           
             <label for="__nav_3">
               <span class="md-nav__icon md-icon"></span>
@@ -578,7 +584,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/getting-started/" class="md-nav__link">
+      <a href="../../../hdlbits/getting-started/" class="md-nav__link">
         Getting Started
       </a>
     </li>
@@ -631,7 +637,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/basics/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/basics/" class="md-nav__link">
         Basics
       </a>
     </li>
@@ -645,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/vectors/" class="md-nav__link">
         Vectors
       </a>
     </li>
@@ -659,7 +665,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/modules/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/modules/" class="md-nav__link">
         Modules
       </a>
     </li>
@@ -673,7 +679,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/procedures/" class="md-nav__link">
         Procedures
       </a>
     </li>
@@ -687,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
+      <a href="../../../hdlbits/verilog-language/more-features/" class="md-nav__link">
         More Verilog Features
       </a>
     </li>
@@ -757,7 +763,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/basic-gates/" class="md-nav__link">
         Basic Gates
       </a>
     </li>
@@ -771,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/multiplexers/" class="md-nav__link">
         Multiplexers
       </a>
     </li>
@@ -785,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/arithmetic/" class="md-nav__link">
         Arithmetic Circuits
       </a>
     </li>
@@ -799,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/karnaugh-map/" class="md-nav__link">
         Karnaugh Map
       </a>
     </li>
@@ -813,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/latches-and-flip-flops/" class="md-nav__link">
         Latches and Flip-Flops
       </a>
     </li>
@@ -827,7 +833,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/counters/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/counters/" class="md-nav__link">
         Counters
       </a>
     </li>
@@ -841,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/shift-registers/" class="md-nav__link">
         Shift Registers
       </a>
     </li>
@@ -855,7 +861,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/more-circuits/" class="md-nav__link">
         More Circuits
       </a>
     </li>
@@ -869,7 +875,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/finite-state-machines/" class="md-nav__link">
         Finite State Machines
       </a>
     </li>
@@ -883,7 +889,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
+      <a href="../../../hdlbits/circuits/building-larger-circuits/" class="md-nav__link">
         Building Larger Circuits
       </a>
     </li>
@@ -937,7 +943,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/reading-simulations/" class="md-nav__link">
         Reading Simulations
       </a>
     </li>
@@ -951,7 +957,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
+      <a href="../../../hdlbits/verification/writing-testbenches/" class="md-nav__link">
         Writing Testbenches
       </a>
     </li>
@@ -972,7 +978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../hdlbits/cs450/" class="md-nav__link">
+      <a href="../../../hdlbits/cs450/" class="md-nav__link">
         CS450
       </a>
     </li>
@@ -1012,7 +1018,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../../pve/">Proxmox VE</a>
+          <a href="../../../pve/">Proxmox VE</a>
           
         </div>
       
@@ -1037,14 +1043,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
       
       
         
@@ -1061,7 +1069,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           solvcon
@@ -1092,7 +1100,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../preface/">Preface</a>
+          <a href="../../preface/">Preface</a>
           
         </div>
       
@@ -1116,14 +1124,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
       
       
         
@@ -1131,22 +1141,134 @@
             
           
         
+          
+        
+          
+        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../../array/">Array</a>
+          <a href="../">Array</a>
+          
+            <label for="__nav_5_2">
+              <span class="md-nav__icon md-icon"></span>
+            </label>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_2">
           <span class="md-nav__icon md-icon"></span>
           Array
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Signed mdspan
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Signed mdspan
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目錄">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#stdlayout_stride" class="md-nav__link">
+    為什麼不能直接用 std::layout_stride
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signedstridelayout" class="md-nav__link">
+    SignedStrideLayout 保存什麼
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping" class="md-nav__link">
+    Mapping 公式
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-handle" class="md-nav__link">
+    data handle 為什麼要往回移
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contract" class="md-nav__link">
+    Contract 與限制
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" class="md-nav__link">
+    Source
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../setitem/" class="md-nav__link">
+        Indexing and setitem
+      </a>
+    </li>
+  
+
             
           
         </ul>
@@ -1175,24 +1297,12 @@
             
           
         
-          
-        
-          
-        
-          
-            
-          
-        
       
       
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../">Matmul</a>
-          
-            <label for="__nav_5_3">
-              <span class="md-nav__icon md-icon"></span>
-            </label>
+          <a href="../../matmul/">Matmul</a>
           
         </div>
       
@@ -1203,48 +1313,6 @@
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../implementation/generic/" class="md-nav__link">
-        Generic
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../implementation/dispatch/" class="md-nav__link">
-        Dispatch
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../profiling/" class="md-nav__link">
-        Benchmarks
-      </a>
-    </li>
-  
-
             
           
         </ul>
@@ -1280,6 +1348,56 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目錄
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#stdlayout_stride" class="md-nav__link">
+    為什麼不能直接用 std::layout_stride
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signedstridelayout" class="md-nav__link">
+    SignedStrideLayout 保存什麼
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mapping" class="md-nav__link">
+    Mapping 公式
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-handle" class="md-nav__link">
+    data handle 為什麼要往回移
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contract" class="md-nav__link">
+    Contract 與限制
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#source" class="md-nav__link">
+    Source
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1296,10 +1414,144 @@
 
 
 
-<p><meta http-equiv="refresh" content="0; url=/solvcon/matmul/"></p>
-<h1 id="matmul-article-moved">Matmul article moved</h1>
-<p>The introduction and development story now form one article:
-<a href="../../">open Matmul</a>.</p>
+<h1 id="signed-mdspan">Signed mdspan</h1>
+<h2 id="stdlayout_stride">為什麼不能直接用 <code>std::layout_stride</code></h2>
+<p>限制不在 <code>std::mdspan</code> 本身。<code>std::mdspan</code> 可以接收自訂 <code>LayoutPolicy</code>；真正的
+缺口是標準 <code>std::layout_stride::mapping</code> 要求 supplied stride 全部大於零。
+<code>SimpleArray</code> 的 reversed view 必須保存 <code>(-3,-1)</code>，所以不能直接把 descriptor
+交給 <code>std::layout_stride</code>。</p>
+<p>此外，通用 mapping contract 要求合法 index 對應到 non-negative offset；
+<code>default_accessor</code> 接收的 offset type 也是 <code>size_t</code>。因此解法不是讓 accessor
+吃 negative offset，而是重寫 mapping 資料結構：保留 signed per-axis strides，
+再加入 <code>origin_offset</code>，把結果平移到 non-negative range。</p>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/array/layout-stride-gap.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/array/layout-stride-gap-mobile.svg">
+      <img src="/assets/images/solvcon/array/layout-stride-gap.svg"
+           alt="std layout stride 要求正 stride，而 reversed SimpleArray 需要保存負三與負一，因此必須提供自訂 LayoutPolicy mapping"
+           loading="lazy">
+    </picture>
+  </a>
+  <figcaption>
+    重寫的是 <code>LayoutPolicy::mapping</code>，不是 <code>mdspan</code> 或 accessor。
+  </figcaption>
+</figure>
+
+<h2 id="signedstridelayout"><code>SignedStrideLayout</code> 保存什麼</h2>
+<p>同一個 reversed view 交給 C++ kernel 時，<code>SignedStrideLayout</code> 會保存 extents、
+signed strides、<code>origin_offset</code> 與 required span。若 mapping 直接回傳 raw
+negative offset，會違反 mapping contract；custom mapping 因此把 offsets
+正規化為 non-negative range。<code>as_mdspan()</code> 再把 data handle 移到最低
+reachable address。一般 <code>SimpleArray</code> 的 buffer 可能還有 unused prefix，所以
+該位址不一定等於 <code>data()</code>。</p>
+<figure class="solvcon-figure">
+  <a href="/assets/images/solvcon/array/signed-mdspan.svg">
+    <picture>
+      <source media="(max-width: 44.984375em)"
+              srcset="/assets/images/solvcon/array/signed-mdspan-mobile.svg">
+      <img src="/assets/images/solvcon/array/signed-mdspan.svg"
+           alt="SignedStrideLayout 從負五到零的 raw offsets 算出 origin offset 五，將 mdspan mapping 正規化為零到五"
+           loading="lazy">
+    </picture>
+  </a>
+  <figcaption>
+    負 stride 沒被改寫；map 加上 <code>origin_offset</code>，data handle 往回移。
+  </figcaption>
+</figure>
+
+<h2 id="mapping">Mapping 公式</h2>
+<p>對 extent <span class="arithmatex">\(e_d\)</span> 與 signed element stride <span class="arithmatex">\(s_d\)</span>：</p>
+<div class="arithmatex">\[
+\operatorname{raw}(i)=\sum_d i_d s_d
+\]</div>
+<div class="arithmatex">\[
+\Delta_d=(e_d-1)s_d
+\]</div>
+<div class="arithmatex">\[
+\operatorname{min}=\sum_d\min(\Delta_d,0)
+\]</div>
+<div class="arithmatex">\[
+\operatorname{max}=\sum_d\max(\Delta_d,0)
+\]</div>
+<p>layout 再定義：</p>
+<div class="arithmatex">\[
+\operatorname{origin\_offset}=-\operatorname{min}
+\]</div>
+<div class="arithmatex">\[
+\begin{aligned}
+\operatorname{map}(i)
+&amp;=\operatorname{origin\_offset}\\
+&amp;\quad+\operatorname{raw}(i).
+\end{aligned}
+\]</div>
+<p>當所有 extents 都非零時，<code>required_span_size</code> 是 <code>max - min + 1</code>；任一
+extent 為零時則是 0。</p>
+<p>對 shape <code>(2,3)</code>、strides <code>(-3,-1)</code>：</p>
+<p>兩個 axis deltas 是 <code>-3</code> 與 <code>-2</code>，所以 raw range 為 <code>[-5,0]</code>、
+<code>origin_offset=5</code>、required span 為 6 elements。最後 <code>map(0,0)=5</code>、
+<code>map(1,2)=0</code>，所有 valid mdspan offsets 都落在 <code>[0,5]</code>。</p>
+<h2 id="data-handle">data handle 為什麼要往回移</h2>
+<p><code>SimpleArray::as_mdspan&lt;N&gt;()</code> 先建立 mapping，再調整 accessor handle：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">auto</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_mdspan_mapping</span><span class="o">&lt;</span><span class="n">N</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">logical_data</span><span class="p">();</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">{</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">handle</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">mapping</span><span class="p">.</span><span class="n">origin_offset</span><span class="p">();</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="k">return</span><span class="w"> </span><span class="n">mdspan_type</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span><span class="w"> </span><span class="n">mapping</span><span class="p">);</span>
+</span></code></pre></div>
+<p>兩次平移會互相抵消：</p>
+<div class="arithmatex">\[
+\begin{aligned}
+\operatorname{handle} + \operatorname{map}(i)
+&amp;=(\operatorname{logical\_data}-o)\\
+&amp;\quad +(o+\operatorname{raw}(i))\\
+&amp;=\operatorname{logical\_data}+\operatorname{raw}(i),
+\end{aligned}
+\]</div>
+<p>其中 <code>o</code> 是 <code>origin_offset</code>。</p>
+<p>最小 C++ example：</p>
+<div class="language-cpp highlight"><span class="filename">C++</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">using</span><span class="w"> </span><span class="n">Array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">SimpleArray</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">solvcon</span><span class="o">::</span><span class="n">ConcreteBuffer</span><span class="o">::</span><span class="n">construct</span><span class="p">(</span><span class="mi">6</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="n">Array</span><span class="w"> </span><span class="nf">a</span><span class="p">(</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">Array</span><span class="o">::</span><span class="n">shape_type</span><span class="p">{</span><span class="mi">-3</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">},</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">buffer</span><span class="p">,</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="mi">5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">double</span><span class="p">));</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">view</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">.</span><span class="n">as_mdspan</span><span class="o">&lt;</span><span class="mi">2</span><span class="o">&gt;</span><span class="p">();</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10"></a><a href="#__codelineno-1-10"><span class="linenos" data-linenos="10 "></span></a><span class="c1">// &amp;view[0, 0] == a.logical_data()</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11"></a><a href="#__codelineno-1-11"><span class="linenos" data-linenos="11 "></span></a><span class="c1">// &amp;view[1, 2] == a.data()</span>
+</span></code></pre></div>
+<p><code>as_mdspan&lt;N&gt;()</code> 只檢查 runtime rank 是否等於 <code>N</code>。mdspan 自己不持有
+<code>SimpleArray</code> 或 buffer lifetime；owner 消失後，handle 也會 dangling。</p>
+<h2 id="contract">Contract 與限制</h2>
+<ul>
+<li>Shape 的 storage type 是 signed，但 shape value 仍必須非負。</li>
+<li>任一 extent 為零時，origin 與 required span 都是零。</li>
+<li>Required span 是覆蓋所有 reachable addresses 的 envelope；它可以包含 holes。</li>
+<li>Layout 宣告 mapping unique，但 runtime 不檢查 zero/overlapping strides。Caller
+  必須提供 unique、可表示的 mapping。</li>
+<li>Offset arithmetic 沒有 overflow check，也不做 element bounds check。</li>
+<li><code>nghost</code> 不進入 mdspan metadata。mdspan axis 0 仍從 storage index 0 開始；
+  body 的起點是 mdspan index <code>nghost</code>。</li>
+<li>目前 <code>as_mdspan()</code> 沒有 Python binding，也不是 Python <code>__setitem__</code> 的實作
+  路徑。</li>
+</ul>
+<h2 id="source">Source</h2>
+<ul>
+<li><a href="https://eel.is/c++draft/mdspan.layout.stride#cons-4.1"><code>std::layout_stride</code> positive-stride precondition</a></li>
+<li><a href="https://eel.is/c++draft/mdspan.layout.reqmts#8"><code>LayoutMapping</code> non-negative offset requirement</a></li>
+<li><a href="https://eel.is/c++draft/mdspan.layout.reqmts#18"><code>LayoutMapping</code> signed stride definition</a></li>
+<li><a href="https://eel.is/c++draft/mdspan.mdspan#overview-1"><code>std::mdspan</code> accepts a custom LayoutPolicy</a></li>
+<li><a href="https://eel.is/c++draft/mdspan.accessor.default.members"><code>default_accessor</code> members</a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/signed_stride_layout.hpp#L18-L168"><code>SignedStrideLayout</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/cpp/solvcon/buffer/SimpleArray.hpp#L2636-L2671"><code>SimpleArray::as_mdspan()</code></a></li>
+<li><a href="https://github.com/solvcon/solvcon/blob/d662a740e068a35bb2edc56abcea7ff7f083c3e5/gtests/test_nopython_mdspan.cpp#L583-L618">Negative-stride mdspan regression</a></li>
+<li><a href="https://github.com/solvcon/solvcon/pull/1102">PR #1102: signed-stride mdspan</a></li>
+</ul>
 
 
 
@@ -1341,13 +1593,13 @@
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "navigation.prune", "navigation.indexes", "content.code.copy", "content.code.select", "content.code.annotate", "search.suggest", "search.highlight", "search.share"], "search": "../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "\u5df2\u8907\u88fd", "clipboard.copy": "\u8907\u88fd", "search.result.more.one": "\u6b64\u9801\u5c1a\u6709 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.more.other": "\u6b64\u9801\u5c1a\u6709 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.none": "\u6c92\u6709\u7b26\u5408\u7684\u9805\u76ee", "search.result.one": "\u627e\u5230 1 \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.other": "\u627e\u5230 # \u500b\u7b26\u5408\u7684\u9805\u76ee", "search.result.placeholder": "\u6253\u5b57\u9032\u884c\u641c\u5c0b", "search.result.term.missing": "\u7f3a\u5c11\u5b57\u8a5e", "select.version": "\u9078\u64c7\u7248\u672c"}}</script>
     
     
-      <script src="../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../../../javascripts/mathjax.js"></script>
+          <script src="../../../javascripts/mathjax.js"></script>
         
       
         
