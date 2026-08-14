@@ -1279,8 +1279,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#from-view-contract-to-execution" class="md-nav__link">
-    From view contract to execution
+  <a href="#from-goal-to-architecture" class="md-nav__link">
+    From goal to architecture
   </a>
   
 </li>
@@ -1346,12 +1346,12 @@
 
 
 <h1 id="the-simplearray-data-model">The SimpleArray Data Model</h1>
-<p>NumPy is the reference for array semantics, but a numerical kernel does not
-need the whole NumPy object model. Solvcon keeps a smaller view contract:
-storage lifetime, a logical origin, shape, and signed strides. An operation can
-then select a kernel, and separately decide whether to pack an input, from the
-same compact descriptor.</p>
-<h2 id="from-view-contract-to-execution">From view contract to execution</h2>
+<p><code>SimpleArray</code> has a direct goal: build a NumPy-like array that can outperform
+NumPy on Solvcon's numerical workloads. It does not reproduce the whole NumPy
+API. Instead, it keeps a simplified version of NumPy's view architecture, then
+exposes those facts to an operation layer that selects a kernel and
+independently decides whether to pack an input.</p>
+<h2 id="from-goal-to-architecture">From goal to architecture</h2>
 <div class="language-text highlight"><span class="filename">Text Only</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>NumPy view
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a>    ↓ zero-copy import
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a>SimpleArray descriptor
